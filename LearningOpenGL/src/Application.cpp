@@ -25,14 +25,25 @@ const float ASPECT_RATIO = static_cast<float>(SCREEN_WIDTH) / SCREEN_HEIGHT;
 
 float deltaTime = 0.0f;		//time between current and last frame
 float lastFrame = 0.0f;		//time of last frame
-bool useTexture = true;		//whether to use textures on a shader / use normals
 
 //global variable that positions the light - can use vec4's w component to check if light is a position or direction (1.0f = position)
-glm::vec3 lightPosition(0.0f, 5.0f, 0.0f);
-glm::vec3 lightDirection(0.0f, -5.0f, 0.0f);
+glm::vec3 lightDirection(1.2f, 3.0f, 2.0f);
+
+//reusable light properties for directional lighting
+glm::vec3 dirLightAmbient(0.0f);
+glm::vec3 dirLightDiffuse(0.05f);
+glm::vec3 dirLightSpecular(0.2f);
+
+//coloring for each point light
+glm::vec3 pointLightColors[]{
+	glm::vec3(0.5f, 0.5f, 0.5f),
+	glm::vec3(0.75f, 0.0f, 0.60f),
+	glm::vec3(0.0f, 0.0f, 0.8f),
+	glm::vec3(0.75f, 0.05f, 0.05f)
+};
 
 //setting up camera
-Camera camera(glm::vec3(0.0f, 1.0f, 0.0f));
+Camera camera(glm::vec3(0.0f, 1.0f, 3.0f));
 float lastX = SCREEN_WIDTH / 2;
 float lastY = SCREEN_HEIGHT / 2;
 bool firstMouse = true;
@@ -74,34 +85,6 @@ int main()
 	Shader wallShader("res/shaders/wall.vert", "res/shaders/wall.frag");
 	Shader lightingShader("res/shaders/container.vert", "res/shaders/lighting.frag");
 	Shader lightCubeShader("res/shaders/container.vert", "res/shaders/lightCube.frag");
-
-	/*
-	//setting the pos, normal and texture attributes of the brick wall (2D)
-	float wallVertices[] = {
-		// positions           // normals           // texture coords
-		 0.5f,  0.5f, 0.0f,    0.0f, 0.0f, 1.0f,     1.0f, 1.0f,   // top right
-		 0.5f, -0.5f, 0.0f,    0.0f, 0.0f, 1.0f,     1.0f, 0.0f,   // bottom right
-		-0.5f, -0.5f, 0.0f,    0.0f, 0.0f, 1.0f,     0.0f, 0.0f,   // bottom left
-		-0.5f,  0.5f, 0.0f,    0.0f, 0.0f, 1.0f,     0.0f, 1.0f    // top left
-	};
-
-
-	//the numbering is like this because it begins drawing anticlockwise
-	unsigned int wallIndices[] = {
-		0, 1, 3,		//first triangle
-		1, 2, 3			//second traingle
-	};
-
-	*/
-
-	//creating the WORLD positions for the wall
-	glm::vec3 wallPositions[] = {
-		glm::vec3(0.0f,  1.0f,  5.0f),		//front wall
-		glm::vec3(5.0f,  1.0f,  0.0f),		//right wall
-		glm::vec3(0.0f,  1.0f,  -5.0f),		//back wall
-		glm::vec3(-5.0f,  1.0f,  0.0f),		//left wall
-	};
-
 
 	//cube data
 	float cubeVertices[] = {			//with positions, normals and textures
@@ -156,11 +139,24 @@ int main()
 
 	//creating the WORLD positions for x cubes that will be rendered - RANDOM POSITIONS
 	glm::vec3 cubePositions[] = {
-		glm::vec3(1.0f,  0.0f,  3.0f),
-		glm::vec3(-3.0f,  0.0f,  2.0f),
-		glm::vec3(2.0f,  0.0f, -3.0f),
-		glm::vec3(4.0f,  0.0f,  -1.0f),
-		glm::vec3(-3.0f,  0.0f,  -3.0f),
+		glm::vec3(0.0f,  0.0f,  0.0f),
+		glm::vec3(2.0f,  5.0f, -15.0f),
+		glm::vec3(-1.5f, -2.2f, -2.5f),
+		glm::vec3(-3.8f, -2.0f, -12.3f),
+		glm::vec3(2.4f, -0.4f, -3.5f),
+		glm::vec3(-1.7f,  3.0f, -7.5f),
+		glm::vec3(1.3f, -2.0f, -2.5f),
+		glm::vec3(1.5f,  2.0f, -2.5f),
+		glm::vec3(1.5f,  0.2f, -1.5f),
+		glm::vec3(-1.3f,  1.0f, -1.5f)
+	};
+
+	//world positions for point lights
+	glm::vec3 pointLightPositions[] = {
+		glm::vec3(0.7f,  0.2f,  2.0f),
+		glm::vec3(2.3f, -3.3f, -4.0f),
+		glm::vec3(-4.0f,  2.0f, -12.0f),
+		glm::vec3(0.0f,  0.0f, -3.0f)
 	};
 
 	//creating an array of vertex objects
@@ -209,16 +205,6 @@ int main()
 	containerShader.setInt("material.diffuse", 0);
 	containerShader.setInt("material.specular", 1);
 
-	/* 2D RENDERING STUFF
-	wallShader.useProgram();
-	wallShader.setInt("material.diffuse", 0);
-	*/
-
-	lightingShader.useProgram();
-	lightingShader.setInt("material.diffuse", 0);
-	lightingShader.setInt("material.specular", 1);
-	lightingShader.setInt("material.emission", 2);
-
 	//-------------------------------- RENDER LOOP ----------------------------------------
 	while (!glfwWindowShouldClose(window))		//checks if glfw has been instructed to close
 	{
@@ -231,78 +217,12 @@ int main()
 		processInput(window);
 
 		//rendering stuff will go here...
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClearColor(0.01f, 0.01f, 0.01f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);		//clearing the buffers every iteration
 
 		//creating matrixes
 		glm::mat4 projectionMatrix = glm::perspective(glm::radians(camera.zoom), ASPECT_RATIO, 0.1f, 100.0f);		//radians = FOV, width/height (aspect ratio), near place and far plane	
 		glm::mat4 cameraView = camera.GetViewMatrix();
-		
-		
-		//drawing some 3D walls
-		glBindVertexArray(VAO[0]);
-		wallShader.useProgram();
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture3);
-		//setting material properties
-		wallShader.setVec3("material.specular", glm::vec3(0.5f));
-		wallShader.setFloat("material.shininess", 32.0f);
-		//setting light properties
-		//wallShader.setVec3("light.position", lightPosition);
-		wallShader.setVec3("light.direction", lightDirection);
-		wallShader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
-		wallShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f); // darken diffuse light a bit
-		wallShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-		//setting uniforms
-		wallShader.setMat4("u_projectionMatrix", projectionMatrix);
-		wallShader.setMat4("u_viewMatrix", cameraView);
-		wallShader.setVec3("u_viewPosition", camera.position);
-
-		for (int i = 0; i < 4; i++)
-		{
-			glm::mat4 wallModel3D = glm::mat4(1.0f);
-			wallModel3D = glm::translate(wallModel3D, wallPositions[i]);
-
-			//rotating the walls based on the index
-			if (i == 1)
-				wallModel3D = glm::rotate(wallModel3D, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-			if (i == 2)
-				wallModel3D = glm::rotate(wallModel3D, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-			if (i == 3)
-				wallModel3D = glm::rotate(wallModel3D, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-
-			wallModel3D = glm::scale(wallModel3D, glm::vec3(9.75f, 2.5f, 0.25f));
-			wallModel3D = glm::translate(wallModel3D, glm::vec3(0.0f, 0.1f, 0.0f));
-
-			wallShader.setMat4("u_modelMatrix", wallModel3D);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-		}
-
-		//rendering the floor
-		glBindVertexArray(VAO[0]);
-		wallShader.useProgram();
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture1);
-		//setting material properties
-		wallShader.setVec3("material.specular", glm::vec3(0.5f));
-		wallShader.setFloat("material.shininess", 32.0f);
-		//setting light properties
-		//wallShader.setVec3("light.position", lightPosition);
-		wallShader.setVec3("light.direction", lightDirection);
-		wallShader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
-		wallShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f); // darken diffuse light a bit
-		wallShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-		//setting uniforms
-		wallShader.setMat4("u_projectionMatrix", projectionMatrix);
-		wallShader.setMat4("u_viewMatrix", cameraView);
-		wallShader.setVec3("u_viewPosition", camera.position);
-
-		glm::mat4 floorModel = glm::mat4(1.0f);
-		floorModel = glm::rotate(floorModel, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		floorModel = glm::scale(floorModel, glm::vec3(9.5f, 9.5f, 0.01f));
-		wallShader.setMat4("u_modelMatrix", floorModel);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-
 
 		//rendering 3D cubes
 		containerShader.useProgram();
@@ -311,86 +231,121 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, diffuseMap);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, specularMap);
-		//setting material properties
-		containerShader.setFloat("material.shininess", 32.0f);
-		//setting light properties
-		//containerShader.setVec3("light.position", lightPosition);
-		containerShader.setVec3("light.direction", lightDirection);
-		containerShader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
-		containerShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f); // darken diffuse light a bit
-		containerShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-		//setting uniforms
+		//applying matrixes
 		containerShader.setVec3("u_viewPosition", camera.position);
-		containerShader.setMat4("u_projectionMatrix", projectionMatrix); //applying matrixes
+		containerShader.setMat4("u_projectionMatrix", projectionMatrix);
 		containerShader.setMat4("u_viewMatrix", cameraView);
+		//setting material properties
+		containerShader.setFloat("u_material.shininess", 32.0f);
+
+		// ---------- LIGHT PROPERTIES OF CONTAINER SHADER ---------- 
+		
+		
+		//DIRECTIONAL LIGHTING	
+		containerShader.setVec3("u_dirLight.direction", lightDirection);
+		containerShader.setVec3("u_dirLight.ambient", dirLightAmbient);
+		containerShader.setVec3("u_dirLight.diffuse", dirLightDiffuse);
+		containerShader.setVec3("u_dirLight.specular", dirLightSpecular);
+		
+
+		//POINT LIGHTING 1
+		containerShader.setVec3("u_pointLight[0].position", pointLightPositions[0]);
+		containerShader.setVec3("u_pointLight[0].ambient", pointLightColors[0].x * 0.1f, pointLightColors[0].y * 0.1f, pointLightColors[0].z * 0.1f);
+		containerShader.setVec3("u_pointLight[0].diffuse", pointLightColors[0]);
+		containerShader.setVec3("u_pointLight[0].specular", pointLightColors[0]);
+
+		containerShader.setFloat("u_pointLight[0].constant", 1.0f);
+		containerShader.setFloat("u_pointLight[0].linear", 0.09f);
+		containerShader.setFloat("u_pointLight[0].quadratic", 0.032f);
+
+		//POINT LIGHTING 2
+		containerShader.setVec3("u_pointLight[1].position", pointLightPositions[1]);
+		containerShader.setVec3("u_pointLight[1].ambient", pointLightColors[1].x * 0.1f, pointLightColors[1].y * 0.1f, pointLightColors[1].z * 0.1f);
+		containerShader.setVec3("u_pointLight[1].diffuse", pointLightColors[1]);
+		containerShader.setVec3("u_pointLight[1].specular", pointLightColors[1]);
+
+		containerShader.setFloat("u_pointLight[1].constant", 1.0f);
+		containerShader.setFloat("u_pointLight[1].linear", 0.09f);
+		containerShader.setFloat("u_pointLight[1].quadratic", 0.032f);
+
+		//POINT LIGHTING 3
+		containerShader.setVec3("u_pointLight[2].position", pointLightPositions[2]);
+		containerShader.setVec3("u_pointLight[2].ambient", pointLightColors[2].x * 0.1f, pointLightColors[2].y * 0.1f, pointLightColors[2].z * 0.1f);
+		containerShader.setVec3("u_pointLight[2].diffuse", pointLightColors[2]);
+		containerShader.setVec3("u_pointLight[2].specular", pointLightColors[2]);
+
+		containerShader.setFloat("u_pointLight[2].constant", 1.0f);
+		containerShader.setFloat("u_pointLight[2].linear", 0.09f);
+		containerShader.setFloat("u_pointLight[2].quadratic", 0.032f);
+
+		//POINT LIGHTING 4
+		containerShader.setVec3("u_pointLight[3].position", pointLightPositions[3]);
+		containerShader.setVec3("u_pointLight[3].ambient", pointLightColors[3].x * 0.1f, pointLightColors[3].y * 0.1f, pointLightColors[3].z * 0.1f);
+		containerShader.setVec3("u_pointLight[3].diffuse", pointLightColors[3]);
+		containerShader.setVec3("u_pointLight[3].specular", pointLightColors[3]);
+
+		containerShader.setFloat("u_pointLight[3].constant", 1.0f);
+		containerShader.setFloat("u_pointLight[3].linear", 0.09f);
+		containerShader.setFloat("u_pointLight[3].quadratic", 0.032f);
+
+
+		//SPOT LIGHTING
+		containerShader.setVec3("u_spotLight.position", camera.position);
+		containerShader.setVec3("u_spotLight.direction", camera.front);
+		containerShader.setVec3("u_spotLight.ambient", 0.0f, 0.0f, 0.0f);
+		containerShader.setVec3("u_spotLight.diffuse", 1.0f, 1.0f, 1.0f);
+		containerShader.setVec3("u_spotLight.specular", 1.0f, 1.0f, 1.0f);
+		
+		containerShader.setFloat("u_spotLight.constant", 1.0f);
+		containerShader.setFloat("u_spotLight.linear", 0.22f);
+		containerShader.setFloat("u_spotLight.quadratic", 0.20f);
+		
+		containerShader.setFloat("u_spotLight.cutOff", glm::cos(glm::radians(10.0f)));
+		containerShader.setFloat("u_spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
+
+		// ---------- END OF LIGHTING ----------
 
 		//rendering each cube
 		glBindVertexArray(VAO[0]);
-		for (unsigned int i = 0; i < 5; i++)
+		for (unsigned int i = 0; i < 10; i++)
 		{
 			glm::mat4 cubeModel = glm::mat4(1.0f);
 			cubeModel = glm::translate(cubeModel, cubePositions[i]);
 			cubeModel = glm::translate(cubeModel, glm::vec3(0.0f, 0.51f, 0.0f));
-
 			//enabling rotations
-			//float angle = 60.0f;
-			//cubeModel = glm::rotate(cubeModel, (float)glfwGetTime() * glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
-
+			float angle = 20.0f + (i * 3);
+			cubeModel = glm::rotate(cubeModel, (float)glfwGetTime() * glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 			containerShader.setMat4("u_modelMatrix", cubeModel);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
-
 		
-		//rendering the light affected cube
-		glBindVertexArray(VAO[0]);
-		lightingShader.useProgram();
-		//binding texture maps
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, diffuseMap);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, specularMap);
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, emissionMap);
-		//setting material properties
-		lightingShader.setFloat("material.shininess", 32.0f);
-		//setting light properties
-		//lightingShader.setVec3("light.position", lightPosition);				//positional lighting
-		lightingShader.setVec3("light.direction", lightDirection);				//directional lighting
-		lightingShader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
-		lightingShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
-		lightingShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-		//setting uniforms
-		lightingShader.setMat4("u_projectionMatrix", projectionMatrix);
-		lightingShader.setMat4("u_viewMatrix", cameraView);
-		lightingShader.setVec3("u_viewPosition", camera.position);
-
-		//drawing the models
-		glm::mat4 lightModel = glm::mat4(1.0f);	
-		lightModel = glm::translate(lightModel, glm::vec3(0.0f, 3.5f, 0.0f));
-		lightModel = glm::scale(lightModel, glm::vec3(1.0f, 1.0f, 1.0f));
-		//lightModel = glm::rotate(lightModel, (float)glfwGetTime() * glm::radians(20.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-		lightingShader.setMat4("u_modelMatrix", lightModel);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-
-		/*
-		//======= CURRENTLY USELESS SINCE WE ARE USING THE LIGHT DIRECTION INSTEAD =======		
+		//======= CURRENTLY NOT USELESS SINCE WE ARE USING THE LIGHT POSITION RN =======		
 		//rendering light source
 		glBindVertexArray(VAO[0]);
 		lightCubeShader.useProgram();
 		lightCubeShader.setMat4("u_projectionMatrix", projectionMatrix);
 		lightCubeShader.setMat4("u_viewMatrix", cameraView);
 
-		lightModel = glm::mat4(1.0f);
-		lightModel = glm::translate(lightModel, lightPosition);
-		lightModel = glm::scale(lightModel, glm::vec3(0.5f));
-		lightCubeShader.setMat4("u_modelMatrix", lightModel);
+		for (int i = 0; i < 4; i++) {
+			glm::mat4 lightModel = glm::mat4(1.0f);
+			lightCubeShader.setVec3("u_lightColor", pointLightColors[i]);
+			lightModel = glm::translate(lightModel, pointLightPositions[i]);
+			lightModel = glm::scale(lightModel, glm::vec3(0.5f));
+			lightCubeShader.setMat4("u_modelMatrix", lightModel);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+
+		//rendering direction light source
+		glBindVertexArray(VAO[0]);
+		lightCubeShader.useProgram();
+		lightCubeShader.setMat4("u_projectionMatrix", projectionMatrix);
+		lightCubeShader.setMat4("u_viewMatrix", cameraView);
+		glm::mat4 dirLightModel = glm::mat4(1.0f);
+		lightCubeShader.setVec3("u_lightColor", glm::vec3(1.0f));
+		dirLightModel = glm::translate(dirLightModel, lightDirection);
+		lightCubeShader.setMat4("u_modelMatrix", dirLightModel);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
-		// change the light's position values over time (can be done anywhere in the render loop actually, but try to do it at least before using the light source positions)
-		lightPosition.x = sin(glfwGetTime()) * 3.0f;
-		lightPosition.z = cos(glfwGetTime()) * 3.0f;
-		lightPosition.y = 3.5f;
-		*/
 
 		//checking call events and swapping buffers
 		glfwSwapBuffers(window);
