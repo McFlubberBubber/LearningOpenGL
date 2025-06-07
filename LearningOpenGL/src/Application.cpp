@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include "Shader.h"
+#include "Model.h"
 #include "Camera.h"
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -77,14 +78,21 @@ int main()
 		return -1;
 	}
 
+	//telling stbi_image to flip
+	stbi_set_flip_vertically_on_load(true);
+
 	//enabling depth testing for z buffers
 	glEnable(GL_DEPTH_TEST);
 
-	//building and compiling the shader program (pathing starts from the solution directory)
+	// BUILDING SHADERS (pathing starts from the solution directory)
 	Shader containerShader("res/shaders/container.vert", "res/shaders/container.frag");
-	Shader wallShader("res/shaders/wall.vert", "res/shaders/wall.frag");
-	Shader lightingShader("res/shaders/container.vert", "res/shaders/lighting.frag");
+	//Shader wallShader("res/shaders/wall.vert", "res/shaders/wall.frag");
+	//Shader lightingShader("res/shaders/container.vert", "res/shaders/lighting.frag");
 	Shader lightCubeShader("res/shaders/container.vert", "res/shaders/lightCube.frag");
+	Shader backpackShader("res/shaders/backpack.vert", "res/shaders/backpack.frag");
+
+	//LOADING MODELS
+	Model backpack("res/models/backpack/backpack.obj");
 
 	//cube data
 	float cubeVertices[] = {			//with positions, normals and textures
@@ -217,14 +225,14 @@ int main()
 		processInput(window);
 
 		//rendering stuff will go here...
-		glClearColor(0.01f, 0.01f, 0.01f, 1.0f);
+		glClearColor(0.001f, 0.001f, 0.001f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);		//clearing the buffers every iteration
 
 		//creating matrixes
 		glm::mat4 projectionMatrix = glm::perspective(glm::radians(camera.zoom), ASPECT_RATIO, 0.1f, 100.0f);		//radians = FOV, width/height (aspect ratio), near place and far plane	
 		glm::mat4 cameraView = camera.GetViewMatrix();
 
-		//rendering 3D cubes
+		// ========== RENDERING CONTAINERS ==========
 		containerShader.useProgram();
 		//textures for containers
 		glActiveTexture(GL_TEXTURE0);
@@ -305,7 +313,7 @@ int main()
 
 		// ---------- END OF LIGHTING ----------
 
-		//rendering each cube
+		//drawing each cube
 		glBindVertexArray(VAO[0]);
 		for (unsigned int i = 0; i < 10; i++)
 		{
@@ -318,6 +326,92 @@ int main()
 			containerShader.setMat4("u_modelMatrix", cubeModel);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
+
+
+		
+		// ========== RENDERING BACKPACK MODEL ==========
+		backpackShader.useProgram();
+		backpackShader.setVec3("u_viewPosition", camera.position);
+		backpackShader.setMat4("u_projectionMatrix", projectionMatrix);
+		backpackShader.setMat4("u_viewMatrix", cameraView);
+		backpackShader.setFloat("u_material.shininess", 32.0f);
+
+		// ---------- LIGHTING PROPERTIES OF BACKPACK ----------
+
+		//DIRECTIONAL LIGHTING	
+		backpackShader.setVec3("u_dirLight.direction", lightDirection);
+		backpackShader.setVec3("u_dirLight.ambient", dirLightAmbient);
+		backpackShader.setVec3("u_dirLight.diffuse", dirLightDiffuse);
+		backpackShader.setVec3("u_dirLight.specular", dirLightSpecular);
+
+
+		//POINT LIGHTING 1
+		backpackShader.setVec3("u_pointLight[0].position", pointLightPositions[0]);
+		backpackShader.setVec3("u_pointLight[0].ambient", pointLightColors[0].x * 0.1f, pointLightColors[0].y * 0.1f, pointLightColors[0].z * 0.1f);
+		backpackShader.setVec3("u_pointLight[0].diffuse", pointLightColors[0]);
+		backpackShader.setVec3("u_pointLight[0].specular", pointLightColors[0]);
+
+		backpackShader.setFloat("u_pointLight[0].constant", 1.0f);
+		backpackShader.setFloat("u_pointLight[0].linear", 0.09f);
+		backpackShader.setFloat("u_pointLight[0].quadratic", 0.032f);
+
+		//POINT LIGHTING 2
+		backpackShader.setVec3("u_pointLight[1].position", pointLightPositions[1]);
+		backpackShader.setVec3("u_pointLight[1].ambient", pointLightColors[1].x * 0.1f, pointLightColors[1].y * 0.1f, pointLightColors[1].z * 0.1f);
+		backpackShader.setVec3("u_pointLight[1].diffuse", pointLightColors[1]);
+		backpackShader.setVec3("u_pointLight[1].specular", pointLightColors[1]);
+
+		backpackShader.setFloat("u_pointLight[1].constant", 1.0f);
+		backpackShader.setFloat("u_pointLight[1].linear", 0.09f);
+		backpackShader.setFloat("u_pointLight[1].quadratic", 0.032f);
+
+		//POINT LIGHTING 3
+		backpackShader.setVec3("u_pointLight[2].position", pointLightPositions[2]);
+		backpackShader.setVec3("u_pointLight[2].ambient", pointLightColors[2].x * 0.1f, pointLightColors[2].y * 0.1f, pointLightColors[2].z * 0.1f);
+		backpackShader.setVec3("u_pointLight[2].diffuse", pointLightColors[2]);
+		backpackShader.setVec3("u_pointLight[2].specular", pointLightColors[2]);
+
+		backpackShader.setFloat("u_pointLight[2].constant", 1.0f);
+		backpackShader.setFloat("u_pointLight[2].linear", 0.09f);
+		backpackShader.setFloat("u_pointLight[2].quadratic", 0.032f);
+
+		//POINT LIGHTING 4
+		backpackShader.setVec3("u_pointLight[3].position", pointLightPositions[3]);
+		backpackShader.setVec3("u_pointLight[3].ambient", pointLightColors[3].x * 0.1f, pointLightColors[3].y * 0.1f, pointLightColors[3].z * 0.1f);
+		backpackShader.setVec3("u_pointLight[3].diffuse", pointLightColors[3]);
+		backpackShader.setVec3("u_pointLight[3].specular", pointLightColors[3]);
+
+		backpackShader.setFloat("u_pointLight[3].constant", 1.0f);
+		backpackShader.setFloat("u_pointLight[3].linear", 0.09f);
+		backpackShader.setFloat("u_pointLight[3].quadratic", 0.032f);
+
+
+		//SPOT LIGHTING
+		backpackShader.setVec3("u_spotLight.position", camera.position);
+		backpackShader.setVec3("u_spotLight.direction", camera.front);
+		backpackShader.setVec3("u_spotLight.ambient", 0.0f, 0.0f, 0.0f);
+		backpackShader.setVec3("u_spotLight.diffuse", 1.0f, 1.0f, 1.0f);
+		backpackShader.setVec3("u_spotLight.specular", 1.0f, 1.0f, 1.0f);
+
+		backpackShader.setFloat("u_spotLight.constant", 1.0f);
+		backpackShader.setFloat("u_spotLight.linear", 0.22f);
+		backpackShader.setFloat("u_spotLight.quadratic", 0.20f);
+
+		backpackShader.setFloat("u_spotLight.cutOff", glm::cos(glm::radians(10.0f)));
+		backpackShader.setFloat("u_spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
+
+
+		// ---------- END OF LIGHTING ----------
+
+		glm::mat4 backpackModel = glm::mat4(1.0f);
+		backpackModel = glm::translate(backpackModel, glm::vec3(-3.0f, 0.0f, -5.0f));
+		backpackModel = glm::scale(backpackModel, glm::vec3(0.5f));
+		backpackModel = glm::rotate(backpackModel, (float)glfwGetTime() * glm::radians(45.0f), glm::vec3(1.0f));
+		backpackShader.setMat4("u_modelMatrix", backpackModel);
+		backpack.Draw(backpackShader);
+
+
+
 		
 		//======= CURRENTLY NOT USELESS SINCE WE ARE USING THE LIGHT POSITION RN =======		
 		//rendering light source
