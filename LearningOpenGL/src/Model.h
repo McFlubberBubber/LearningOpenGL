@@ -17,9 +17,9 @@
 class Model {
 public:
 	//constructor
-	Model(const char* path)
+	Model(const char* path, bool flipUvs)
 	{
-		m_LoadModel(path);			//immediately loads the model based on path
+		m_LoadModel(path, flipUvs);			//immediately loads the model based on path
 	}
 
 	//drawing the full model based on the amount of meshes found
@@ -35,10 +35,17 @@ private:
 	std::vector<Mesh> m_meshes;
 	std::string m_directory;
 
-	void m_LoadModel(std::string path) {
+	void m_LoadModel(std::string path, bool flipUvs) {
 		//creating importer object to read file path and execute post processing options of ASSIMP
 		Assimp::Importer importer;
-		const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+		const aiScene* scene;
+		if (flipUvs) {
+			scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+		}
+		else {
+			scene = importer.ReadFile(path, aiProcess_Triangulate);
+		}
+
 
 		//error logging if no scene exists / flags are incomplete
 		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
@@ -132,22 +139,36 @@ private:
 			aiString str;
 			material->GetTexture(type, i, &str);
 			bool skip = false;
+			std::string fullPath = m_directory + '/' + str.C_Str();
 			
 			//if the texture has been loaded previously, break the loop
 			for (unsigned int j = 0; j < m_texturesLoaded.size(); j++) {
+				
+				//CURRENTLY: testing changes to ensure texture file names that match don't get reused in other models
+				/*
+				if (m_texturesLoaded[j].path == fullPath) {
+					textures.push_back(m_texturesLoaded[j]);
+					skip = true;
+					break;
+				}
+				*/
+
 				if (std::strcmp(m_texturesLoaded[j].path.data(), str.C_Str()) == 0) {
 					textures.push_back(m_texturesLoaded[j]);
 					skip = true;
 					break;
 				}
+				
 			}
 
 			//if the texture has not been loaded already, then load it
 			if (!skip) {
 				Texture texture;
-				texture.id = m_TextureFromFile(str.C_Str(), m_directory);
+				texture.id = m_TextureFromFile(str.C_Str(), m_directory);		//old
+				//texture.id = m_TextureFromFile(fullPath.c_str(), "");
 				texture.type = typeName;
 				texture.path = str.C_Str();
+				//texture.path = fullPath;
 				textures.push_back(texture);
 				m_texturesLoaded.push_back(texture);		//adding to loaded textures vector
 			}

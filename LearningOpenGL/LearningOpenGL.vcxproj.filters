@@ -48,5 +48,7 @@
     <None Include="res\shaders\lightCube.frag" />
     <None Include="res\shaders\backpack.vert" />
     <None Include="res\shaders\backpack.frag" />
+    <None Include="res\shaders\blahaj.vert" />
+    <None Include="res\shaders\blahaj.frag" />
   </ItemGroup>
 </Project>
