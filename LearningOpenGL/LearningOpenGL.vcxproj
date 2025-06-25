@@ -155,7 +155,7 @@
     <None Include="res\shaders\container.frag" />
     <None Include="res\shaders\container.vert" />
     <None Include="res\shaders\lightCube.frag" />
-    <None Include="res\shaders\lighting.frag" />
+    <None Include="res\shaders\emission.frag" />
     <None Include="res\shaders\blahaj.frag" />
     <None Include="res\shaders\blahaj.vert" />
     <None Include="res\shaders\wall.frag" />

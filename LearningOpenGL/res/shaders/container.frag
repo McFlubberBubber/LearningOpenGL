@@ -65,10 +65,15 @@ uniform DirLight u_dirLight;
 uniform PointLight u_pointLight[NR_POINT_LIGHTS];		//based on the definition of point lights 
 uniform SpotLight u_spotLight;
 
+//Depth buffer stuff
+float near = 0.1;
+float far = 100.0;
+
 //FUNCTION PROTOTYPES
 vec3 CalculateDirectionalLight(DirLight u_dirLight, vec3 norm, vec3 viewDirection);
 vec3 CalculatePointLight(PointLight u_pointLight, vec3 norm, vec3 fragPosOutput, vec3 viewDirection);
 vec3 CaluclateSpotLight(SpotLight u_spotLight, vec3 norm, vec3 fragPosOutput, vec3 viewDirection);
+float LinearizeDepth(float depth);
 
 void main ()
 {
@@ -88,7 +93,21 @@ void main ()
 	result += CaluclateSpotLight(u_spotLight, norm, fragPosOutput, viewDirection);
 
 	//Applying all lighting calculations
-	FragColor = vec4(result, 1.0);
+	//FragColor = vec4(result, 1.0);
+
+	//visualizing the depth buffer with foggyness
+	float fogDensity = 5.0f;
+	float depth = LinearizeDepth(gl_FragCoord.z) / far;
+	//FragColor = vec4(vec3(depth), 1.0);
+	float depthVec = exp(-pow(depth * fogDensity, 2.0));
+
+	//using different fog colors for testing
+	vec3 fogColor = vec3(0.001f, 0.001f, 0.001f);			//set to BG color
+	//vec3 fogColor = vec3(1.0, 0.0, 0.0);					//bright red
+
+	//mixing the result with the fog
+	vec3 mixedResult = mix(fogColor, result, depthVec);
+	FragColor = vec4(mixedResult, 1.0f);
 }
 
 
@@ -172,4 +191,9 @@ vec3 CaluclateSpotLight(SpotLight u_spotLight, vec3 norm, vec3 fragPosOutput, ve
 	specular *= attenuation * intensity;
 
 	return (ambient + diffuse + specular);
+}
+
+float LinearizeDepth(float depth){
+	float z = depth * 2.0 - 1.0;
+	return (2.0 * near * far) / (far + near - z * (far - near) );
 }

@@ -88,18 +88,19 @@ int main()
 		return -1;
 	}
 
-
 	//enabling depth testing for z buffers
 	glEnable(GL_DEPTH_TEST);
 
 	// BUILDING SHADERS (pathing starts from the solution directory)
+	// currently, most fragment shaders will use the 'container.frag' since 
+	// there are fog-render distance calculations completed already
 	Shader containerShader("res/shaders/container.vert", "res/shaders/container.frag");
-	Shader lightingShader("res/shaders/container.vert", "res/shaders/lighting.frag");
+	Shader emissionShader("res/shaders/container.vert", "res/shaders/emission.frag");
 	Shader backpackShader("res/shaders/backpack.vert", "res/shaders/backpack.frag");
 	Shader blahajShader("res/shaders/blahaj.vert", "res/shaders/blahaj.frag");
 	Shader lightCubeShader("res/shaders/container.vert", "res/shaders/lightCube.frag");
 
-	//LOADING MODELS
+	//LOADING MODELS - bool is used whether we want to flip the texture
 	Model backpack("res/models/backpack/backpack.obj", true);
 	Model blahaj("res/models/blahaj/blahaj.obj", false);
 
@@ -224,10 +225,10 @@ int main()
 	containerShader.setInt("u_material.textureDiffuse1", 0);
 	containerShader.setInt("u_material.textureSpecular1", 1);
 
-	lightingShader.useProgram();
-	lightingShader.setInt("u_material.textureDiffuse1", 0);
-	lightingShader.setInt("u_material.textureSpecular1", 1);
-	lightingShader.setInt("u_material.textureEmission1", 2);
+	emissionShader.useProgram();
+	emissionShader.setInt("u_material.textureDiffuse1", 0);
+	emissionShader.setInt("u_material.textureSpecular1", 1);
+	emissionShader.setInt("u_material.textureEmission1", 2);
 
 	//-------------------------------- RENDER LOOP ----------------------------------------
 	while (!glfwWindowShouldClose(window)) {		//checks if glfw has been instructed to close
@@ -242,9 +243,12 @@ int main()
 		//rendering stuff will go here...
 		glClearColor(0.001f, 0.001f, 0.001f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);		//clearing the buffers every iteration
+		//glDepthMask(GL_FALSE);
+		glDepthFunc(GL_LESS);
+		
 
 		//creating matrixes
-		glm::mat4 projectionMatrix = glm::perspective(glm::radians(camera.zoom), ASPECT_RATIO, 0.1f, 100.0f);		//radians = FOV, width/height (aspect ratio), near place and far plane	
+		glm::mat4 projectionMatrix = glm::perspective(glm::radians(camera.zoom), ASPECT_RATIO, 0.1f, 100.0f);		//radians = FOV, width/height (aspect ratio), near and far plane	
 		glm::mat4 cameraView = camera.GetViewMatrix();
 
 		// ========== RENDERING CONTAINERS ==========
@@ -276,8 +280,9 @@ int main()
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 
+
 		// ========== RENDERING EMISSION CUBE ==========
-		lightingShader.useProgram();
+		emissionShader.useProgram();
 		//binding textures
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, diffuseMap);
@@ -286,21 +291,21 @@ int main()
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, emissionMap);
 		//applying matrixes
-		lightingShader.setVec3("u_viewPosition", camera.position);
-		lightingShader.setMat4("u_projectionMatrix", projectionMatrix);
-		lightingShader.setMat4("u_viewMatrix", cameraView);
+		emissionShader.setVec3("u_viewPosition", camera.position);
+		emissionShader.setMat4("u_projectionMatrix", projectionMatrix);
+		emissionShader.setMat4("u_viewMatrix", cameraView);
 		//setting material properties
-		lightingShader.setFloat("u_material.shininess", 32.0f);
+		emissionShader.setFloat("u_material.shininess", 32.0f);
 		//setting lighting
-		loadLighting(lightingShader);
+		loadLighting(emissionShader);
 		//drawing emission cube
 		glBindVertexArray(VAO[0]);
 		glm::mat4 emissionCubeModel = glm::mat4(1.0f);
-		emissionCubeModel = glm::translate(emissionCubeModel, glm::vec3(5.0f, -3.0f, -3.0f));
+		emissionCubeModel = glm::translate(emissionCubeModel, glm::vec3(5.0f, -2.0f, 7.0f));
 		//enabling rotations
 		float angle = 20.0f;
 		emissionCubeModel = glm::rotate(emissionCubeModel, (float)glfwGetTime() * glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-		containerShader.setMat4("u_modelMatrix", emissionCubeModel);
+		emissionShader.setMat4("u_modelMatrix", emissionCubeModel);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
 
