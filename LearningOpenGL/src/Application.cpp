@@ -25,8 +25,11 @@ const unsigned int SCREEN_WIDTH = 1280;
 const unsigned int SCREEN_HEIGHT = 720;
 const float ASPECT_RATIO = static_cast<float>(SCREEN_WIDTH) / SCREEN_HEIGHT;
 
+//variables for FPS counter
+float currentFrame = 0.0f;
 float deltaTime = 0.0f;		//time between current and last frame
 float lastFrame = 0.0f;		//time of last frame
+unsigned int counter = 0;
 
 //global variable that positions the light - can use vec4's w component to check if light is a position or direction (1.0f = position)
 glm::vec3 lightDirection(1.2f, 3.0f, 2.0f);
@@ -38,7 +41,7 @@ glm::vec3 dirLightSpecular(0.2f);
 
 //coloring for each point light
 glm::vec3 pointLightColors[]{
-	glm::vec3(0.5f, 0.5f, 0.5f),
+	glm::vec3(0.75f, 0.75f, 0.75f),
 	glm::vec3(0.75f, 0.0f, 0.60f),
 	glm::vec3(0.0f, 0.0f, 0.8f),
 	glm::vec3(0.75f, 0.05f, 0.05f)
@@ -57,6 +60,12 @@ Camera camera(glm::vec3(0.0f, 1.0f, 3.0f));
 float lastX = SCREEN_WIDTH / 2;
 float lastY = SCREEN_HEIGHT / 2;
 bool firstMouse = true;
+
+//global var for sky colors
+glm::vec3 darkSky(0.001f, 0.001f, 0.001f);
+glm::vec3 greySky(0.5f, 0.5f, 0.5f);
+glm::vec3 skyColor;
+
 
 int main()
 {
@@ -88,17 +97,18 @@ int main()
 		return -1;
 	}
 
-	//enabling depth testing for z buffers
+
+	//configuring global openGL state
 	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
 
 	// BUILDING SHADERS (pathing starts from the solution directory)
-	// currently, most fragment shaders will use the 'container.frag' since 
-	// there are fog-render distance calculations completed already
 	Shader containerShader("res/shaders/container.vert", "res/shaders/container.frag");
 	Shader emissionShader("res/shaders/container.vert", "res/shaders/emission.frag");
+	Shader lightCubeShader("res/shaders/container.vert", "res/shaders/lightCube.frag");
+
 	Shader backpackShader("res/shaders/backpack.vert", "res/shaders/backpack.frag");
 	Shader blahajShader("res/shaders/blahaj.vert", "res/shaders/blahaj.frag");
-	Shader lightCubeShader("res/shaders/container.vert", "res/shaders/lightCube.frag");
 
 	//LOADING MODELS - bool is used whether we want to flip the texture
 	Model backpack("res/models/backpack/backpack.obj", true);
@@ -230,28 +240,48 @@ int main()
 	emissionShader.setInt("u_material.textureSpecular1", 1);
 	emissionShader.setInt("u_material.textureEmission1", 2);
 
+
+
 	//-------------------------------- RENDER LOOP ----------------------------------------
 	while (!glfwWindowShouldClose(window)) {		//checks if glfw has been instructed to close
 		//per frame
-		float currentFrame = glfwGetTime();
+		currentFrame = (float)glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
+		counter++;
 
 		//getting user input through the application loop
 		processInput(window);
 
+		//FPS counter
+		static float timeAccumulator = 0.0f;
+		timeAccumulator += deltaTime;
+		if (timeAccumulator >= 1.0f) {
+			std::string fps = std::to_string(counter);
+			std::string ms = std::to_string(1000.0f / (float)counter);
+			std::string applicationTitle = "LearningOpenGL: " + fps + "FPS / " + ms + "ms";
+			glfwSetWindowTitle(window, applicationTitle.c_str());
+			counter = 0;
+			timeAccumulator = 0.0f;
+		}
+
+		//changing the color of the sky to simulate a day / night cycle
+		float skyTransitionSpeed = 1.0f;
+		float t = 0.5f * (1.0f + sin(skyTransitionSpeed * glfwGetTime()));
+		skyColor = glm::mix(darkSky, greySky, t);
+
+
 		//rendering stuff will go here...
-		glClearColor(0.001f, 0.001f, 0.001f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);		//clearing the buffers every iteration
-		//glDepthMask(GL_FALSE);
-		glDepthFunc(GL_LESS);
-		
+        glClearColor(skyColor.r, skyColor.g, skyColor.b, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);		//clearing the buffers every iteration (includes depth + stencil testing)
 
 		//creating matrixes
 		glm::mat4 projectionMatrix = glm::perspective(glm::radians(camera.zoom), ASPECT_RATIO, 0.1f, 100.0f);		//radians = FOV, width/height (aspect ratio), near and far plane	
 		glm::mat4 cameraView = camera.GetViewMatrix();
 
+
 		// ========== RENDERING CONTAINERS ==========
+
 		containerShader.useProgram();
 		//textures for containers
 		glActiveTexture(GL_TEXTURE0);
@@ -351,6 +381,7 @@ int main()
 		lightCubeShader.useProgram();
 		lightCubeShader.setMat4("u_projectionMatrix", projectionMatrix);
 		lightCubeShader.setMat4("u_viewMatrix", cameraView);
+		lightCubeShader.setVec3("u_skyColor", skyColor);
 
 		for (int i = 0; i < 4; i++) {
 			glm::mat4 lightModel = glm::mat4(1.0f);
@@ -370,11 +401,13 @@ int main()
 		lightCubeShader.setVec3("u_lightColor", glm::vec3(1.0f));
 		dirLightModel = glm::translate(dirLightModel, lightDirection);
 		lightCubeShader.setMat4("u_modelMatrix", dirLightModel);
+		lightCubeShader.setVec3("u_skyColor", skyColor);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
 
 		//checking call events and swapping buffers
 		glfwSwapBuffers(window);
+		glfwSwapInterval(1);				//this line enables v-sync
 		glfwPollEvents();
 	}
 
@@ -547,4 +580,7 @@ void loadLighting(Shader &shader) {
 
 	shader.setFloat("u_spotLight.cutOff", glm::cos(glm::radians(10.0f)));
 	shader.setFloat("u_spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
+	
+	//FOG (USING SKY COLOR)
+	shader.setVec3("u_skyColor", skyColor);
 }

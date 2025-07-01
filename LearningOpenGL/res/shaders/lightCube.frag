@@ -4,6 +4,7 @@ out vec4 FragColor;
 
 //UNIFORMS
 uniform vec3 u_lightColor;
+uniform vec3 u_skyColor;
 
 //FUNCTION PROTOTYPES
 float LinearizeDepth(float depth);
@@ -26,8 +27,7 @@ void main()
 	float depthVec = exp(-pow(depth * fogDensity, 2.0));
 
 	//using different fog colors for testing
-	vec3 fogColor = vec3(0.001f, 0.001f, 0.001f);			//set to BG color
-	//vec3 fogColor = vec3(1.0, 0.0, 0.0);					//bright red
+	vec3 fogColor = u_skyColor;
 
 	//mixing the result with the fog
 	vec3 mixedResult = mix(fogColor, u_lightColor, depthVec);

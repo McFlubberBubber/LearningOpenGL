@@ -60,6 +60,7 @@ out vec4 FragColor;
 
 //UNIFORMS
 uniform vec3 u_viewPosition;
+uniform vec3 u_skyColor;
 uniform Material u_material;
 uniform DirLight u_dirLight;
 uniform PointLight u_pointLight[NR_POINT_LIGHTS];		//based on the definition of point lights 
@@ -102,7 +103,7 @@ void main ()
 	float depthVec = exp(-pow(depth * fogDensity, 2.0));
 
 	//using different fog colors for testing
-	vec3 fogColor = vec3(0.001f, 0.001f, 0.001f);			//set to BG color
+	vec3 fogColor = u_skyColor;			//set to BG color
 	//vec3 fogColor = vec3(1.0, 0.0, 0.0);					//bright red
 
 	//mixing the result with the fog
