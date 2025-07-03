@@ -1,7 +1,7 @@
 #pragma once
 
 #include <glad/glad.h>
-
+#include <iostream>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -17,6 +17,7 @@
 class Model {
 public:
 	//constructor
+	Model() = default;
 	Model(const char* path, bool flipUvs)
 	{
 		m_LoadModel(path, flipUvs);			//immediately loads the model based on path

@@ -9,6 +9,7 @@
 class Shader {
 public: 
 	unsigned int programID = 0;
+	Shader() = default;
 
 	// constructor + using the program based on ID
 	Shader(const char* vertexPath, const char* fragmentPath);
