@@ -29,11 +29,11 @@ const float ASPECT_RATIO = static_cast<float>(SCREEN_WIDTH) / SCREEN_HEIGHT;
 //Time variables
 float deltaTime;
 float currentTime;
-static float timeAccumulator = 0.0f; 
-unsigned int counter = 0;
+static float timeAccumulator; 
+unsigned int counter;
 
 //setting up camera
-Camera camera(glm::vec3(0.0f, 1.0f, 3.0f));
+Camera camera(glm::vec3(0.0f, 1.0f, 5.0f));
 float lastX = SCREEN_WIDTH / 2;
 float lastY = SCREEN_HEIGHT / 2;
 bool firstMouse = true;
@@ -85,6 +85,7 @@ int main()
 		Time::update();
 		deltaTime = Time::getDeltaTime();
 		currentTime = Time::getTime();
+		counter++;
 
 		processInput(window);
 

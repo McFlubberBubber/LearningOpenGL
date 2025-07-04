@@ -33,6 +33,12 @@ void drawPointLights();
 void drawDirectionalLight();
 void drawLights();
 
+//Room rendering
+void drawGrass();
+void drawFloor();
+void drawWalls();
+void drawRoom();
+
 // Will be used in render loop - utilises all the draw functions above
 void renderScene(Camera& camera, const float ASPECT_RATIO);
 void cleanupScene();

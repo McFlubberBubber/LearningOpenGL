@@ -6,8 +6,8 @@
 
 //material properties
 struct Material {
-	sampler2D diffuse;
-	sampler2D specular;
+	sampler2D textureDiffuse1;
+	sampler2D textureSpecular1;
 	float shininess;
 };
 
@@ -60,15 +60,22 @@ out vec4 FragColor;
 
 //UNIFORMS
 uniform vec3 u_viewPosition;
+uniform vec3 u_skyColor;
+uniform float u_textureTiling;							//scaling how the texture is
 uniform Material u_material;
 uniform DirLight u_dirLight;
 uniform PointLight u_pointLight[NR_POINT_LIGHTS];		//based on the definition of point lights 
 uniform SpotLight u_spotLight;
 
+//Depth buffer stuff
+float near = 0.1;
+float far = 100.0;
+
 //FUNCTION PROTOTYPES
 vec3 CalculateDirectionalLight(DirLight u_dirLight, vec3 norm, vec3 viewDirection);
 vec3 CalculatePointLight(PointLight u_pointLight, vec3 norm, vec3 fragPosOutput, vec3 viewDirection);
 vec3 CaluclateSpotLight(SpotLight u_spotLight, vec3 norm, vec3 fragPosOutput, vec3 viewDirection);
+float LinearizeDepth(float depth);
 
 void main ()
 {
@@ -88,7 +95,21 @@ void main ()
 	result += CaluclateSpotLight(u_spotLight, norm, fragPosOutput, viewDirection);
 
 	//Applying all lighting calculations
-	FragColor = vec4(result, 1.0);
+	//FragColor = vec4(result, 1.0);
+
+	//visualizing the depth buffer with foggyness
+	float fogDensity = 5.0f;
+	float depth = LinearizeDepth(gl_FragCoord.z) / far;
+	//FragColor = vec4(vec3(depth), 1.0);
+	float depthVec = exp(-pow(depth * fogDensity, 2.0));
+
+	//using different fog colors for testing
+	vec3 fogColor = u_skyColor;			//set to BG color
+	//vec3 fogColor = vec3(1.0, 0.0, 0.0);					//bright red
+
+	//mixing the result with the fog
+	vec3 mixedResult = mix(fogColor, result, depthVec);
+	FragColor = vec4(mixedResult, 1.0f);
 }
 
 
@@ -105,9 +126,9 @@ vec3 CalculateDirectionalLight(DirLight u_dirLight, vec3 norm, vec3 viewDirectio
 	float spec = pow(max(dot(viewDirection, reflectDirection), 0.0f), u_material.shininess);			//calculating specular with power based on shininess, dot prod on view + ref directions
 
 	//combining results
-	vec3 ambient = u_dirLight.ambient * vec3(texture(u_material.diffuse, textureOutput));				//light ambient multiplied with material diffuse's texture
-	vec3 diffuse = u_dirLight.diffuse * diff * vec3(texture(u_material.diffuse, textureOutput));		//light diffuse multiplied with material diffuse's texture
-	vec3 specular = u_dirLight.specular * spec * vec3(texture(u_material.specular, textureOutput));		//light specular multiplied with material specular's texture
+	vec3 ambient = u_dirLight.ambient * vec3(texture(u_material.textureDiffuse1, textureOutput * u_textureTiling));				//light ambient multiplied with material diffuse's texture
+	vec3 diffuse = u_dirLight.diffuse * diff * vec3(texture(u_material.textureDiffuse1, textureOutput * u_textureTiling));		//light diffuse multiplied with material diffuse's texture
+	vec3 specular = u_dirLight.specular * spec * vec3(texture(u_material.textureSpecular1, textureOutput * u_textureTiling));		//light specular multiplied with material specular's texture
 
 	//returning vec3 result
 	return (ambient + diffuse + specular);
@@ -131,9 +152,9 @@ vec3 CalculatePointLight(PointLight u_pointLight, vec3 norm, vec3 fragPosOutput,
 	float attenuation = 1.0f / (u_pointLight.constant + u_pointLight.linear * distance + u_pointLight.quadratic * (distance * distance));
 
 	//combining results
-	vec3 ambient = u_pointLight.ambient * vec3(texture(u_material.diffuse, textureOutput));
-	vec3 diffuse = u_pointLight.diffuse * diff * vec3(texture(u_material.diffuse, textureOutput));
-	vec3 specular = u_pointLight.specular * spec * vec3(texture(u_material.specular, textureOutput));
+	vec3 ambient = u_pointLight.ambient * vec3(texture(u_material.textureDiffuse1, textureOutput * u_textureTiling));
+	vec3 diffuse = u_pointLight.diffuse * diff * vec3(texture(u_material.textureDiffuse1, textureOutput* u_textureTiling));
+	vec3 specular = u_pointLight.specular * spec * vec3(texture(u_material.textureSpecular1, textureOutput * u_textureTiling));
 
 	//applying attenuation to lighting vectors
 	ambient *= attenuation;
@@ -163,13 +184,18 @@ vec3 CaluclateSpotLight(SpotLight u_spotLight, vec3 norm, vec3 fragPosOutput, ve
 	float intensity = clamp((theta - u_spotLight.outerCutOff) / epsilon, 0.0f, 1.0f);		//clamping the values between 0 and 1
 
 	//applying spotlight
-	vec3 ambient = u_spotLight.ambient * vec3(texture(u_material.diffuse, textureOutput));
-	vec3 diffuse = u_spotLight.diffuse * diff * vec3(texture(u_material.diffuse, textureOutput));
-	vec3 specular = u_spotLight.specular * spec * vec3(texture(u_material.specular, textureOutput));
+	vec3 ambient = u_spotLight.ambient * vec3(texture(u_material.textureDiffuse1, textureOutput * u_textureTiling));
+	vec3 diffuse = u_spotLight.diffuse * diff * vec3(texture(u_material.textureDiffuse1, textureOutput * u_textureTiling));
+	vec3 specular = u_spotLight.specular * spec * vec3(texture(u_material.textureSpecular1, textureOutput * u_textureTiling));
 
 	ambient *= attenuation * intensity;
 	diffuse *= attenuation * intensity;
 	specular *= attenuation * intensity;
 
 	return (ambient + diffuse + specular);
+}
+
+float LinearizeDepth(float depth){
+	float z = depth * 2.0 - 1.0;
+	return (2.0 * near * far) / (far + near - z * (far - near) );
 }

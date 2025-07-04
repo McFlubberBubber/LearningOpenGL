@@ -16,6 +16,9 @@ Shader emissionShader;
 Shader lightCubeShader;
 Shader backpackShader;
 Shader blahajShader;
+Shader floorShader;
+Shader wallShader;
+Shader grassShader;
 
 // Models
 Model backpack;
@@ -31,6 +34,11 @@ unsigned int texture3;
 unsigned int diffuseMap = 0;
 unsigned int specularMap = 0;
 unsigned int emissionMap = 0;
+
+unsigned int grassTexture = 0;
+unsigned int floorTexture = 0;
+unsigned int wallTexture = 0;
+
 
 // Matrixes - doing this instead of passing a camera reference to the draw calls because there isn't much else we want
 // the camera for, so we just store the pos and front of the cam here
@@ -120,6 +128,20 @@ glm::vec3 blahajPositions[] = {
 	glm::vec3(5.0f, 0.0f, 5.0f),
 };
 
+glm::vec3 wallPositions[] = {
+	glm::vec3(-15.0f, 1.0f, 5.0f),  // left wall
+	glm::vec3(-5.0f, 1.0f, 5.0f),	// right wall
+	glm::vec3(-10.0f, 1.0f, 0.0f),	// front wall
+	glm::vec3(-10.0f, 1.0f, 10.0f)	// back wall
+};
+
+float wallRotations[] = {
+	0.0f,
+	0.0f,
+	90.0f,
+	90.0f,
+};
+
 // Lighting properties
 glm::vec3 lightDirection(1.2f, 3.0f, 2.0f);		// Directional lighting - can use vec4's w component to check if light is a position or direction (1.0f = position)
 glm::vec3 dirLightAmbient(0.0f);
@@ -182,6 +204,9 @@ void initShaders() {
 	lightCubeShader	= Shader("res/shaders/container.vert", "res/shaders/lightCube.frag");
 	backpackShader	= Shader("res/shaders/backpack.vert", "res/shaders/backpack.frag");
 	blahajShader	= Shader("res/shaders/blahaj.vert", "res/shaders/blahaj.frag");
+	floorShader		= Shader("res/shaders/wall.vert", "res/shaders/wall.frag");
+	wallShader		= Shader("res/shaders/wall.vert", "res/shaders/wall.frag");
+
 }
 
 
@@ -202,19 +227,37 @@ void initTextures() {
 	*/
 
 	// These maps are curently ONLY for the containers
-	diffuseMap = loadTexture("res/textures/container2.png");
+	diffuseMap	= loadTexture("res/textures/container2.png");
 	specularMap = loadTexture("res/textures/container2_specular.png");
 	emissionMap = loadTexture("res/textures/matrix.jpg");
 
+	// Textures for the room scene
+	floorTexture = loadTexture("res/textures/dark_wooden_planks.jpg");
+	wallTexture	 = loadTexture("res/textures/wallpaper.jpg");
+
+
+	// @TODO These textures could possibly be called in a seperate function so clean
+	// up this code since the shaders are using the same integers and texture uniforms
 	//setting texture uniforms
 	containerShader.useProgram();
 	containerShader.setInt("u_material.textureDiffuse1", 0);
 	containerShader.setInt("u_material.textureSpecular1", 1);
 
+	wallShader.useProgram();
+	wallShader.setInt("u_material.textureDiffuse1", 0);
+	wallShader.setInt("u_material.textureSpecular1", 1);
+
+	floorShader.useProgram();
+	floorShader.setInt("u_material.textureDiffuse1", 0);
+	floorShader.setInt("u_material.textureSpecular1", 1);
+
+	// This one is different because it uses an extra emission integer
 	emissionShader.useProgram();
 	emissionShader.setInt("u_material.textureDiffuse1", 0);
 	emissionShader.setInt("u_material.textureSpecular1", 1);
 	emissionShader.setInt("u_material.textureEmission1", 2);
+
+
 }
 		
 
@@ -346,6 +389,56 @@ void drawModels() {
 }
 
 
+// Probably not gonna be used
+void drawGrass() {
+	std::cout << "Should be drawing grass rn" << std::endl;
+}
+
+void drawFloor() {
+	floorShader.useProgram();
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, floorTexture);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, floorTexture);
+	floorShader.setFloat("u_material.shininess", 32.0f);
+	floorShader.setFloat("u_textureTiling", 10.0f);
+	applyMatrixes(floorShader);
+	processLighting(floorShader);
+
+	glBindVertexArray(VAO[0]);
+	glm::mat4 floorModel = glm::mat4(1.0f);
+	floorModel = glm::translate(floorModel, glm::vec3(-10.0f, 0.0f, 5.0f));
+	floorModel = glm::scale(floorModel, glm::vec3(10.0f, 0.1f, 10.0f));
+	floorShader.setMat4("u_modelMatrix", floorModel);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
+void drawWalls() {
+	wallShader.useProgram();
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, wallTexture);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, wallTexture);
+	wallShader.setFloat("u_material.shininess", 16.0f);
+	wallShader.setFloat("u_textureTiling", 10.0f);
+	applyMatrixes(wallShader);
+	processLighting(wallShader);
+
+	for (int i = 0; i < 4; i++) {
+		glBindVertexArray(VAO[0]);
+		glm::mat4 wallModel = glm::mat4(1.0f);
+		wallModel = glm::translate(wallModel, wallPositions[i]);
+		wallModel = glm::rotate(wallModel, glm::radians(wallRotations[i]), glm::vec3(0.0f, 1.0f, 0.0f));
+		wallModel = glm::scale(wallModel, glm::vec3(0.1f, 2.0f, 10.0f)); // thickness, height, length
+		wallShader.setMat4("u_modelMatrix", wallModel);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+	}
+}
+
+void drawRoom() {
+	drawFloor();
+	drawWalls();
+}
 
 //
 // ========== RENDERING THE SCENE ==========
@@ -360,9 +453,15 @@ void renderScene(Camera& camera, const float ASPECT_RATIO) {
 	glClearColor(skyColor.r, skyColor.g, skyColor.b, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	//Drawing the floating stuff
 	drawContainers();
 	drawModels();
 	drawLights();
+
+	void drawGrass();
+
+	//Drawing the room
+	drawRoom();
 }
 
 void cleanupScene() {
