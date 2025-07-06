@@ -72,7 +72,7 @@ void Camera::processFPSMovement(camera_movement direction, float deltaTime)
 		position += right * velocity;
 
 	//locking to user to stay grounded
-	position.y = 1.0f;
+	position.y = -4.0f;
 
 	//logging XYZ coordinates
 	std::cout << "X: " << position.x << " | Y: " << position.y << " | Z: " << position.z << std::endl;

@@ -61,6 +61,7 @@ out vec4 FragColor;
 //UNIFORMS
 uniform vec3 u_viewPosition;
 uniform vec3 u_skyColor;
+uniform float u_fogDistance;
 uniform float u_textureTiling;							//scaling how the texture is
 uniform Material u_material;
 uniform DirLight u_dirLight;
@@ -98,7 +99,7 @@ void main ()
 	//FragColor = vec4(result, 1.0);
 
 	//visualizing the depth buffer with foggyness
-	float fogDensity = 5.0f;
+	float fogDensity = u_fogDistance;
 	float depth = LinearizeDepth(gl_FragCoord.z) / far;
 	//FragColor = vec4(vec3(depth), 1.0);
 	float depthVec = exp(-pow(depth * fogDensity, 2.0));

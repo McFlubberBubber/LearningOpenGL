@@ -34,10 +34,14 @@ void drawDirectionalLight();
 void drawLights();
 
 //Room rendering
-void drawGrass();
 void drawFloor();
 void drawWalls();
 void drawRoom();
+
+//Drawing the grass lands and transparent grass stuff
+void drawGrassLand();
+//void drawFoiliage();
+//void drawGrass();
 
 // Will be used in render loop - utilises all the draw functions above
 void renderScene(Camera& camera, const float ASPECT_RATIO);

@@ -14,15 +14,20 @@ unsigned int VAO[2], VBO[2], EBO;		//these are currently set to 2, one for 3D cu
 Shader containerShader;
 Shader emissionShader;
 Shader lightCubeShader;
+
 Shader backpackShader;
 Shader blahajShader;
+Shader houseShader;
+
 Shader floorShader;
 Shader wallShader;
 Shader grassShader;
 
+
 // Models
 Model backpack;
 Model blahaj;
+Model house;
 
 // Textures
 // Currently unused (2D rendering objects use these ones)
@@ -35,9 +40,11 @@ unsigned int diffuseMap = 0;
 unsigned int specularMap = 0;
 unsigned int emissionMap = 0;
 
-unsigned int grassTexture = 0;
 unsigned int floorTexture = 0;
 unsigned int wallTexture = 0;
+
+unsigned int grassLandTexture = 0;
+unsigned int grassTexture = 0;
 
 
 // Matrixes - doing this instead of passing a camera reference to the draw calls because there isn't much else we want
@@ -129,10 +136,10 @@ glm::vec3 blahajPositions[] = {
 };
 
 glm::vec3 wallPositions[] = {
-	glm::vec3(-15.0f, 1.0f, 5.0f),  // left wall
-	glm::vec3(-5.0f, 1.0f, 5.0f),	// right wall
-	glm::vec3(-10.0f, 1.0f, 0.0f),	// front wall
-	glm::vec3(-10.0f, 1.0f, 10.0f)	// back wall
+	glm::vec3(-15.0f, -4.0f, 5.0f),  // left wall
+	glm::vec3(-5.0f, -4.0f, 5.0f),	// right wall
+	glm::vec3(-10.0f, -4.0f, 0.0f),	// front wall
+	glm::vec3(-10.0f, -4.0f, 10.0f)	// back wall
 };
 
 float wallRotations[] = {
@@ -202,10 +209,16 @@ void initShaders() {
 	containerShader	= Shader("res/shaders/container.vert", "res/shaders/container.frag");
 	emissionShader	= Shader("res/shaders/container.vert", "res/shaders/emission.frag");
 	lightCubeShader	= Shader("res/shaders/container.vert", "res/shaders/lightCube.frag");
+
 	backpackShader	= Shader("res/shaders/backpack.vert", "res/shaders/backpack.frag");
 	blahajShader	= Shader("res/shaders/blahaj.vert", "res/shaders/blahaj.frag");
+	houseShader		= Shader("res/shaders/container.vert", "res/shaders/container.frag");
+
 	floorShader		= Shader("res/shaders/wall.vert", "res/shaders/wall.frag");
 	wallShader		= Shader("res/shaders/wall.vert", "res/shaders/wall.frag");
+	
+	// @TODO Might need to change the shader files the grass will use
+	grassShader		= Shader("res/shaders/wall.vert", "res/shaders/wall.frag");
 
 }
 
@@ -214,6 +227,7 @@ void initModels() {
 	// 2nd param specifies whether to flip the texture UVs
 	backpack	= Model("res/models/backpack/backpack.obj", false);
 	blahaj		= Model("res/models/blahaj/blahaj.obj", true);
+	house		= Model("res/models/house/house.fbx", false);
 }
 
 
@@ -235,6 +249,10 @@ void initTextures() {
 	floorTexture = loadTexture("res/textures/dark_wooden_planks.jpg");
 	wallTexture	 = loadTexture("res/textures/wallpaper.jpg");
 
+	//Textures for the grass
+	grassTexture		= loadTexture("res/textures/grass.png");
+	grassLandTexture	= loadTexture("res/textures/grassland.jpg");
+
 
 	// @TODO These textures could possibly be called in a seperate function so clean
 	// up this code since the shaders are using the same integers and texture uniforms
@@ -250,6 +268,10 @@ void initTextures() {
 	floorShader.useProgram();
 	floorShader.setInt("u_material.textureDiffuse1", 0);
 	floorShader.setInt("u_material.textureSpecular1", 1);
+
+	// @TODO Set grassShader to the transparent grass png stuff
+
+
 
 	// This one is different because it uses an extra emission integer
 	emissionShader.useProgram();
@@ -383,16 +405,65 @@ void drawBlahaj() {
 	}
 }
 
+
+// @TODO The house vectors are successfully drawn at the right world pos, but the
+// texturing of the model is currently messed up (possibly due to naming conventions
+// or due to file formatting?)
+void drawHouse() {
+	houseShader.useProgram();
+	applyMatrixes(houseShader);
+	houseShader.setFloat("u_material.shininess", 32.0f);
+	processLighting(houseShader);
+
+	glm::mat4 houseModel = glm::mat4(1.0f);
+	houseModel = glm::translate(houseModel, glm::vec3(12.5f, -5.0f, 0.0f));
+	houseModel = glm::scale(houseModel, glm::vec3(0.3f));
+	houseModel = glm::rotate(houseModel, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	houseShader.setMat4("u_modelMatrix", houseModel);
+	house.Draw(houseShader);
+}
+
 void drawModels() {
 	drawBackpack();
 	drawBlahaj();
+	//drawHouse();
 }
 
 
-// Probably not gonna be used
+
+void drawGrassLand() {
+	//Drawing the grass land FLOOR
+	floorShader.useProgram();
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, grassLandTexture);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, grassLandTexture);
+	floorShader.setFloat("u_material.shininess", 1.0f);
+	floorShader.setFloat("u_textureTiling", 64.0f);
+	applyMatrixes(floorShader);
+	processLighting(floorShader);
+
+	glBindVertexArray(VAO[0]);
+	glm::mat4 floorModel = glm::mat4(1.0f);
+	floorModel = glm::translate(floorModel, glm::vec3(-10.0f, -5.0f, 5.0f));
+	floorModel = glm::scale(floorModel, glm::vec3(100.0f, 0.001f, 100.0f));
+	floorShader.setMat4("u_modelMatrix", floorModel);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
+
+/*
+void drawFoiliage() {
+
+}
+*/
+
 void drawGrass() {
-	std::cout << "Should be drawing grass rn" << std::endl;
+	drawGrassLand();
+	//drawFoiliage();
 }
+
+
 
 void drawFloor() {
 	floorShader.useProgram();
@@ -407,7 +478,7 @@ void drawFloor() {
 
 	glBindVertexArray(VAO[0]);
 	glm::mat4 floorModel = glm::mat4(1.0f);
-	floorModel = glm::translate(floorModel, glm::vec3(-10.0f, 0.0f, 5.0f));
+	floorModel = glm::translate(floorModel, glm::vec3(-10.0f, -5.0f, 5.0f));
 	floorModel = glm::scale(floorModel, glm::vec3(10.0f, 0.1f, 10.0f));
 	floorShader.setMat4("u_modelMatrix", floorModel);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -440,6 +511,8 @@ void drawRoom() {
 	drawWalls();
 }
 
+
+
 //
 // ========== RENDERING THE SCENE ==========
 //
@@ -458,10 +531,10 @@ void renderScene(Camera& camera, const float ASPECT_RATIO) {
 	drawModels();
 	drawLights();
 
-	void drawGrass();
 
 	//Drawing the room
 	drawRoom();
+	drawGrass();
 }
 
 void cleanupScene() {
@@ -554,6 +627,7 @@ void processLighting(Shader& shader) {
 	shader.setFloat("u_spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
 
 	//FOG (USING SKY COLOR)
+	shader.setFloat("u_fogDistance", 3.0f);
 	shader.setVec3("u_skyColor", skyColor);
 }
 

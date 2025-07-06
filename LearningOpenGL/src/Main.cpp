@@ -33,7 +33,7 @@ static float timeAccumulator;
 unsigned int counter;
 
 //setting up camera
-Camera camera(glm::vec3(0.0f, 1.0f, 5.0f));
+Camera camera(glm::vec3(0.0f, -4.0f, 5.0f));
 float lastX = SCREEN_WIDTH / 2;
 float lastY = SCREEN_HEIGHT / 2;
 bool firstMouse = true;
@@ -146,7 +146,7 @@ void processInput(GLFWwindow* window) {
 		s_fpsMode = !s_fpsMode;
 		if (s_fpsMode) {
 			std::cout << "FPS MODE ENABLED!" << std::endl;
-			camera.position.y = 1.0f;
+			camera.position.y = -4.0f;
 		} 
 		else {
 			std::cout << "FREE FLY MODE ENABLED!" << std::endl;

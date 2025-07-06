@@ -21,7 +21,7 @@ void main()
    
 
     //visualizing the depth buffer with foggyness
-	float fogDensity = 5.0f;
+	float fogDensity = 3.0f;
 	float depth = LinearizeDepth(gl_FragCoord.z) / far;
 	//FragColor = vec4(vec3(depth), 1.0);
 	float depthVec = exp(-pow(depth * fogDensity, 2.0));
