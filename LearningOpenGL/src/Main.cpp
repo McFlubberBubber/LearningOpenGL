@@ -56,12 +56,14 @@ int main()
 		glfwTerminate();
 		return -1;
 	}
-	glfwMakeContextCurrent(window);											//setting the current context to the window 	
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);		//calling this function whenever the user resizes window
-	glfwSetCursorPosCallback(window, mouse_callback);						//calling the mouse callback to handle looking around
-	glfwSetScrollCallback(window, scroll_callback);							//calling scroll to allow zooming within the scene
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);			//capturing our mouse
-	glfwSwapInterval(1);													//this line enables v-sync
+	glfwMakeContextCurrent(window);											// setting the current context to the window 	
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);		// calling this function whenever the user resizes window
+	glfwSetCursorPosCallback(window, mouse_callback);						// calling the mouse callback to handle looking around
+	glfwSetScrollCallback(window, scroll_callback);							// calling scroll to allow zooming within the scene
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);			// capturing our mouse
+	glfwSwapInterval(1);													// this line enables v-sync
+	stbi_set_flip_vertically_on_load(true);									// flipping all images loaded vertically				
+
 
 	//ensuring that glad is initialized before we use openGL functions
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))

@@ -68,5 +68,6 @@
     <None Include="res\shaders\backpack.frag" />
     <None Include="res\shaders\blahaj.vert" />
     <None Include="res\shaders\blahaj.frag" />
+    <None Include="res\shaders\grass.frag" />
   </ItemGroup>
 </Project>

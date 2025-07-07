@@ -29,6 +29,7 @@ Model backpack;
 Model blahaj;
 Model house;
 
+
 // Textures
 // Currently unused (2D rendering objects use these ones)
 /*
@@ -106,6 +107,21 @@ static float cubeVertices[] = {
 	-0.5f,  0.5f, -0.5f,   0.0f,  1.0f, 0.0f,   0.0f, 1.0f
 };
 
+static float wallVertices[] = {
+   -0.5f, 0.0f, -0.5f,  0.0f, 1.0f, 0.0f,  0.0f, 0.0f,
+	0.5f, 0.0f, -0.5f,  0.0f, 1.0f, 0.0f,  1.0f, 0.0f,
+	0.5f, 0.0f,  0.5f,  0.0f, 1.0f, 0.0f,  1.0f, 1.0f,
+
+	0.5f, 0.0f,  0.5f,  0.0f, 1.0f, 0.0f,  1.0f, 1.0f,
+   -0.5f, 0.0f,  0.5f,  0.0f, 1.0f, 0.0f,  0.0f, 1.0f,
+   -0.5f, 0.0f, -0.5f,  0.0f, 1.0f, 0.0f,  0.0f, 0.0f,
+};
+
+
+// @TODO Since most of these positions are declared globally with regular
+// arrays, we can't use std::vector, therefore the loops that draw each object
+// at the specified world pos need their 'size()' values hardcoded, this includes
+// the point lights count that needs to be hardcoded aswell
 // World positions of objects
 glm::vec3 cubePositions[] = {
 	glm::vec3(0.0f,  0.0f,  0.0f),
@@ -140,6 +156,19 @@ glm::vec3 wallPositions[] = {
 	glm::vec3(-5.0f, -4.0f, 5.0f),	// right wall
 	glm::vec3(-10.0f, -4.0f, 0.0f),	// front wall
 	glm::vec3(-10.0f, -4.0f, 10.0f)	// back wall
+};
+
+glm::vec3 foliagePositions[] = {
+	glm::vec3(0.0f, -4.5f, 2.0f),
+	glm::vec3(1.0f, -4.5f, 0.0f),
+	glm::vec3(4.0f, -4.5f, 5.0f),
+	glm::vec3(-2.0f, -4.5f, -1.0f),
+	glm::vec3(-5.0f, -4.5f, -1.0f),
+	glm::vec3(5.0f, -4.5f, 3.0f),
+	glm::vec3(3.5f, -4.5f, -6.0f),
+	glm::vec3(2.0f, -4.5f, -3.5f),
+	glm::vec3(-2.0f, -4.5f, -7.0f),
+	glm::vec3(7.0f, -4.5f, 2.0f),
 };
 
 float wallRotations[] = {
@@ -188,19 +217,21 @@ void initBuffers() {							// Size of the VAOs and VBOs are subject to change
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 
-	/*
+	
 	// 2D Rendering walls / rectangles
 	glBindVertexArray(VAO[1]);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(wallVertices), wallVertices, GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(wallIndices), wallIndices, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
+
+	/*
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(wallIndices), wallIndices, GL_STATIC_DRAW);
 	*/
 }
 
@@ -218,16 +249,16 @@ void initShaders() {
 	wallShader		= Shader("res/shaders/wall.vert", "res/shaders/wall.frag");
 	
 	// @TODO Might need to change the shader files the grass will use
-	grassShader		= Shader("res/shaders/wall.vert", "res/shaders/wall.frag");
+	grassShader		= Shader("res/shaders/container.vert", "res/shaders/grass.frag");
 
 }
 
 
 void initModels() {
 	// 2nd param specifies whether to flip the texture UVs
-	backpack	= Model("res/models/backpack/backpack.obj", false);
-	blahaj		= Model("res/models/blahaj/blahaj.obj", true);
-	house		= Model("res/models/house/house.fbx", false);
+	backpack	= Model("res/models/backpack/backpack.obj", true);
+	blahaj		= Model("res/models/blahaj/blahaj.obj",		false);
+	house		= Model("res/models/house/house.fbx",		true);
 }
 
 
@@ -270,7 +301,9 @@ void initTextures() {
 	floorShader.setInt("u_material.textureSpecular1", 1);
 
 	// @TODO Set grassShader to the transparent grass png stuff
-
+	grassShader.useProgram();
+	grassShader.setInt("u_material.textureDiffuse1", 0);
+	grassShader.setInt("u_material.textureSpecular1", 1);
 
 
 	// This one is different because it uses an extra emission integer
@@ -451,16 +484,29 @@ void drawGrassLand() {
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
+void drawFoliage() {
+	grassShader.useProgram();
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, grassTexture);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, grassTexture);		// @TODO The specular may not be needed here
+	grassShader.setFloat("u_material.shininess", 32.0f);
+	applyMatrixes(grassShader);
+	processLighting(grassShader);
 
-/*
-void drawFoiliage() {
-
+	glBindVertexArray(VAO[1]);
+	for (unsigned int i = 0; i < 10; i++) {
+		glm::mat4 grassModel = glm::mat4(1.0f);
+		grassModel = glm::translate(grassModel, foliagePositions[i]);
+		grassModel = glm::rotate(grassModel, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		grassShader.setMat4("u_modelMatrix", grassModel);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+	}
 }
-*/
 
 void drawGrass() {
 	drawGrassLand();
-	//drawFoiliage();
+	drawFoliage();
 }
 
 
@@ -574,8 +620,13 @@ unsigned int loadTexture(const char* path) {
 		glTexImage2D(GL_TEXTURE_2D, 0, textureFormat, width, height, 0, textureFormat, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 		//texture wrapping + mipmapping
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		if (textureFormat != GL_RGBA) {
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		} else {
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		}
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
