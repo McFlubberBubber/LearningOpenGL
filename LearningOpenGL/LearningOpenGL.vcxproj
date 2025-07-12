@@ -167,6 +167,7 @@
     <None Include="res\shaders\blahaj.vert" />
     <None Include="res\shaders\wall.frag" />
     <None Include="res\shaders\wall.vert" />
+    <None Include="res\shaders\window.frag" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

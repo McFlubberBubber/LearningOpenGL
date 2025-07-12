@@ -43,6 +43,9 @@ void drawGrassLand();
 void drawFoliage();
 void drawGrass();
 
+// Rendering transparent windows
+void drawWindows(const Camera& camera);
+
 // Will be used in render loop - utilises all the draw functions above
 void renderScene(Camera& camera, const float ASPECT_RATIO);
 void cleanupScene();

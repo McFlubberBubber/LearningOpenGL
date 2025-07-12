@@ -14,7 +14,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-
 //prototyping functions that will be declared beneath the main function
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
@@ -74,8 +73,13 @@ int main()
 
 	// Configuring global openGL state
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDepthFunc(GL_LESS);
 
+
+	// @TODO All these functions can be shrunk down to an initGame() or initScene()
+	// but for now, it's nice to know what exactly we are initializing
 	// Initializing here...
 	initBuffers();
 	initShaders();

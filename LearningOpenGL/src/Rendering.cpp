@@ -1,5 +1,6 @@
 #include "Rendering.h"
 #include "Time.h"
+#include <map>
 
 //
 // ========== DATA / VARIABLES ==========
@@ -23,6 +24,7 @@ Shader floorShader;
 Shader wallShader;
 Shader grassShader;
 
+Shader windowShader;
 
 // Models
 Model backpack;
@@ -47,6 +49,7 @@ unsigned int wallTexture = 0;
 unsigned int grassLandTexture = 0;
 unsigned int grassTexture = 0;
 
+unsigned int windowTexture = 0;
 
 // Matrixes - doing this instead of passing a camera reference to the draw calls because there isn't much else we want
 // the camera for, so we just store the pos and front of the cam here
@@ -178,6 +181,15 @@ float wallRotations[] = {
 	90.0f,
 };
 
+// @TODO These window positions may need to get changed since they could overlap
+// with some other areas on the scene
+std::vector<glm::vec3> windowPositions = {
+	glm::vec3(5.0f, -4.5f, 5.0f),
+	glm::vec3(3.0f, -4.5f, 2.0f),
+	glm::vec3(5.0f, -4.5f, 0.0f)
+};
+
+
 // Lighting properties
 glm::vec3 lightDirection(1.2f, 3.0f, 2.0f);		// Directional lighting - can use vec4's w component to check if light is a position or direction (1.0f = position)
 glm::vec3 dirLightAmbient(0.0f);
@@ -248,9 +260,9 @@ void initShaders() {
 	floorShader		= Shader("res/shaders/wall.vert", "res/shaders/wall.frag");
 	wallShader		= Shader("res/shaders/wall.vert", "res/shaders/wall.frag");
 	
-	// @TODO Might need to change the shader files the grass will use
 	grassShader		= Shader("res/shaders/container.vert", "res/shaders/grass.frag");
 
+	windowShader	= Shader("res/shaders/container.vert", "res/shaders/window.frag");
 }
 
 
@@ -284,6 +296,9 @@ void initTextures() {
 	grassTexture		= loadTexture("res/textures/grass.png");
 	grassLandTexture	= loadTexture("res/textures/grassland.jpg");
 
+	//Texture for the windows
+	windowTexture		= loadTexture("res/textures/transparent_window.png");
+
 
 	// @TODO These textures could possibly be called in a seperate function so clean
 	// up this code since the shaders are using the same integers and texture uniforms
@@ -300,11 +315,14 @@ void initTextures() {
 	floorShader.setInt("u_material.textureDiffuse1", 0);
 	floorShader.setInt("u_material.textureSpecular1", 1);
 
-	// @TODO Set grassShader to the transparent grass png stuff
 	grassShader.useProgram();
 	grassShader.setInt("u_material.textureDiffuse1", 0);
 	grassShader.setInt("u_material.textureSpecular1", 1);
 
+	// @TODO Windows currently won't have lighting calculations on them yet so
+	// they will need their uniforms updated.
+	windowShader.useProgram();
+	windowShader.setInt("u_texture1", 0);
 
 	// This one is different because it uses an extra emission integer
 	emissionShader.useProgram();
@@ -509,6 +527,34 @@ void drawGrass() {
 	drawFoliage();
 }
 
+// 
+void drawWindows(const Camera& camera) {
+	windowShader.useProgram();
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, windowTexture);
+	applyMatrixes(windowShader);
+	//processLighting(windowShader);
+
+	// Mapping the window positions based on which is the farthest away from
+	// the camera. This allows us to draw the furthest ones away first to ensure
+	// the windows will render properly behind eachother.
+	std::map<float, glm::vec3> sortedWindows;
+	for (unsigned int i = 0; i < windowPositions.size(); i++)
+	{
+		float distance = glm::length(camera.position - windowPositions[i]);
+		sortedWindows[distance] = windowPositions[i];
+	}
+
+	//Drawing the windows at their positions based on the map
+	for (std::map<float, glm::vec3>::reverse_iterator it = sortedWindows.rbegin(); it != sortedWindows.rend(); ++it)
+	{
+		glm::mat4 windowModel = glm::mat4(1.0f);
+		windowModel = glm::translate(windowModel, it->second);
+		windowModel = glm::rotate(windowModel, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		windowShader.setMat4("u_modelMatrix", windowModel);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+	}
+}
 
 
 void drawFloor() {
@@ -578,9 +624,10 @@ void renderScene(Camera& camera, const float ASPECT_RATIO) {
 	drawLights();
 
 
-	//Drawing the room
+	//Drawing everything else
 	drawRoom();
 	drawGrass();
+	drawWindows(camera);
 }
 
 void cleanupScene() {
