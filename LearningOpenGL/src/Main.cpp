@@ -73,15 +73,23 @@ int main()
 
 	// Configuring global openGL state
 	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);	
+
+	/*
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);
+	glFrontFace(GL_CCW);		// Incase we prefer clockwise faces instead of counter clockwise
+	*/
+	
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glDepthFunc(GL_LESS);
+
 
 
 	// @TODO All these functions can be shrunk down to an initGame() or initScene()
 	// but for now, it's nice to know what exactly we are initializing
 	// Initializing here...
-	initBuffers();
+	initBuffers(SCREEN_WIDTH, SCREEN_HEIGHT);
 	initShaders();
 	initModels();
 	initTextures();

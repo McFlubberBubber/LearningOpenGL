@@ -7,7 +7,9 @@
 // 
 
 // Buffers 
-unsigned int VAO[2], VBO[2], EBO;		//these are currently set to 2, one for 3D cubes, and the other for 2D that we don't use
+unsigned int VAO[2], VBO[2], EBO, FBO, RBO;		//these are currently set to 2, one for 3D cubes, and the other for 2D that we don't use
+unsigned int textureColorBuffer;
+
 
 // @TODO There's a lot of global state here with the shaders and the models, one of the suggestions was 
 // create an AssetManager struct 
@@ -213,10 +215,10 @@ glm::vec3 skyColor;
 //
 // ========== INITIALIZATION ==========
 //
-void initBuffers() {							// Size of the VAOs and VBOs are subject to change
-	glGenVertexArrays(2, VAO);
+void initBuffers(const unsigned int width, const unsigned int height) {				   	glGenVertexArrays(2, VAO);
 	glGenBuffers(2, VBO);
 	glGenBuffers(1, &EBO);
+	glGenFramebuffers(1, &FBO);
 
 	// 3D Rendering cubes
 	glBindVertexArray(VAO[0]);
@@ -245,6 +247,21 @@ void initBuffers() {							// Size of the VAOs and VBOs are subject to change
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(wallIndices), wallIndices, GL_STATIC_DRAW);
 	*/
+
+	// Binding frame buffers
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glGenTextures(1, &textureColorBuffer);
+	glBindTexture(GL_TEXTURE_2D, textureColorBuffer);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorBuffer, 0);
+
+	// Checking if the frame buffer status is complete
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+	}
 }
 
 
@@ -322,7 +339,9 @@ void initTextures() {
 	// @TODO Windows currently won't have lighting calculations on them yet so
 	// they will need their uniforms updated.
 	windowShader.useProgram();
-	windowShader.setInt("u_texture1", 0);
+	windowShader.setInt("u_material.textureDiffuse1", 0);
+	windowShader.setInt("u_material.textureSpecular1", 1);
+
 
 	// This one is different because it uses an extra emission integer
 	emissionShader.useProgram();
@@ -532,8 +551,11 @@ void drawWindows(const Camera& camera) {
 	windowShader.useProgram();
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, windowTexture);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, windowTexture);
+	windowShader.setFloat("u_material.shininess", 64.0f);
 	applyMatrixes(windowShader);
-	//processLighting(windowShader);
+	processLighting(windowShader);
 
 	// Mapping the window positions based on which is the farthest away from
 	// the camera. This allows us to draw the furthest ones away first to ensure
@@ -604,7 +626,6 @@ void drawRoom() {
 }
 
 
-
 //
 // ========== RENDERING THE SCENE ==========
 //
@@ -634,6 +655,7 @@ void cleanupScene() {
 	glDeleteVertexArrays(2, VAO);
 	glDeleteBuffers(2, VBO);
 	glDeleteBuffers(1, &EBO);
+	glDeleteFramebuffers(1, &FBO);
 }
 
 //

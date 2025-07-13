@@ -13,7 +13,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 // Initializing things for the game objects
-void initBuffers();
+void initBuffers(const unsigned int width, const unsigned int height);
 void initShaders();
 void initModels();
 void initTextures();
