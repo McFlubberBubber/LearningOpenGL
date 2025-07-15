@@ -48,7 +48,7 @@ int main()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);	//using core profile
 
 	//setting up GLFWwindow
-	GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Learning OpenGL", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "LearningOpenGL", NULL, NULL);
 	if (window == NULL)
 	{
 		std::cout << "Failed to load GLFW window!" << std::endl;
@@ -71,9 +71,12 @@ int main()
 		return -1;
 	}
 
+	
 	// Configuring global openGL state
+	/*
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);	
+	*/
 
 	/*
 	glEnable(GL_CULL_FACE);
@@ -131,7 +134,13 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);
 }
 
-//function to handle user input
+
+
+// @TODO This whole user input section could probably be moved to a seperate
+// file since this function would become very large to include within the main.cpp
+// ALSO we need to change the ENTER key to render something else other than polygon
+// mode since the whole scene is being rendered to a frame buffer now. (15/07/25)
+// Function to handle user input
 void processInput(GLFWwindow* window) {
 	//variables for toggling between GL_LINE and GL_FILL
 	static bool s_wireframeMode = false;
@@ -147,6 +156,8 @@ void processInput(GLFWwindow* window) {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 
+
+	/*
 	//if the user presses enter, toggle wireframe mode
 	if (enterPressed && !s_enterState)
 	{
@@ -154,7 +165,8 @@ void processInput(GLFWwindow* window) {
 		glPolygonMode(GL_FRONT_AND_BACK, s_wireframeMode ? GL_LINE : GL_FILL);
 	}
 	s_enterState = enterPressed;
-
+	*/
+	
 	//if the user presses E, toggle between free fly / FPS camera
 	if (ePressed && !s_eState) {
 		s_fpsMode = !s_fpsMode;
@@ -210,6 +222,9 @@ void mouse_callback(GLFWwindow* window, double xPosIn, double yPosIn) {
 	camera.processMouseMovement(xOffset, yOffset);
 }
 
+
+// @TODO The zoom currently breaks when the user resizes the window and thus
+// only zooms onto one region of the screen
 //function to handle zooming in and out
 void scroll_callback(GLFWwindow* window, double xOffset, double yOffset) {
 	camera.processMouseScroll(static_cast<float>(yOffset));

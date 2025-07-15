@@ -165,6 +165,8 @@
     <None Include="res\shaders\emission.frag" />
     <None Include="res\shaders\blahaj.frag" />
     <None Include="res\shaders\blahaj.vert" />
+    <None Include="res\shaders\screenbuffer.frag" />
+    <None Include="res\shaders\screenbuffer.vert" />
     <None Include="res\shaders\wall.frag" />
     <None Include="res\shaders\wall.vert" />
     <None Include="res\shaders\window.frag" />

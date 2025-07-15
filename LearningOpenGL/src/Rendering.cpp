@@ -7,8 +7,10 @@
 // 
 
 // Buffers 
-unsigned int VAO[2], VBO[2], EBO, FBO, RBO;		//these are currently set to 2, one for 3D cubes, and the other for 2D that we don't use
-unsigned int textureColorBuffer;
+// @TODO Most likely going to change the VAOs and VBOs to be properly named to
+// whatever vertex object they represent (VAO[0] = cubeVAO / VAO[1] = wallVAO).
+unsigned int VAO[2], VBO[2], EBO, FBO, RBO;
+unsigned int quadVAO, quadVBO;
 
 
 // @TODO There's a lot of global state here with the shaders and the models, one of the suggestions was 
@@ -25,8 +27,10 @@ Shader houseShader;
 Shader floorShader;
 Shader wallShader;
 Shader grassShader;
-
 Shader windowShader;
+
+Shader screenShader;
+
 
 // Models
 Model backpack;
@@ -41,17 +45,19 @@ unsigned int texture1;
 unsigned int texture2;
 unsigned int texture3;
 */
-unsigned int diffuseMap = 0;
+unsigned int diffuseMap  = 0;
 unsigned int specularMap = 0;
 unsigned int emissionMap = 0;
 
 unsigned int floorTexture = 0;
-unsigned int wallTexture = 0;
+unsigned int wallTexture  = 0;
 
 unsigned int grassLandTexture = 0;
-unsigned int grassTexture = 0;
+unsigned int grassTexture     = 0;
 
 unsigned int windowTexture = 0;
+
+unsigned int textureColorBuffer = 0;
 
 // Matrixes - doing this instead of passing a camera reference to the draw calls because there isn't much else we want
 // the camera for, so we just store the pos and front of the cam here
@@ -122,11 +128,18 @@ static float wallVertices[] = {
    -0.5f, 0.0f, -0.5f,  0.0f, 1.0f, 0.0f,  0.0f, 0.0f,
 };
 
+static float quadVertices[] = {  
+    // positions   // texCoords
+    -1.0f,  1.0f,  0.0f, 1.0f,
+    -1.0f, -1.0f,  0.0f, 0.0f,
+     1.0f, -1.0f,  1.0f, 0.0f,
 
-// @TODO Since most of these positions are declared globally with regular
-// arrays, we can't use std::vector, therefore the loops that draw each object
-// at the specified world pos need their 'size()' values hardcoded, this includes
-// the point lights count that needs to be hardcoded aswell
+    -1.0f,  1.0f,  0.0f, 1.0f,
+     1.0f, -1.0f,  1.0f, 0.0f,
+     1.0f,  1.0f,  1.0f, 1.0f
+};	
+
+
 // World positions of objects
 glm::vec3 cubePositions[] = {
 	glm::vec3(0.0f,  0.0f,  0.0f),
@@ -215,10 +228,21 @@ glm::vec3 skyColor;
 //
 // ========== INITIALIZATION ==========
 //
-void initBuffers(const unsigned int width, const unsigned int height) {				   	glGenVertexArrays(2, VAO);
+void initBuffers(const unsigned int width, const unsigned int height) {
+	// Generating the relevant buffers
+	// REMEMBER since some of these objects are not arrays, they need to be
+	// referenced if they are a single obj
+	glGenVertexArrays(2, VAO);
 	glGenBuffers(2, VBO);
 	glGenBuffers(1, &EBO);
+
+	glGenVertexArrays(1, &quadVAO);
+	glGenBuffers(1, &quadVBO);
+
 	glGenFramebuffers(1, &FBO);
+	glGenTextures(1, &textureColorBuffer);
+	glGenRenderbuffers(1, &RBO);
+	
 
 	// 3D Rendering cubes
 	glBindVertexArray(VAO[0]);
@@ -248,20 +272,39 @@ void initBuffers(const unsigned int width, const unsigned int height) {				   	g
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(wallIndices), wallIndices, GL_STATIC_DRAW);
 	*/
 
-	// Binding frame buffers
+	
+	// Frame buffer VAO + VBO
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glGenTextures(1, &textureColorBuffer);
+	glBindVertexArray(quadVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+
+
+	// Setting texture color attachment
 	glBindTexture(GL_TEXTURE_2D, textureColorBuffer);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorBuffer, 0);
 
+	// Setting the render buffer attachments
+	glBindRenderbuffer(GL_RENDERBUFFER, RBO);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);		// Creating a depth + stencil render buffer
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
+	// The rule with knowing when to use an RBO is when you never need to sample data from a buffer,
+	// then you should use a render buffer for that specific buffer. BUT if you do need to sample data
+	// (like color and texture values), then you should use a texture attachment instead.
+
 	// Checking if the frame buffer status is complete
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
 	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 
@@ -280,6 +323,8 @@ void initShaders() {
 	grassShader		= Shader("res/shaders/container.vert", "res/shaders/grass.frag");
 
 	windowShader	= Shader("res/shaders/container.vert", "res/shaders/window.frag");
+
+	screenShader	= Shader("res/shaders/screenbuffer.vert", "res/shaders/screenbuffer.frag");
 }
 
 
@@ -349,7 +394,9 @@ void initTextures() {
 	emissionShader.setInt("u_material.textureSpecular1", 1);
 	emissionShader.setInt("u_material.textureEmission1", 2);
 
-
+	// Screen frame buffer stuff
+	screenShader.useProgram();
+	screenShader.setInt("u_screenTexture", 0);
 }
 		
 
@@ -635,21 +682,39 @@ void renderScene(Camera& camera, const float ASPECT_RATIO) {
 	cameraPosition = camera.position;
 	cameraFront = camera.front;
 
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+	glEnable(GL_DEPTH_TEST);
+
+	/*
+	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	*/
+
 	skyColor = calculateSkyColor(Time::getTime());
 	glClearColor(skyColor.r, skyColor.g, skyColor.b, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+		
 	//Drawing the floating stuff
 	drawContainers();
 	drawModels();
 	drawLights();
 
-
 	//Drawing everything else
 	drawRoom();
 	drawGrass();
 	drawWindows(camera);
+
+	// Using the screen shader for the frame buffer
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glDisable(GL_DEPTH_TEST);
+
+	screenShader.useProgram();
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, textureColorBuffer);
+	glBindVertexArray(quadVAO);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
 }
+
 
 void cleanupScene() {
 	glDeleteVertexArrays(2, VAO);
