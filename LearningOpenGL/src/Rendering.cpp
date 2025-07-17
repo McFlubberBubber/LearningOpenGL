@@ -8,7 +8,7 @@
 
 // Buffers 
 // @TODO Most likely going to change the VAOs and VBOs to be properly named to
-// whatever vertex object they represent (VAO[0] = cubeVAO / VAO[1] = wallVAO).
+// whatever vertex object they represent (VAO[0] = cubeVAO / VAO[1] = wanllVAO).
 unsigned int VAO[2], VBO[2], EBO, FBO, RBO;
 unsigned int quadVAO, quadVBO;
 
@@ -397,6 +397,7 @@ void initTextures() {
 	// Screen frame buffer stuff
 	screenShader.useProgram();
 	screenShader.setInt("u_screenTexture", 0);
+	screenShader.setBool("u_invertFilter", false);
 }
 		
 
@@ -543,7 +544,7 @@ void drawHouse() {
 void drawModels() {
 	drawBackpack();
 	drawBlahaj();
-	//drawHouse();
+	drawHouse();
 }
 
 
@@ -593,7 +594,6 @@ void drawGrass() {
 	drawFoliage();
 }
 
-// 
 void drawWindows(const Camera& camera) {
 	windowShader.useProgram();
 	glActiveTexture(GL_TEXTURE0);
@@ -722,6 +722,14 @@ void cleanupScene() {
 	glDeleteBuffers(1, &EBO);
 	glDeleteFramebuffers(1, &FBO);
 }
+
+
+// @TODO This function needs to be done based on the new user input
+// system that we still need to make
+void toggleInvert() {
+	
+}
+
 
 //
 // ========== UTILITY FUNCTIONS ==========
