@@ -49,6 +49,7 @@ void processInput(GLFWwindow* window, Camera& camera, float deltaTime, InputStat
 
 // Utility functions to help cycle through the enums
 void switch_camera_mode(InputState& input);
+
 static void apply_render_mode(RenderMode render_mode);
 void increment_render_mode(InputState& input);
 void decrement_render_mode(InputState& input);
@@ -57,4 +58,6 @@ void decrement_render_mode(InputState& input);
 void do_fps_movement(GLFWwindow* window, Camera& camera, float deltaTime);
 void do_freefly_movement(GLFWwindow* window, Camera& camera, float deltaTime);
 
+// Function to store RenderMode state for future printing requirements
+const char* render_mode_to_string(RenderMode render_mode);
 #endif

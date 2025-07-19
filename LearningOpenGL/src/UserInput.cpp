@@ -18,8 +18,8 @@ void increment_render_mode (InputState& input_state) {
 
 	input_state.render_mode = static_cast<RenderMode> (next_mode);
 	apply_render_mode(input_state.render_mode);
-
-	std::cout << "RenderMode::" << static_cast<int> (input_state.render_mode) << std::endl;
+	
+	std::cout << "RenderMode::" << render_mode_to_string(input_state.render_mode) << std::endl;
 	
 }
 
@@ -31,8 +31,8 @@ void decrement_render_mode(InputState& input_state) {
 	input_state.render_mode = static_cast<RenderMode> (prev_mode);
 	apply_render_mode(input_state.render_mode);
 	
-	std::cout << "RenderMode::" << static_cast<int> (input_state.render_mode) << std::endl;
-
+	std::cout << "RenderMode::" << render_mode_to_string(input_state.render_mode) << std::endl;
+	
 }
 
 
@@ -60,10 +60,6 @@ void switch_camera_mode(InputState& input_state) {
 // we get text rendering out the way. But this should make creating
 // keybindings a lot easier from now on.
 void processInput(GLFWwindow* window, Camera& camera, float deltaTime, InputState& input_state) {
-	
-	// @NOTE This line is already being called in the render loop
-	// glfwPollEvents();
-	
 	// Cycling through the camera mode enums	
 	if (input_state.is_key_pressed(window, GLFW_KEY_E)) {
 		switch_camera_mode(input_state);
@@ -73,7 +69,6 @@ void processInput(GLFWwindow* window, Camera& camera, float deltaTime, InputStat
 	if (input_state.is_key_pressed(window, GLFW_KEY_UP)) {
 		increment_render_mode(input_state);
 	}
-
 	if (input_state.is_key_pressed(window, GLFW_KEY_DOWN)) {
 		decrement_render_mode(input_state);
 	}
@@ -83,13 +78,11 @@ void processInput(GLFWwindow* window, Camera& camera, float deltaTime, InputStat
 		glfwSetWindowShouldClose(window, true);
 	}
 
-	// Processing FPS movement
+	// Processing either FPS or FREEFLY movement
 	if (input_state.camera_mode == CameraMode::FPS) {
 		camera.position.y = -4.0f;
 		do_fps_movement(window, camera, deltaTime);
 	}
-
-	// Processing free fly movement
 	if (input_state.camera_mode == CameraMode::FREEFLY) {
 		do_freefly_movement(window, camera, deltaTime);
 	}
@@ -116,4 +109,15 @@ void do_freefly_movement(GLFWwindow* window, Camera& camera, float deltaTime) {
 		camera.processMovement(LEFT, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		camera.processMovement(RIGHT, deltaTime);
+}
+
+const char* render_mode_to_string(RenderMode render_mode) {
+	switch (render_mode) {
+	case RenderMode::NORMAL:			return "NORMAL";
+	case RenderMode::INVERT:			return "INVERT";
+	case RenderMode::GRAYSCALE:			return "GRAYSCALE";
+	case RenderMode::SHARPEN:			return "SHARPEN";
+	case RenderMode::DARK_SHARPEN:		return "DARK SHARPEN";
+	default:							return "ERROR!";
+	}
 }
