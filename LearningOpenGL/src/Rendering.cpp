@@ -726,10 +726,11 @@ void cleanupScene() {
 
 // @TODO This function needs to be done based on the new user input
 // system that we still need to make
+/*
 void toggleInvert() {
 	
 }
-
+*/
 
 //
 // ========== UTILITY FUNCTIONS ==========
@@ -829,4 +830,12 @@ glm::vec3 calculateSkyColor(float currentTime) {
 	float skyTransitionSpeed = 1.0f;
 	float t = 0.5f * (1.0f + sin(skyTransitionSpeed * currentTime));
 	return skyColor = glm::mix(darkSky, greySky, t);
+}
+
+void resize_framebuffer(int width, int height) {
+	glBindTexture(GL_TEXTURE_2D, textureColorBuffer);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+
+	glBindRenderbuffer(GL_RENDERBUFFER, RBO);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);	
 }

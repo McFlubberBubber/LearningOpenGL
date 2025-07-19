@@ -145,6 +145,7 @@
     <ClCompile Include="src\Rendering.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\Time.cpp" />
+    <ClCompile Include="src\UserInput.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Camera.h" />
@@ -154,6 +155,7 @@
     <ClInclude Include="src\Shader.h" />
     <ClInclude Include="src\stb_image.h" />
     <ClInclude Include="src\Time.h" />
+    <ClInclude Include="src\UserInput.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\backpack.frag" />

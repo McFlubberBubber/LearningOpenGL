@@ -2,6 +2,7 @@
 
 //INPUTS
 in vec2 textureOutput;
+
 //OUTPUTS
 out vec4 FragColor;
 
@@ -11,7 +12,6 @@ uniform bool u_invertFilter;
 
 //VARIBLES
 const float offset = 1.0f / 300.0f;		// Configurable to our liking
-
 
 
 // @HARDCODE All the sections of code that appear under this main

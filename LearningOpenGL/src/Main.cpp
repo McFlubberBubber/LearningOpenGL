@@ -10,13 +10,13 @@
 #include "Camera.h"
 #include "Rendering.h"
 #include "Time.h"
+#include "UserInput.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 //prototyping functions that will be declared beneath the main function
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xPos, double yPos);
 void scroll_callback(GLFWwindow* window, double xOffset, double yOffset);
 
@@ -97,6 +97,11 @@ int main()
 	initModels();
 	initTextures();
 
+	// @NOTE This can proably be done under an init function aswell
+	// but this is here just to test the processInput function if it
+	// works
+	InputState input_state;
+
 	//-------------------------------- RENDER LOOP ----------------------------------------
 	while (!glfwWindowShouldClose(window)) {		//checks if glfw has been instructed to close
 		Time::update();
@@ -104,7 +109,7 @@ int main()
 		currentTime = Time::getTime();
 		counter++;
 
-		processInput(window);
+		processInput(window, camera, deltaTime, input_state);
 
 		//FPS counter
 		timeAccumulator += deltaTime;
@@ -132,77 +137,9 @@ int main()
 //ensuring the viewport gets resized if the user does so
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);
+	resize_framebuffer(width, height);
 }
 
-
-
-// @TODO This whole user input section could probably be moved to a seperate
-// file since this function would become very large to include within the main.cpp
-// ALSO we need to change the ENTER key to render something else other than polygon
-// mode since the whole scene is being rendered to a frame buffer now. (15/07/25)
-// Function to handle user input
-void processInput(GLFWwindow* window) {
-	//variables for toggling between GL_LINE and GL_FILL
-	static bool s_wireframeMode = false;
-	static bool s_enterState = false;
-	bool enterPressed = glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS;
-
-	//variables for toggling between free fly / FPS mode
-	static bool s_fpsMode = false;
-	static bool s_eState = false;
-	bool ePressed = glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS;
-
-	//if the user presses escape, close the window
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, true);
-
-
-	/*
-	//if the user presses enter, toggle wireframe mode
-	if (enterPressed && !s_enterState)
-	{
-		s_wireframeMode = !s_wireframeMode;
-		glPolygonMode(GL_FRONT_AND_BACK, s_wireframeMode ? GL_LINE : GL_FILL);
-	}
-	s_enterState = enterPressed;
-	*/
-	
-	//if the user presses E, toggle between free fly / FPS camera
-	if (ePressed && !s_eState) {
-		s_fpsMode = !s_fpsMode;
-		if (s_fpsMode) {
-			std::cout << "FPS MODE ENABLED!" << std::endl;
-			camera.position.y = -4.0f;
-		} 
-		else {
-			std::cout << "FREE FLY MODE ENABLED!" << std::endl;
-		}
-	}
-	s_eState = ePressed;
-
-	if (s_fpsMode) {
-		//camera movement inputs - FPS VERSION
-		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-			camera.processFPSMovement(FORWARD, deltaTime);
-		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-			camera.processFPSMovement(BACKWARD, deltaTime);
-		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-			camera.processFPSMovement(LEFT, deltaTime);
-		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-			camera.processFPSMovement(RIGHT, deltaTime);
-	}
-	else {
-		//camera movement inputs - FREE FLY
-		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-			camera.processMovement(FORWARD, deltaTime);
-		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-			camera.processMovement(BACKWARD, deltaTime);
-		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-			camera.processMovement(LEFT, deltaTime);
-		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-			camera.processMovement(RIGHT, deltaTime);
-	}
-}
 
 //function to handle the camera looking around the scene
 void mouse_callback(GLFWwindow* window, double xPosIn, double yPosIn) {

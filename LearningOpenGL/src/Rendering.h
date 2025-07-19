@@ -18,43 +18,16 @@ void initShaders();
 void initModels();
 void initTextures();
 
-// Drawing the cubes
-void drawWoodenContainers();
-void drawEmissionContainer();
-void drawContainers();
-
-//Drawing the models
-void drawBackpack();
-void drawBlahaj();
-void drawModels();
-
-//Drawing light sources
-void drawPointLights();
-void drawDirectionalLight();
-void drawLights();
-
-//Room rendering
-void drawFloor();
-void drawWalls();
-void drawRoom();
-
-//Drawing the grass lands and transparent grass stuff
-void drawGrassLand();
-void drawFoliage();
-void drawGrass();
-
-// Rendering transparent windows
-void drawWindows(const Camera& camera);
-
 // Will be used in render loop - utilises all the draw functions above
 void renderScene(Camera& camera, const float ASPECT_RATIO);
 void cleanupScene();
-void toggleInvert();
+// void toggleInvert();
 
 // Utility functions for drawing
 void applyMatrixes(Shader& shader);
 unsigned int loadTexture(const char* path);
 void processLighting(Shader& shader);
 glm::vec3 calculateSkyColor(float currentTime);
+void resize_framebuffer(int width, int height);
 
 #endif
