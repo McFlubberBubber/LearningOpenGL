@@ -1,5 +1,6 @@
 #include <iostream>
 #include "UserInput.h"
+#include "Rendering.h"
 
 // @TODO: So basically, this refactor has A LOT of if statement that
 // are being used in this file which is most likely not the most
@@ -8,8 +9,7 @@
 
 
 static void apply_render_mode (RenderMode render_mode) {
-
-
+	apply_render_mode_to_screen_shader(render_mode);
 }
 
 
@@ -26,7 +26,7 @@ void increment_render_mode (InputState& input_state) {
 void decrement_render_mode(InputState& input_state) {
 	int current_mode = static_cast<int> (input_state.render_mode);
 	int total_modes  = static_cast<int> (RenderMode::COUNT);
-	int prev_mode	 = (current_mode - 1 + total_modes) & total_modes;
+	int prev_mode	 = (current_mode - 1 + total_modes) % total_modes;
 
 	input_state.render_mode = static_cast<RenderMode> (prev_mode);
 	apply_render_mode(input_state.render_mode);

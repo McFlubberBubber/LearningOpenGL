@@ -12,6 +12,7 @@ enum class RenderMode {
 	INVERT,
 	GRAYSCALE,
 	SHARPEN,
+	DARK_SHARPEN,
 	COUNT		// Extra enum type
 };
 

@@ -8,45 +8,50 @@ out vec4 FragColor;
 
 //UNIFORMS
 uniform sampler2D u_screenTexture;
-uniform bool u_invertFilter;
+uniform int u_render_mode;
 
 //VARIBLES
 const float offset = 1.0f / 300.0f;		// Configurable to our liking
 
+//POST PROCESSING MODES
+const int NORMAL_MODE	    = 0;
+const int INVERT_MODE	    = 1;
+const int GRAYSCALE_MODE    = 2;
+const int SHARPEN_MODE	    = 3;
+const int DARK_SHARPEN_MODE	= 4;
 
-// @HARDCODE All the sections of code that appear under this main
-// function are not toggle-able during the render of the application.
-// These functionalities depend on the new user input system to be
-// implemented into the project before we can work on toggle modes
-// for each post processing effect.
+//FUNCTION PROTOTYPES
+vec4 process_sharpening(bool do_dark_sharpening);
+
 void main() {
+	vec4 color = texture(u_screenTexture, textureOutput);
 
-	// @TODO This block of code relies on the 'toggleInvert()' function
-	// that has not been programmed into the application yet.
-	// POST PROCESSING: Inverting the colors rendered on the scene
-	/*
-	if (u_invertFilter) {
-		FragColor = vec4(vec3(1.0f - texture(u_screenTexture, textureOutput)), 1.0f);
-	} else {
-		FragColor = texture(u_screenTexture, textureOutput);		
+	switch (u_render_mode) {
+		case INVERT_MODE:
+			color.rgb = 1.0f - color.rgb;
+			break;
+
+		case GRAYSCALE_MODE:
+			float k = dot(color.rgb, vec3(0.2126f, 0.7152f, 0.0722f));
+			color = vec4(vec3(k), 1.0f);
+			break;
+
+		case SHARPEN_MODE:
+			color = process_sharpening(false);
+			break;
+
+		case DARK_SHARPEN_MODE:
+			color = process_sharpening(true);
+			break;
+			
+		default: //NORMAL_MODE
+			break;
 	}
-	*/
 
+	FragColor = color;
+}
 
-	// POST PROCESSING: Rendering the scene on a gray scale	
-	// Variables for gray scaling
-	float redScale   = 0.2126f;
-	float greenScale = 0.7152f;
-	float blueScale	 = 0.0722f;
-
-	// This is the default screen buffer rendering
-	FragColor = texture(u_screenTexture, textureOutput);		
-
-	float grayScale = FragColor.r * redScale + FragColor.g * greenScale + FragColor.b * blueScale;
-	FragColor = vec4(grayScale, grayScale, grayScale, 1.0f);
-
-
-	// POST PROCESSING: Using kernals and stuff
+vec4 process_sharpening (bool do_dark_sharpening) {
 	vec2 offsets[9] = vec2[] (
 		vec2(-offset,	offset),		// top-left
 		vec2(0.0f,		offset),		// top-center
@@ -59,34 +64,23 @@ void main() {
 		vec2(offset,	-offset)		// bottom-right
 	);
 
-
-	// Normal sharpening
-	float kernal[9] = float[] (
-		-1, -1, -1,
-		-1,  9, -1,
-		-1, -1, -1
-	);
-
-
-	// Dark sharperning
-	/*
-	float kernal[9] = float[] (
-		1,  1, 1,
-		1, -8, 1,
-		1,  1, 1
-	);
-	*/
-
-	vec3 sampleTex[9];
-	for (int i = 0; i < 9; i++) {
-		sampleTex[i] = vec3(texture(u_screenTexture, textureOutput.st + offsets[i]));
-	}
-	
-	vec3 color = vec3(0.0f);
-	for (int i = 0; i < 9; i++) {
-		color += sampleTex[i] * kernal[i];
+	float kernal[9];
+	if (!do_dark_sharpening) {
+		kernal[0] = -1; kernal[1] = -1; kernal[2] = -1;
+		kernal[3] = -1; kernal[4] =  9; kernal[5] = -1;
+		kernal[6] = -1; kernal[7] = -1; kernal[8] = -1;
+		
+	} else {
+		kernal[0] =  1; kernal[1] =  1; kernal[2] =  1;
+		kernal[3] =  1; kernal[4] = -8; kernal[5] =  1;
+		kernal[6] =  1; kernal[7] =  1; kernal[8] =  1;
 	}
 
-	FragColor = vec4(color, 1.0f);
+
+	vec3 acc = vec3(0.0f);
+	for (int i = 0; i < 9; i++) {
+		acc += vec3(texture(u_screenTexture, textureOutput + offsets[i])) * kernal[i];
+	}
+
+	return vec4(acc, 1.0f);
 }
-

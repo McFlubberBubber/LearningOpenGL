@@ -397,7 +397,7 @@ void initTextures() {
 	// Screen frame buffer stuff
 	screenShader.useProgram();
 	screenShader.setInt("u_screenTexture", 0);
-	screenShader.setBool("u_invertFilter", false);
+	screenShader.setInt("u_render_mode", 0);
 }
 		
 
@@ -827,7 +827,7 @@ void processLighting(Shader& shader) {
 
 glm::vec3 calculateSkyColor(float currentTime) {
 	//changing the color of the sky to simulate a day / night cycle
-	float skyTransitionSpeed = 1.0f;
+	float skyTransitionSpeed = 0.3f;
 	float t = 0.5f * (1.0f + sin(skyTransitionSpeed * currentTime));
 	return skyColor = glm::mix(darkSky, greySky, t);
 }
@@ -838,4 +838,10 @@ void resize_framebuffer(int width, int height) {
 
 	glBindRenderbuffer(GL_RENDERBUFFER, RBO);
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);	
+}
+
+
+void apply_render_mode_to_screen_shader(RenderMode render_mode){
+	screenShader.useProgram();
+	screenShader.setInt("u_render_mode", static_cast<int> (render_mode));
 }
