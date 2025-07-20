@@ -15,27 +15,8 @@ Camera::Camera (
 	m_updateCameraVectors();
 }
 
-
-/*
-//constructor with scalar values
-Camera
-( 
-	float posX, float posY, float posZ,
-	float upX, float upY, float upZ,
-	float yaw, float pitch
-) : front(glm::vec3(0.0f, 0.0f, -1.0f)), movementSpeed(SPEED), mouseSensitivity(SENSITIVITY), zoom(ZOOM)
-{
-	this->position = position;
-	this->worldUp = up;
-	this->yaw = yaw;
-	this->pitch = pitch;
-	m_updateCameraVectors();
-}
-*/
-
-
 //returning the view matrix using eular angles and lookAt matrix
-glm::mat4 Camera::GetViewMatrix()
+glm::mat4 Camera::GetViewMatrix() const
 {
 	return glm::lookAt(position, position + front, up);
 }

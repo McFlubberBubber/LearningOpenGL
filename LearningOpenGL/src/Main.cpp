@@ -61,7 +61,7 @@ int main()
 	glfwSetScrollCallback(window, scroll_callback);							// calling scroll to allow zooming within the scene
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);			// capturing our mouse
 	glfwSwapInterval(1);													// this line enables v-sync
-	stbi_set_flip_vertically_on_load(true);									// flipping all images loaded vertically				
+	stbi_set_flip_vertically_on_load(true);
 
 
 	//ensuring that glad is initialized before we use openGL functions
@@ -97,6 +97,8 @@ int main()
 	initModels();
 	initTextures();
 
+	init_skybox();
+
 	// @NOTE This can proably be done under an init function aswell
 	// but this is here just to test the processInput function if it
 	// works
@@ -129,6 +131,7 @@ int main()
 		glfwPollEvents();
 	}
 
+	
 	cleanupScene();
 	glfwTerminate();		//clearing resources that were allocated
 	return 0;

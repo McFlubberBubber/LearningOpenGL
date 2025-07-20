@@ -73,11 +73,6 @@ void processInput(GLFWwindow* window, Camera& camera, float deltaTime, InputStat
 		decrement_render_mode(input_state);
 	}
 
-	// Closing the window
-	if (input_state.is_key_pressed(window, GLFW_KEY_ESCAPE)) {
-		glfwSetWindowShouldClose(window, true);
-	}
-
 	// Processing either FPS or FREEFLY movement
 	if (input_state.camera_mode == CameraMode::FPS) {
 		camera.position.y = -4.0f;
@@ -85,6 +80,12 @@ void processInput(GLFWwindow* window, Camera& camera, float deltaTime, InputStat
 	}
 	if (input_state.camera_mode == CameraMode::FREEFLY) {
 		do_freefly_movement(window, camera, deltaTime);
+	}
+
+
+	// Closing the window
+	if (input_state.is_key_pressed(window, GLFW_KEY_ESCAPE)) {
+		glfwSetWindowShouldClose(window, true);
 	}
 }
 

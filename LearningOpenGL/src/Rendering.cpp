@@ -534,7 +534,7 @@ void drawHouse() {
 	processLighting(houseShader);
 
 	glm::mat4 houseModel = glm::mat4(1.0f);
-	houseModel = glm::translate(houseModel, glm::vec3(12.5f, -5.0f, 0.0f));
+	houseModel = glm::translate(houseModel, glm::vec3(12.5f, -4.5f, 0.0f));
 	houseModel = glm::scale(houseModel, glm::vec3(0.3f));
 	houseModel = glm::rotate(houseModel, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	houseShader.setMat4("u_modelMatrix", houseModel);
@@ -685,15 +685,11 @@ void renderScene(Camera& camera, const float ASPECT_RATIO) {
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 	glEnable(GL_DEPTH_TEST);
 
-	/*
-	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	*/
-
 	skyColor = calculateSkyColor(Time::getTime());
 	glClearColor(skyColor.r, skyColor.g, skyColor.b, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
+	
+
 	//Drawing the floating stuff
 	drawContainers();
 	drawModels();
@@ -703,16 +699,17 @@ void renderScene(Camera& camera, const float ASPECT_RATIO) {
 	drawRoom();
 	drawGrass();
 	drawWindows(camera);
-
+	draw_skybox(projectionMatrix, camera);
+	
 	// Using the screen shader for the frame buffer
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glDisable(GL_DEPTH_TEST);
-
 	screenShader.useProgram();
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, textureColorBuffer);
 	glBindVertexArray(quadVAO);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
+
 }
 
 

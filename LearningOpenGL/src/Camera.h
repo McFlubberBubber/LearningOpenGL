@@ -50,17 +50,7 @@ public:
 		float pitch = PITCH
 	);
 
-
-	/*
-	//constructor with scalar values
-	Camera (
-		float posX, float posY, float posZ,
-		float upX, float upY, float upZ,
-		float yaw, float pitch
-	); 
-	*/
-
-	glm::mat4 GetViewMatrix();
+	glm::mat4 GetViewMatrix() const;
 	void processMovement(camera_movement direction, float deltaTime);
 	void processFPSMovement(camera_movement direction, float deltaTime);
 	void processMouseMovement(float xOffset, float yOffset, GLboolean constrainPitch = true);

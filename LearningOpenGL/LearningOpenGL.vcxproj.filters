@@ -36,6 +36,9 @@
     <ClCompile Include="src\UserInput.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Skybox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Shader.h">
@@ -62,6 +65,9 @@
     <ClInclude Include="src\UserInput.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Skybox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\container.vert" />
@@ -78,5 +84,7 @@
     <None Include="res\shaders\window.frag" />
     <None Include="res\shaders\screenbuffer.vert" />
     <None Include="res\shaders\screenbuffer.frag" />
+    <None Include="res\shaders\skybox.vert" />
+    <None Include="res\shaders\skybox.frag" />
   </ItemGroup>
 </Project>

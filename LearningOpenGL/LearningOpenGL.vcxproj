@@ -144,6 +144,7 @@
     <ClCompile Include="src\glad.c" />
     <ClCompile Include="src\Rendering.cpp" />
     <ClCompile Include="src\Shader.cpp" />
+    <ClCompile Include="src\Skybox.cpp" />
     <ClCompile Include="src\Time.cpp" />
     <ClCompile Include="src\UserInput.cpp" />
   </ItemGroup>
@@ -153,6 +154,7 @@
     <ClInclude Include="src\Mesh.h" />
     <ClInclude Include="src\Model.h" />
     <ClInclude Include="src\Shader.h" />
+    <ClInclude Include="src\Skybox.h" />
     <ClInclude Include="src\stb_image.h" />
     <ClInclude Include="src\Time.h" />
     <ClInclude Include="src\UserInput.h" />
@@ -169,6 +171,8 @@
     <None Include="res\shaders\blahaj.vert" />
     <None Include="res\shaders\screenbuffer.frag" />
     <None Include="res\shaders\screenbuffer.vert" />
+    <None Include="res\shaders\skybox.frag" />
+    <None Include="res\shaders\skybox.vert" />
     <None Include="res\shaders\wall.frag" />
     <None Include="res\shaders\wall.vert" />
     <None Include="res\shaders\window.frag" />

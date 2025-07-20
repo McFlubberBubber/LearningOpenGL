@@ -6,6 +6,7 @@
 #include "Model.h"
 #include "Camera.h"
 #include "UserInput.h"
+#include "Skybox.h"
 
 #include <iostream>
 #include <glad/glad.h>
@@ -13,7 +14,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-// Global Variable so that input system can affect screen shader
 extern Shader screenShader;
 
 // Initializing things for the game objects
