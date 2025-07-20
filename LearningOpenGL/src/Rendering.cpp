@@ -689,6 +689,7 @@ void renderScene(Camera& camera, const float ASPECT_RATIO) {
 	glClearColor(skyColor.r, skyColor.g, skyColor.b, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
+	draw_skybox(projectionMatrix, camera);	
 
 	//Drawing the floating stuff
 	drawContainers();
@@ -698,9 +699,8 @@ void renderScene(Camera& camera, const float ASPECT_RATIO) {
 	//Drawing everything else
 	drawRoom();
 	drawGrass();
-	drawWindows(camera);
-	draw_skybox(projectionMatrix, camera);
-	
+	drawWindows(camera);	
+
 	// Using the screen shader for the frame buffer
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glDisable(GL_DEPTH_TEST);

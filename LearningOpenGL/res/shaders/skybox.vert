@@ -13,6 +13,13 @@ uniform mat4 u_viewMatrix;
 // going textureOutput within the main function
 void main() {
 	textureOutput = aPos;
+
+/*
 	vec4 pos = u_projectionMatrix * u_viewMatrix * vec4(aPos, 1.0f);
 	gl_Position = pos.xyww;
+*/
+
+	gl_Position = u_projectionMatrix * u_viewMatrix * vec4(aPos, 1.0f);
+
+
 }

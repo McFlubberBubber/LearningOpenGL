@@ -131,7 +131,7 @@ void draw_skybox(const glm::mat4& projection_matrix, const Camera& camera) {
 	// Depth test passes when values are equal to the depth buffer's
 	// content
 	glDepthMask(GL_FALSE);
-	glDepthFunc(GL_LEQUAL);
+//	glDepthFunc(GL_LEQUAL);
 	skybox_shader.useProgram();
 
 	skybox_shader.setMat4("u_projectionMatrix", projection_matrix);
@@ -144,5 +144,5 @@ void draw_skybox(const glm::mat4& projection_matrix, const Camera& camera) {
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	glDepthMask(GL_TRUE);
-	glDepthFunc(GL_LESS);  
+//	glDepthFunc(GL_LESS);  
 }
