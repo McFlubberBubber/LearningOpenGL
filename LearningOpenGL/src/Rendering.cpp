@@ -141,7 +141,7 @@ static float quadVertices[] = {
 
 
 // World positions of objects
-glm::vec3 cubePositions[] = {
+std::vector<glm::vec3> cubePositions = {
 	glm::vec3(0.0f,  0.0f,  0.0f),
 	glm::vec3(2.0f,  5.0f, -15.0f),
 	glm::vec3(-1.5f, -2.2f, -2.5f),
@@ -154,14 +154,14 @@ glm::vec3 cubePositions[] = {
 	glm::vec3(-1.3f,  1.0f, -1.5f)
 };
 
-glm::vec3 pointLightPositions[] = {
+std::vector<glm::vec3> pointLightPositions = {
 	glm::vec3(0.7f,  0.2f,  2.0f),
 	glm::vec3(2.3f, -3.3f, -4.0f),
 	glm::vec3(-4.0f,  2.0f, -12.0f),
 	glm::vec3(0.0f,  0.0f, -3.0f)
 };
 
-glm::vec3 blahajPositions[] = {
+std::vector<glm::vec3> blahajPositions = {
 	glm::vec3(5.0f, 5.0f, -5.0f),
 	glm::vec3(7.0f, 2.0f, 7.0f),
 	glm::vec3(-6.0f, -1.0f, -5.0f),
@@ -169,14 +169,14 @@ glm::vec3 blahajPositions[] = {
 	glm::vec3(5.0f, 0.0f, 5.0f),
 };
 
-glm::vec3 wallPositions[] = {
+std::vector<glm::vec3> wallPositions = {
 	glm::vec3(-15.0f, -4.0f, 5.0f),  // left wall
 	glm::vec3(-5.0f, -4.0f, 5.0f),	// right wall
 	glm::vec3(-10.0f, -4.0f, 0.0f),	// front wall
 	glm::vec3(-10.0f, -4.0f, 10.0f)	// back wall
 };
 
-glm::vec3 foliagePositions[] = {
+std::vector<glm::vec3> foliagePositions = {
 	glm::vec3(0.0f, -4.5f, 2.0f),
 	glm::vec3(1.0f, -4.5f, 0.0f),
 	glm::vec3(4.0f, -4.5f, 5.0f),
@@ -196,8 +196,6 @@ float wallRotations[] = {
 	90.0f,
 };
 
-// @TODO These window positions may need to get changed since they could overlap
-// with some other areas on the scene
 std::vector<glm::vec3> windowPositions = {
 	glm::vec3(5.0f, -4.5f, 5.0f),
 	glm::vec3(3.0f, -4.5f, 2.0f),
@@ -211,7 +209,7 @@ glm::vec3 dirLightAmbient(0.0f);
 glm::vec3 dirLightDiffuse(0.05f);
 glm::vec3 dirLightSpecular(0.2f);
 
-glm::vec3 pointLightColors[]{					// Hardcoded the number of point lights here + in each shader
+std::vector<glm::vec3> pointLightColors = {					// Hardcoded the number of point lights here + in each shader
 	glm::vec3(0.75f, 0.75f, 0.75f),
 	glm::vec3(0.75f, 0.0f, 0.60f),
 	glm::vec3(0.0f, 0.0f, 0.8f),
@@ -319,9 +317,7 @@ void initShaders() {
 
 	floorShader		= Shader("res/shaders/wall.vert", "res/shaders/wall.frag");
 	wallShader		= Shader("res/shaders/wall.vert", "res/shaders/wall.frag");
-	
 	grassShader		= Shader("res/shaders/container.vert", "res/shaders/grass.frag");
-
 	windowShader	= Shader("res/shaders/container.vert", "res/shaders/window.frag");
 
 	screenShader	= Shader("res/shaders/screenbuffer.vert", "res/shaders/screenbuffer.frag");
@@ -337,62 +333,29 @@ void initModels() {
 
 
 void initTextures() {
-	// @TODO Naming could be better here?
-	// but also, these textures aren't even being used, so they are commented out for now
-	/*
-	texture1 = loadTexture("res/textures/container.jpg");
-	texture2 = loadTexture("res/textures/awesomeface.png");
-	texture3 = loadTexture("res/textures/wall.jpg");
-	*/
-
 	// These maps are curently ONLY for the containers
 	diffuseMap	= loadTexture("res/textures/container2.png");
 	specularMap = loadTexture("res/textures/container2_specular.png");
 	emissionMap = loadTexture("res/textures/matrix.jpg");
 
-	// Textures for the room scene
 	floorTexture = loadTexture("res/textures/dark_wooden_planks.jpg");
 	wallTexture	 = loadTexture("res/textures/wallpaper.jpg");
 
-	//Textures for the grass
 	grassTexture		= loadTexture("res/textures/grass.png");
 	grassLandTexture	= loadTexture("res/textures/grassland.jpg");
 
-	//Texture for the windows
 	windowTexture		= loadTexture("res/textures/transparent_window.png");
 
 
-	// @TODO These textures could possibly be called in a seperate function so clean
-	// up this code since the shaders are using the same integers and texture uniforms
-	//setting texture uniforms
-	containerShader.useProgram();
-	containerShader.setInt("u_material.textureDiffuse1", 0);
-	containerShader.setInt("u_material.textureSpecular1", 1);
+	// Setting texture uniforms (that currently only have ONE of each
+	// texture type, 2nd param specifies if there is an emission
+	// texture that is to be included.
+	set_texture_uniforms(containerShader,	false);
+	set_texture_uniforms(wallShader,	    false);
+	set_texture_uniforms(floorShader, 		false);
+	set_texture_uniforms(windowShader,		false);
+	set_texture_uniforms(emissionShader, 	true);
 
-	wallShader.useProgram();
-	wallShader.setInt("u_material.textureDiffuse1", 0);
-	wallShader.setInt("u_material.textureSpecular1", 1);
-
-	floorShader.useProgram();
-	floorShader.setInt("u_material.textureDiffuse1", 0);
-	floorShader.setInt("u_material.textureSpecular1", 1);
-
-	grassShader.useProgram();
-	grassShader.setInt("u_material.textureDiffuse1", 0);
-	grassShader.setInt("u_material.textureSpecular1", 1);
-
-	// @TODO Windows currently won't have lighting calculations on them yet so
-	// they will need their uniforms updated.
-	windowShader.useProgram();
-	windowShader.setInt("u_material.textureDiffuse1", 0);
-	windowShader.setInt("u_material.textureSpecular1", 1);
-
-
-	// This one is different because it uses an extra emission integer
-	emissionShader.useProgram();
-	emissionShader.setInt("u_material.textureDiffuse1", 0);
-	emissionShader.setInt("u_material.textureSpecular1", 1);
-	emissionShader.setInt("u_material.textureEmission1", 2);
 
 	// Screen frame buffer stuff
 	screenShader.useProgram();
@@ -417,7 +380,7 @@ void drawWoodenContainers() {
 
 	//drawing each cube (10 times)
 	glBindVertexArray(VAO[0]);
-	for (unsigned int i = 0; i < 10; i++) {
+	for (unsigned int i = 0; i < cubePositions.size(); i++) {
 		glm::mat4 cubeModel = glm::mat4(1.0f);
 		cubeModel = glm::translate(cubeModel, cubePositions[i]);
 		cubeModel = glm::translate(cubeModel, glm::vec3(0.0f, 0.51f, 0.0f));
@@ -464,7 +427,7 @@ void drawPointLights() {
 	applyMatrixes(lightCubeShader);					// @TODO possible break since there is no u_viewPosition in the frag shader
 	lightCubeShader.setVec3("u_skyColor", skyColor);
 
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < pointLightPositions.size(); i++) {
 		glm::mat4 lightModel = glm::mat4(1.0f);
 		lightCubeShader.setVec3("u_lightColor", pointLightColors[i]);
 		lightModel = glm::translate(lightModel, pointLightPositions[i]);
@@ -512,7 +475,7 @@ void drawBlahaj() {
 	blahajShader.setFloat("u_material.shininess", 32.0f);
 	processLighting(blahajShader);
 
-	for (unsigned int i = 0; i < 5; i++) {
+	for (unsigned int i = 0; i < blahajPositions.size(); i++) {
 		float angle = 20.0f * i;
 		glm::mat4 blahajModel = glm::mat4(1.0f);
 		blahajModel = glm::translate(blahajModel, blahajPositions[i]);
@@ -526,7 +489,7 @@ void drawBlahaj() {
 
 // @TODO The house vectors are successfully drawn at the right world pos, but the
 // texturing of the model is currently messed up (possibly due to naming conventions
-// or due to file formatting?)
+// or due to file formatting?
 void drawHouse() {
 	houseShader.useProgram();
 	applyMatrixes(houseShader);
@@ -574,13 +537,13 @@ void drawFoliage() {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, grassTexture);
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, grassTexture);		// @TODO The specular may not be needed here
+	glBindTexture(GL_TEXTURE_2D, grassTexture);	
 	grassShader.setFloat("u_material.shininess", 32.0f);
 	applyMatrixes(grassShader);
 	processLighting(grassShader);
 
 	glBindVertexArray(VAO[1]);
-	for (unsigned int i = 0; i < 10; i++) {
+	for (unsigned int i = 0; i < foliagePositions.size(); i++) {
 		glm::mat4 grassModel = glm::mat4(1.0f);
 		grassModel = glm::translate(grassModel, foliagePositions[i]);
 		grassModel = glm::rotate(grassModel, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -656,7 +619,7 @@ void drawWalls() {
 	applyMatrixes(wallShader);
 	processLighting(wallShader);
 
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < wallPositions.size(); i++) {
 		glBindVertexArray(VAO[0]);
 		glm::mat4 wallModel = glm::mat4(1.0f);
 		wallModel = glm::translate(wallModel, wallPositions[i]);
@@ -720,14 +683,6 @@ void cleanupScene() {
 	glDeleteFramebuffers(1, &FBO);
 }
 
-
-// @TODO This function needs to be done based on the new user input
-// system that we still need to make
-/*
-void toggleInvert() {
-	
-}
-*/
 
 //
 // ========== UTILITY FUNCTIONS ==========
@@ -841,4 +796,19 @@ void resize_framebuffer(int width, int height) {
 void apply_render_mode_to_screen_shader(RenderMode render_mode){
 	screenShader.useProgram();
 	screenShader.setInt("u_render_mode", static_cast<int> (render_mode));
+}
+
+
+// This is assuming that the naming convention we use for these
+// uniforms are the exact same for each new shader that we create.
+// This also only applies it to stuff that only requires EITHER a single
+// diffuse or a diffuse + specular that exists within the textures
+// folder (after we are done linking the textures)
+void set_texture_uniforms(Shader& shader, bool do_emission) {
+	shader.useProgram();
+	shader.setInt("u_material.textureDiffuse1", 0);
+	shader.setInt("u_material.textureSpecular1", 1);
+
+	if (do_emission)
+		shader.setInt("u_material.textureEmission1", 2);
 }

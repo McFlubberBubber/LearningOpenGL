@@ -39,4 +39,5 @@ void resize_framebuffer(int width, int height);
 
 void apply_render_mode_to_screen_shader(RenderMode render_mode);
 
+void set_texture_uniforms(Shader& shader, bool do_emission);
 #endif
