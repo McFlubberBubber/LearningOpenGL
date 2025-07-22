@@ -7,9 +7,9 @@
 // 
 
 // Buffers 
-// @TODO Most likely going to change the VAOs and VBOs to be properly named to
-// whatever vertex object they represent (VAO[0] = cubeVAO / VAO[1] = wanllVAO).
-unsigned int VAO[2], VBO[2], EBO, FBO, RBO;
+unsigned int cubeVAO, cubeVBO;
+unsigned int wallVAO, wallVBO, EBO;
+unsigned int FBO, RBO;
 unsigned int quadVAO, quadVBO;
 
 
@@ -39,12 +39,6 @@ Model house;
 
 
 // Textures
-// Currently unused (2D rendering objects use these ones)
-/*
-unsigned int texture1;
-unsigned int texture2;
-unsigned int texture3;
-*/
 unsigned int diffuseMap  = 0;
 unsigned int specularMap = 0;
 unsigned int emissionMap = 0;
@@ -209,7 +203,10 @@ glm::vec3 dirLightAmbient(0.0f);
 glm::vec3 dirLightDiffuse(0.05f);
 glm::vec3 dirLightSpecular(0.2f);
 
-std::vector<glm::vec3> pointLightColors = {					// Hardcoded the number of point lights here + in each shader
+// @HARDCODE: Each shader that is affected by lighting properties
+// has a hardcoded amount of point lights that matches the amount that
+// is hardcoded here. Should be a better solution later
+std::vector<glm::vec3> pointLightColors = {
 	glm::vec3(0.75f, 0.75f, 0.75f),
 	glm::vec3(0.75f, 0.0f, 0.60f),
 	glm::vec3(0.0f, 0.0f, 0.8f),
@@ -230,21 +227,23 @@ void initBuffers(const unsigned int width, const unsigned int height) {
 	// Generating the relevant buffers
 	// REMEMBER since some of these objects are not arrays, they need to be
 	// referenced if they are a single obj
-	glGenVertexArrays(2, VAO);
-	glGenBuffers(2, VBO);
-	glGenBuffers(1, &EBO);
+	glGenVertexArrays(1, &cubeVAO);
+	glGenBuffers(1,		 &cubeVBO);
 
-	glGenVertexArrays(1, &quadVAO);
-	glGenBuffers(1, &quadVBO);
+	glGenVertexArrays(1, &wallVAO);
+	glGenBuffers(1,	     &wallVBO);
+	glGenBuffers(1,		 &EBO);
 
-	glGenFramebuffers(1, &FBO);
-	glGenTextures(1, &textureColorBuffer);
+	glGenFramebuffers(1,  &FBO);
+	glGenTextures(1, 	  &textureColorBuffer);
 	glGenRenderbuffers(1, &RBO);
 	
+	glGenVertexArrays(1, &quadVAO);
+	glGenBuffers(1,		 &quadVBO);
 
 	// 3D Rendering cubes
-	glBindVertexArray(VAO[0]);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+	glBindVertexArray(cubeVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
@@ -255,8 +254,8 @@ void initBuffers(const unsigned int width, const unsigned int height) {
 
 	
 	// 2D Rendering walls / rectangles
-	glBindVertexArray(VAO[1]);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+	glBindVertexArray(wallVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, wallVBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(wallVertices), wallVertices, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
@@ -265,6 +264,9 @@ void initBuffers(const unsigned int width, const unsigned int height) {
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 
+
+	// Currently not being used, but it's a good reminder as to how to
+	// render a rectangle with the indices being utilised.
 	/*
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(wallIndices), wallIndices, GL_STATIC_DRAW);
@@ -369,17 +371,13 @@ void initTextures() {
 // ========== DRAWING OBJECTS ==========
 //
 void drawWoodenContainers() {
-	containerShader.useProgram();
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, diffuseMap);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, specularMap);
+	bind_textures(containerShader, diffuseMap, specularMap, 0);
 	containerShader.setFloat("u_material.shininess", 32.0f);
 	applyMatrixes(containerShader);
 	processLighting(containerShader);
 
 	//drawing each cube (10 times)
-	glBindVertexArray(VAO[0]);
+	glBindVertexArray(cubeVAO);
 	for (unsigned int i = 0; i < cubePositions.size(); i++) {
 		glm::mat4 cubeModel = glm::mat4(1.0f);
 		cubeModel = glm::translate(cubeModel, cubePositions[i]);
@@ -393,19 +391,13 @@ void drawWoodenContainers() {
 }
 
 void drawEmissionContainer() {
-	emissionShader.useProgram();
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, diffuseMap);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, specularMap);
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, emissionMap);
+	bind_textures(emissionShader, diffuseMap, specularMap, emissionMap);
 	applyMatrixes(emissionShader);
 	emissionShader.setFloat("u_material.shininess", 32.0f);
 	processLighting(emissionShader);
 
 	//drawing emission cube
-	glBindVertexArray(VAO[0]);
+	glBindVertexArray(cubeVAO);
 	glm::mat4 emissionCubeModel = glm::mat4(1.0f);
 	emissionCubeModel = glm::translate(emissionCubeModel, glm::vec3(5.0f, -2.0f, 7.0f));
 	//enabling rotations
@@ -422,7 +414,7 @@ void drawContainers() {
 
 
 void drawPointLights() {
-	glBindVertexArray(VAO[0]);
+	glBindVertexArray(cubeVAO);
 	lightCubeShader.useProgram();
 	applyMatrixes(lightCubeShader);					// @TODO possible break since there is no u_viewPosition in the frag shader
 	lightCubeShader.setVec3("u_skyColor", skyColor);
@@ -438,7 +430,7 @@ void drawPointLights() {
 }
 
 void drawDirectionalLight() {
-	glBindVertexArray(VAO[0]);
+	glBindVertexArray(cubeVAO);
 	lightCubeShader.useProgram();
 	applyMatrixes(lightCubeShader);				// same here
 	glm::mat4 dirLightModel = glm::mat4(1.0f);
@@ -513,18 +505,13 @@ void drawModels() {
 
 
 void drawGrassLand() {
-	//Drawing the grass land FLOOR
-	floorShader.useProgram();
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, grassLandTexture);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, grassLandTexture);
+	bind_textures(floorShader, grassLandTexture, 0, 0);
 	floorShader.setFloat("u_material.shininess", 1.0f);
 	floorShader.setFloat("u_textureTiling", 64.0f);
 	applyMatrixes(floorShader);
 	processLighting(floorShader);
 
-	glBindVertexArray(VAO[0]);
+	glBindVertexArray(cubeVAO);
 	glm::mat4 floorModel = glm::mat4(1.0f);
 	floorModel = glm::translate(floorModel, glm::vec3(-10.0f, -5.0f, 5.0f));
 	floorModel = glm::scale(floorModel, glm::vec3(100.0f, 0.001f, 100.0f));
@@ -533,16 +520,12 @@ void drawGrassLand() {
 }
 
 void drawFoliage() {
-	grassShader.useProgram();
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, grassTexture);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, grassTexture);	
+	bind_textures(grassShader, grassTexture, 0, 0);
 	grassShader.setFloat("u_material.shininess", 32.0f);
 	applyMatrixes(grassShader);
 	processLighting(grassShader);
 
-	glBindVertexArray(VAO[1]);
+	glBindVertexArray(wallVAO);
 	for (unsigned int i = 0; i < foliagePositions.size(); i++) {
 		glm::mat4 grassModel = glm::mat4(1.0f);
 		grassModel = glm::translate(grassModel, foliagePositions[i]);
@@ -558,11 +541,7 @@ void drawGrass() {
 }
 
 void drawWindows(const Camera& camera) {
-	windowShader.useProgram();
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, windowTexture);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, windowTexture);
+	bind_textures(windowShader, windowTexture, 0, 0);
 	windowShader.setFloat("u_material.shininess", 64.0f);
 	applyMatrixes(windowShader);
 	processLighting(windowShader);
@@ -590,17 +569,13 @@ void drawWindows(const Camera& camera) {
 
 
 void drawFloor() {
-	floorShader.useProgram();
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, floorTexture);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, floorTexture);
+	bind_textures(floorShader, floorTexture, 0, 0);
 	floorShader.setFloat("u_material.shininess", 32.0f);
 	floorShader.setFloat("u_textureTiling", 10.0f);
 	applyMatrixes(floorShader);
 	processLighting(floorShader);
 
-	glBindVertexArray(VAO[0]);
+	glBindVertexArray(cubeVAO);
 	glm::mat4 floorModel = glm::mat4(1.0f);
 	floorModel = glm::translate(floorModel, glm::vec3(-10.0f, -5.0f, 5.0f));
 	floorModel = glm::scale(floorModel, glm::vec3(10.0f, 0.1f, 10.0f));
@@ -609,18 +584,14 @@ void drawFloor() {
 }
 
 void drawWalls() {
-	wallShader.useProgram();
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, wallTexture);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, wallTexture);
+	bind_textures(wallShader, wallTexture, 0, 0);
 	wallShader.setFloat("u_material.shininess", 16.0f);
 	wallShader.setFloat("u_textureTiling", 10.0f);
 	applyMatrixes(wallShader);
 	processLighting(wallShader);
 
 	for (int i = 0; i < wallPositions.size(); i++) {
-		glBindVertexArray(VAO[0]);
+		glBindVertexArray(cubeVAO);
 		glm::mat4 wallModel = glm::mat4(1.0f);
 		wallModel = glm::translate(wallModel, wallPositions[i]);
 		wallModel = glm::rotate(wallModel, glm::radians(wallRotations[i]), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -677,10 +648,18 @@ void renderScene(Camera& camera, const float ASPECT_RATIO) {
 
 
 void cleanupScene() {
-	glDeleteVertexArrays(2, VAO);
-	glDeleteBuffers(2, VBO);
-	glDeleteBuffers(1, &EBO);
-	glDeleteFramebuffers(1, &FBO);
+	glDeleteVertexArrays(1, &cubeVAO);
+	glDeleteBuffers(1,		&cubeVBO);
+	
+	glDeleteVertexArrays(1, &wallVAO);
+	glDeleteBuffers(1,		&wallVBO);
+	glDeleteBuffers(1, 		&EBO);	
+
+	glDeleteVertexArrays(1, &quadVAO);
+	glDeleteBuffers(1,	    &quadVBO);
+
+	glDeleteFramebuffers(1,  &FBO);
+	glDeleteRenderbuffers(1, &RBO);
 }
 
 
@@ -692,7 +671,6 @@ void applyMatrixes(Shader& shader) {
 	shader.setMat4("u_projectionMatrix", projectionMatrix);
 	shader.setMat4("u_viewMatrix", cameraView);
 }
-
 
 
 unsigned int loadTexture(const char* path) {
@@ -735,7 +713,9 @@ unsigned int loadTexture(const char* path) {
 	return textureID;
 }
 
-
+// @HARDCODE: This whole lighting section is hardcoded based on the positions that were
+// defined globally, along with the number of point light objects that are hardcoded within
+// each shader.
 void processLighting(Shader& shader) {
 	//DIRECTIONAL LIGHTING
 	shader.setVec3("u_dirLight.direction", lightDirection);
@@ -743,7 +723,7 @@ void processLighting(Shader& shader) {
 	shader.setVec3("u_dirLight.diffuse", dirLightDiffuse);
 	shader.setVec3("u_dirLight.specular", dirLightSpecular);
 
-	//POINT LIGHTING (count based on definition per shader)
+	// POINT LIGHTING (count based on definition per shader)
 	for (unsigned int i = 0; i < 4; i++) {
 		//converting i to a string to utilise within uniform setting
 		std::string index = std::to_string(i);
@@ -777,12 +757,14 @@ void processLighting(Shader& shader) {
 	shader.setVec3("u_skyColor", skyColor);
 }
 
+
 glm::vec3 calculateSkyColor(float currentTime) {
 	//changing the color of the sky to simulate a day / night cycle
 	float skyTransitionSpeed = 0.3f;
 	float t = 0.5f * (1.0f + sin(skyTransitionSpeed * currentTime));
 	return skyColor = glm::mix(darkSky, greySky, t);
 }
+
 
 void resize_framebuffer(int width, int height) {
 	glBindTexture(GL_TEXTURE_2D, textureColorBuffer);
@@ -812,3 +794,23 @@ void set_texture_uniforms(Shader& shader, bool do_emission) {
 	if (do_emission)
 		shader.setInt("u_material.textureEmission1", 2);
 }
+
+void bind_textures(Shader& shader, unsigned int diffuse, unsigned int specular, unsigned int emission) {
+	shader.useProgram();
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, diffuse);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, specular);
+
+	// Reuse the diffuse texture if the user has no specular texture being used
+	if (specular == 0) {
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, diffuse);
+	}
+
+	if (emission != 0) {
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, emission);
+	}
+}
+
