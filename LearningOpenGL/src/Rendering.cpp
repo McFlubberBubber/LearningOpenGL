@@ -43,13 +43,11 @@ unsigned int diffuseMap  = 0;
 unsigned int specularMap = 0;
 unsigned int emissionMap = 0;
 
-unsigned int floorTexture = 0;
-unsigned int wallTexture  = 0;
-
+unsigned int floorTexture	  = 0;
+unsigned int wallTexture 	  = 0;
 unsigned int grassLandTexture = 0;
 unsigned int grassTexture     = 0;
-
-unsigned int windowTexture = 0;
+unsigned int windowTexture	  = 0;
 
 unsigned int textureColorBuffer = 0;
 
@@ -241,7 +239,7 @@ void initBuffers(const unsigned int width, const unsigned int height) {
 	glGenVertexArrays(1, &quadVAO);
 	glGenBuffers(1,		 &quadVBO);
 
-	// 3D Rendering cubes
+	// 3D Cubes (Positions + Normals + Textures)
 	glBindVertexArray(cubeVAO);
 	glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
@@ -309,9 +307,9 @@ void initBuffers(const unsigned int width, const unsigned int height) {
 
 
 void initShaders() {
-	containerShader	= Shader("res/shaders/container.vert", "res/shaders/container.frag");
-	emissionShader	= Shader("res/shaders/container.vert", "res/shaders/emission.frag");
-	lightCubeShader	= Shader("res/shaders/container.vert", "res/shaders/lightCube.frag");
+	containerShader		= Shader("res/shaders/container.vert", "res/shaders/container.frag");
+	emissionShader		= Shader("res/shaders/container.vert", "res/shaders/emission.frag");
+	lightCubeShader		= Shader("res/shaders/container.vert", "res/shaders/lightCube.frag");
 
 	backpackShader	= Shader("res/shaders/backpack.vert", "res/shaders/backpack.frag");
 	blahajShader	= Shader("res/shaders/blahaj.vert", "res/shaders/blahaj.frag");
@@ -357,7 +355,6 @@ void initTextures() {
 	set_texture_uniforms(floorShader, 		false);
 	set_texture_uniforms(windowShader,		false);
 	set_texture_uniforms(emissionShader, 	true);
-
 
 	// Screen frame buffer stuff
 	screenShader.useProgram();
@@ -416,7 +413,7 @@ void drawContainers() {
 void drawPointLights() {
 	glBindVertexArray(cubeVAO);
 	lightCubeShader.useProgram();
-	applyMatrixes(lightCubeShader);					// @TODO possible break since there is no u_viewPosition in the frag shader
+	applyMatrixes(lightCubeShader);
 	lightCubeShader.setVec3("u_skyColor", skyColor);
 
 	for (int i = 0; i < pointLightPositions.size(); i++) {
@@ -432,7 +429,7 @@ void drawPointLights() {
 void drawDirectionalLight() {
 	glBindVertexArray(cubeVAO);
 	lightCubeShader.useProgram();
-	applyMatrixes(lightCubeShader);				// same here
+	applyMatrixes(lightCubeShader);
 	glm::mat4 dirLightModel = glm::mat4(1.0f);
 	lightCubeShader.setVec3("u_lightColor", glm::vec3(1.0f));
 	dirLightModel = glm::translate(dirLightModel, lightDirection);
@@ -607,6 +604,7 @@ void drawRoom() {
 }
 
 
+
 //
 // ========== RENDERING THE SCENE ==========
 //
@@ -624,6 +622,7 @@ void renderScene(Camera& camera, const float ASPECT_RATIO) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 	draw_skybox(projectionMatrix, camera);	
+	draw_reflection_cube(projectionMatrix, cameraPosition, cameraView);
 
 	//Drawing the floating stuff
 	drawContainers();

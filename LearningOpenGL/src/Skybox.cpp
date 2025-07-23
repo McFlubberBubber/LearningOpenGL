@@ -2,12 +2,63 @@
 
 #include "Shader.h"
 #include "Skybox.h"
+#include "Time.h"
+
 #include "glad/glad.h"
 #include "stb_image.h"
 
 unsigned int skybox_VAO, skybox_VBO;
+unsigned int reflection_VAO, reflection_VBO;
+
 unsigned int cubemap_texture = 0;
+
 Shader skybox_shader;
+Shader reflection_shader;
+
+// These vertices only use the position and normal vectors
+static float reflection_cube_vertices[] = {
+	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+    -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+
+    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+
+    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+};
 
 // Vertex data for the skybox (we don't need texture attributes)
 static float skybox_vertices[] = {
@@ -81,9 +132,30 @@ void init_skybox() {
 	//Initializing the skybox's textures
 	skybox_shader   = Shader("res/shaders/skybox.vert", "res/shaders/skybox.frag");
 	cubemap_texture = load_cubemap(faces);
+	skybox_shader.useProgram();
 	skybox_shader.setInt("u_skybox", 0);
 }
 
+
+void init_reflection_cube() {
+	glGenVertexArrays(1, &reflection_VAO);
+	glGenBuffers(1,		 &reflection_VBO);
+
+	glBindVertexArray(reflection_VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, reflection_VAO);
+
+		
+	// 3D Cubes (Positions + Normals ONLY)
+	glBufferData(GL_ARRAY_BUFFER, sizeof(reflection_cube_vertices), reflection_cube_vertices, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	
+	reflection_shader = Shader("res/shaders/reflection.vert", "res/shaders/reflection.frag");
+	reflection_shader.useProgram();
+	reflection_shader.setInt("u_skybox", 0);	
+}
 
 // @HARDCODE: Since we are loading just the one cubemap that is
 // dedicated to the skybox, we will disable the flip_vertically flag
@@ -145,4 +217,22 @@ void draw_skybox(const glm::mat4& projection_matrix, const Camera& camera) {
 
 	glDepthMask(GL_TRUE);
 //	glDepthFunc(GL_LESS);  
+}
+
+void draw_reflection_cube(const glm::mat4& projection_matrix, const glm::vec3& view_position, const glm::mat4& view_matrix) {
+	reflection_shader.useProgram();
+	reflection_shader.setMat4("u_projectionMatrix", projection_matrix);
+	reflection_shader.setMat4("u_viewMatrix", view_matrix);
+	reflection_shader.setVec3("u_viewPosition", view_position);
+
+	glBindVertexArray(reflection_VAO);
+	glm::mat4 reflection_model = glm::mat4(1.0f);
+	reflection_model = glm::translate(reflection_model, glm::vec3(0.0f, -4.0f, -5.0f));
+	reflection_model = glm::rotate(reflection_model, Time::getTime() * glm::radians(80.0f), glm::vec3(1.0f, 0.5f, 2.5f));
+	reflection_shader.setMat4("u_modelMatrix", reflection_model);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap_texture);
+
+	glDrawArrays(GL_TRIANGLES, 0, 36);
 }

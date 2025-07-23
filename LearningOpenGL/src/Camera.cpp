@@ -35,7 +35,7 @@ void Camera::processMovement(camera_movement direction, float deltaTime)
 		position += right * velocity;
 
 	//logging XYZ coordinates
-	std::cout << "X: " << position.x << " | Y: " << position.y << " | Z: " << position.z << std::endl;
+	std::cout << "X: " << position.x << " | Y: " << position.y << " | Z: " << position.z << "\n";
 
 }
 
@@ -56,7 +56,7 @@ void Camera::processFPSMovement(camera_movement direction, float deltaTime)
 	position.y = -4.0f;
 
 	//logging XYZ coordinates
-	std::cout << "X: " << position.x << " | Y: " << position.y << " | Z: " << position.z << std::endl;
+	std::cout << "X: " << position.x << " | Y: " << position.y << " | Z: " << position.z <<  "\n";
 }
 
 //processing mouse input 

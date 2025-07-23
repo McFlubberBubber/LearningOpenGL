@@ -1,7 +1,6 @@
 #pragma once
 #ifndef RENDERING_H
 #define RENDERING_H
-
 #include "Shader.h"
 #include "Model.h"
 #include "Camera.h"
