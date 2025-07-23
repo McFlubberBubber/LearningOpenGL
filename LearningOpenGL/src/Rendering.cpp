@@ -621,15 +621,18 @@ void renderScene(Camera& camera, const float ASPECT_RATIO) {
 	glClearColor(skyColor.r, skyColor.g, skyColor.b, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
+
+	// Drawing stuff that is related to the skybox environment
 	draw_skybox(projectionMatrix, camera);	
 	draw_reflection_cube(projectionMatrix, cameraPosition, cameraView);
+	draw_refraction_cube(projectionMatrix, cameraPosition, cameraView);
 
-	//Drawing the floating stuff
+	// Drawing the floating stuff
 	drawContainers();
 	drawModels();
 	drawLights();
 
-	//Drawing everything else
+	// Drawing everything else
 	drawRoom();
 	drawGrass();
 	drawWindows(camera);	

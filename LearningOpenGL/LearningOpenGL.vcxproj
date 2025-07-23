@@ -169,6 +169,9 @@
     <None Include="res\shaders\emission.frag" />
     <None Include="res\shaders\blahaj.frag" />
     <None Include="res\shaders\blahaj.vert" />
+    <None Include="res\shaders\reflection.frag" />
+    <None Include="res\shaders\reflection.vert" />
+    <None Include="res\shaders\refraction.frag" />
     <None Include="res\shaders\screenbuffer.frag" />
     <None Include="res\shaders\screenbuffer.vert" />
     <None Include="res\shaders\skybox.frag" />

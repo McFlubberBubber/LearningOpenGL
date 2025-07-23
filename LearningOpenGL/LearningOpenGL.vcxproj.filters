@@ -86,5 +86,8 @@
     <None Include="res\shaders\screenbuffer.frag" />
     <None Include="res\shaders\skybox.vert" />
     <None Include="res\shaders\skybox.frag" />
+    <None Include="res\shaders\reflection.frag" />
+    <None Include="res\shaders\reflection.vert" />
+    <None Include="res\shaders\refraction.frag" />
   </ItemGroup>
 </Project>
