@@ -11,7 +11,7 @@ unsigned int cubeVAO, cubeVBO;
 unsigned int wallVAO, wallVBO, EBO;
 unsigned int FBO, RBO;
 unsigned int quadVAO, quadVBO;
-
+unsigned int UBO_matrices;
 
 // @TODO There's a lot of global state here with the shaders and the models, one of the suggestions was 
 // create an AssetManager struct 
@@ -239,6 +239,9 @@ void initBuffers(const unsigned int width, const unsigned int height) {
 	glGenVertexArrays(1, &quadVAO);
 	glGenBuffers(1,		 &quadVBO);
 
+	glGenBuffers(1, &UBO_matrices);
+
+
 	// 3D Cubes (Positions + Normals + Textures)
 	glBindVertexArray(cubeVAO);
 	glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
@@ -270,7 +273,13 @@ void initBuffers(const unsigned int width, const unsigned int height) {
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(wallIndices), wallIndices, GL_STATIC_DRAW);
 	*/
 
-	
+
+	glBindBuffer(GL_UNIFORM_BUFFER, UBO_matrices);
+	glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	glBindBufferRange(GL_UNIFORM_BUFFER, 0, UBO_matrices, 0, 2 * sizeof(glm::mat4));
+
+
 	// Frame buffer VAO + VBO
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 	glBindVertexArray(quadVAO);
@@ -364,7 +373,7 @@ void initTextures() {
 		
 
 
-//
+//        
 // ========== DRAWING OBJECTS ==========
 //
 void drawWoodenContainers() {
@@ -622,10 +631,17 @@ void renderScene(Camera& camera, const float ASPECT_RATIO) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 
+	// Setting the projection + view matrix into the uniform block
+	glBindBuffer(GL_UNIFORM_BUFFER, UBO_matrices);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projectionMatrix));
+	glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(cameraView));
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+
 	// Drawing stuff that is related to the skybox environment
 	draw_skybox(projectionMatrix, camera);	
-	draw_reflection_cube(projectionMatrix, cameraPosition, cameraView);
-	draw_refraction_cube(projectionMatrix, cameraPosition, cameraView);
+	draw_reflection_cube(cameraPosition);
+	draw_refraction_cube(cameraPosition);
 
 	// Drawing the floating stuff
 	drawContainers();
@@ -650,16 +666,13 @@ void renderScene(Camera& camera, const float ASPECT_RATIO) {
 
 
 void cleanupScene() {
-	glDeleteVertexArrays(1, &cubeVAO);
-	glDeleteBuffers(1,		&cubeVBO);
-	
-	glDeleteVertexArrays(1, &wallVAO);
-	glDeleteBuffers(1,		&wallVBO);
-	glDeleteBuffers(1, 		&EBO);	
+	delete_skybox_buffers();
+	delete_vertex_data(cubeVAO, cubeVBO);	
+	delete_vertex_data(wallVAO, wallVBO);
+	delete_vertex_data(quadVAO, quadVBO);	
 
-	glDeleteVertexArrays(1, &quadVAO);
-	glDeleteBuffers(1,	    &quadVBO);
-
+	glDeleteBuffers(1, 		 &EBO);
+	glDeleteBuffers(1, 		 &UBO_matrices);	
 	glDeleteFramebuffers(1,  &FBO);
 	glDeleteRenderbuffers(1, &RBO);
 }
@@ -669,8 +682,7 @@ void cleanupScene() {
 // ========== UTILITY FUNCTIONS ==========
 //
 void applyMatrixes(Shader& shader) {
-	shader.setVec3("u_viewPosition", cameraPosition);
-	shader.setMat4("u_projectionMatrix", projectionMatrix);
+	shader.set_uniform_buffer("u_matrices", 0);
 	shader.setMat4("u_viewMatrix", cameraView);
 }
 
@@ -726,7 +738,7 @@ void processLighting(Shader& shader) {
 	shader.setVec3("u_dirLight.specular", dirLightSpecular);
 
 	// POINT LIGHTING (count based on definition per shader)
-	for (unsigned int i = 0; i < 4; i++) {
+	for (unsigned int i = 0; i < pointLightColors.size() ; i++) {
 		//converting i to a string to utilise within uniform setting
 		std::string index = std::to_string(i);
 
@@ -754,6 +766,9 @@ void processLighting(Shader& shader) {
 	shader.setFloat("u_spotLight.cutOff", glm::cos(glm::radians(10.0f)));
 	shader.setFloat("u_spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
 
+	// @TODO: This is probably not required in the near future because we are now
+	// rendering a skybox that mamkes all the objects that fade into the fog kinda
+	// awkward, therefore we may scrap this or rework the render distance.
 	//FOG (USING SKY COLOR)
 	shader.setFloat("u_fogDistance", 3.0f);
 	shader.setVec3("u_skyColor", skyColor);
@@ -761,7 +776,7 @@ void processLighting(Shader& shader) {
 
 
 glm::vec3 calculateSkyColor(float currentTime) {
-	//changing the color of the sky to simulate a day / night cycle
+	// Changing the color of the sky to simulate a day / night cycle
 	float skyTransitionSpeed = 0.3f;
 	float t = 0.5f * (1.0f + sin(skyTransitionSpeed * currentTime));
 	return skyColor = glm::mix(darkSky, greySky, t);
@@ -816,3 +831,7 @@ void bind_textures(Shader& shader, unsigned int diffuse, unsigned int specular, 
 	}
 }
 
+void delete_vertex_data (unsigned int& VAO, unsigned int& VBO) {
+	glDeleteVertexArrays(1, &VAO);
+	glDeleteBuffers(1,		&VBO);
+}

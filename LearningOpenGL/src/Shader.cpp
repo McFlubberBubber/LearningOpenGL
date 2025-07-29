@@ -1,3 +1,8 @@
+// @TODO: Most of the strings here are using std::string which is a
+// little more overhead that just using const char*, therefore some
+// refactoring could be done here to make using the utility functions
+// more efficient.
+
 #include "Shader.h"
 
 #include <iostream>
@@ -131,6 +136,21 @@ void Shader::setMat4(const std::string &name, const glm::mat4 &matrix) const {
 	glUniformMatrix4fv(glGetUniformLocation(programID, name.c_str()), 1, GL_FALSE, &matrix[0][0]);
 }
 
+
+//
+// Setting Uniform buffers
+//
+void Shader::set_uniform_buffer(const std::string &uniform_block_name, const int binding_point) const {
+	unsigned int uniform_block_index = glGetUniformBlockIndex(programID, uniform_block_name.c_str());
+
+	if (uniform_block_index == GL_INVALID_INDEX) {
+		std::cout << "WARNING: Uniform block = " << uniform_block_name << ", not found in shader\n";
+		return;
+	}
+
+	glUniformBlockBinding(programID, uniform_block_index, binding_point)
+;
+}
 
 //error logging any failed shader compilations
 void Shader::m_checkCompileErrors(unsigned int shader, std::string type)

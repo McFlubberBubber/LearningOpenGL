@@ -19,7 +19,9 @@ void init_reflection_cube();
 void init_refraction_cube();
 
 void draw_skybox(const glm::mat4& projection_matrix, const Camera& camera);
-void draw_reflection_cube(const glm::mat4& projection_matrix, const glm::vec3& view_position, const glm::mat4& view_matrix);
-void draw_refraction_cube(const glm::mat4& projection_matrix, const glm::vec3& view_position, const glm::mat4& view_matrix);
+void draw_reflection_cube(const glm::vec3& view_position);
+void draw_refraction_cube(const glm::vec3& view_position);
+
+void delete_skybox_buffers();
 
 #endif

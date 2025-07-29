@@ -159,6 +159,7 @@ void init_reflection_cube() {
 	reflection_shader = Shader("res/shaders/reflection.vert", "res/shaders/reflection.frag");
 	reflection_shader.useProgram();
 	reflection_shader.setInt("u_skybox", 0);	
+	reflection_shader.set_uniform_buffer("u_matrices", 0);
 }
 
 void init_refraction_cube() {
@@ -179,7 +180,7 @@ void init_refraction_cube() {
 	refraction_shader = Shader("res/shaders/reflection.vert", "res/shaders/refraction.frag");
 	refraction_shader.useProgram();
 	refraction_shader.setInt("u_skybox", 0);	
-
+	refraction_shader.set_uniform_buffer("u_matrices", 0);
 }
 
 
@@ -208,10 +209,8 @@ void draw_skybox(const glm::mat4& projection_matrix, const Camera& camera) {
 //	glDepthFunc(GL_LESS);  
 }
 
-void draw_reflection_cube(const glm::mat4& projection_matrix, const glm::vec3& view_position, const glm::mat4& view_matrix) {
+void draw_reflection_cube(const glm::vec3& view_position) {
 	reflection_shader.useProgram();
-	reflection_shader.setMat4("u_projectionMatrix", projection_matrix);
-	reflection_shader.setMat4("u_viewMatrix", view_matrix);
 	reflection_shader.setVec3("u_viewPosition", view_position);
 
 	glBindVertexArray(reflection_VAO);
@@ -226,10 +225,8 @@ void draw_reflection_cube(const glm::mat4& projection_matrix, const glm::vec3& v
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
-void draw_refraction_cube(const glm::mat4& projection_matrix, const glm::vec3& view_position, const glm::mat4& view_matrix) {
+void draw_refraction_cube(const glm::vec3& view_position) {
 	refraction_shader.useProgram();
-	refraction_shader.setMat4("u_projectionMatrix", projection_matrix);
-	refraction_shader.setMat4("u_viewMatrix", view_matrix);
 	refraction_shader.setVec3("u_viewPosition", view_position);
 
 	glBindVertexArray(reflection_VAO);
@@ -244,6 +241,13 @@ void draw_refraction_cube(const glm::mat4& projection_matrix, const glm::vec3& v
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
+void delete_skybox_buffers () {
+	glDeleteVertexArrays(1, &skybox_VAO);
+	glDeleteBuffers(1,		&skybox_VBO);
+
+	glDeleteVertexArrays(1, &reflection_VAO);
+	glDeleteBuffers(1,		&reflection_VBO);
+}
 
 
 // @HARDCODE: Since we are loading just the one cubemap that is

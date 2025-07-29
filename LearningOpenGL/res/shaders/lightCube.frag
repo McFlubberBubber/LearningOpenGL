@@ -1,13 +1,14 @@
-#version 330 core
+#version 460 core
 //OUTPUTS
 out vec4 FragColor;
 
 //UNIFORMS
 uniform vec3 u_lightColor;
 uniform vec3 u_skyColor;
+uniform float u_fogDistance;
 
 //FUNCTION PROTOTYPES
-float LinearizeDepth(float depth);
+float linearize_depth(float depth);
 
 //global variables for fog
 float near = 0.1f;
@@ -15,26 +16,21 @@ float far = 100.0f;
 
 void main()
 {
-
-    //without fog effect
-    //FragColor = vec4(u_lightColor, 1.0f); // setting values based on uniform
-   
-
-    //visualizing the depth buffer with foggyness
-	float fogDensity = 3.0f;
-	float depth = LinearizeDepth(gl_FragCoord.z) / far;
+	//visualizing the depth buffer with foggyness
+	float fog_density = u_fogDistance;
+	float depth = linearize_depth(gl_FragCoord.z) / far;
 	//FragColor = vec4(vec3(depth), 1.0);
-	float depthVec = exp(-pow(depth * fogDensity, 2.0));
+	float depth_vec = exp(-pow(depth * fog_density, 2.0));
 
 	//using different fog colors for testing
-	vec3 fogColor = u_skyColor;
+	vec3 fog_color = u_skyColor;
 
 	//mixing the result with the fog
-	vec3 mixedResult = mix(fogColor, u_lightColor, depthVec);
-	FragColor = vec4(mixedResult, 1.0f);
+	vec3 mixed_result = mix(fog_color, u_lightColor, depth_vec);
+	FragColor = vec4(mixed_result, 1.0f);
 }
 
-float LinearizeDepth(float depth){
+float linearize_depth(float depth){
     float z = depth * 2.0 - 1.0;
 	return (2.0 * near * far) / (far + near - z * (far - near) );
 }

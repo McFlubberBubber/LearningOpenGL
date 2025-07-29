@@ -37,6 +37,11 @@ public:
 	void setMat3(const std::string &name, const glm::mat3 &matrix) const;
 	void setMat4(const std::string &name, const glm::mat4 &matrix) const;
 
+
+	// @INCOMPLETE: Uniform buffer binding
+	void set_uniform_buffer(const std::string &uniform_block_name, const int binding_point) const;
+	
+
 private:
 	//logging any compilation errors of any specific shader type
 	void m_checkCompileErrors(unsigned int shader, std::string type);

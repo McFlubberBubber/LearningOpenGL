@@ -1,10 +1,8 @@
-
-#version 330 core
+#version 460 core
 
 //defining how many point lights will exist in the scene
 #define NR_POINT_LIGHTS 4
 
-//material properties
 struct Material {
 	sampler2D textureDiffuse1;
 	sampler2D textureSpecular1;
@@ -12,16 +10,15 @@ struct Material {
 	float shininess;
 };
 
-//Directional light properties
+
 struct DirLight {
 	vec3 direction;
-
 	vec3 ambient;
 	vec3 diffuse;
 	vec3 specular;
 };
 
-//Point light properties
+
 struct PointLight {
 	vec3 position;
 
@@ -34,7 +31,7 @@ struct PointLight {
 	vec3 specular;
 };
 
-//Spot light properties
+
 struct SpotLight {
 	vec3 position;
 	vec3 direction;
@@ -51,91 +48,104 @@ struct SpotLight {
 	float outerCutOff;
 };
 
-//INPUTS
-in vec3 normalOutput;
-in vec3 fragPosOutput;
-in vec2 textureOutput;
+// Inputs
+in VS_OUT {
+	vec2 texture_coords;
+	vec3 normal;
+	vec3 frag_pos;
+} fs_input;
 
-//OUTPUTS
+
+// Outputs
 out vec4 FragColor;
 
-//UNIFORMS
+
+// Uniforms
 uniform vec3 u_viewPosition;
 uniform vec3 u_skyColor;
 uniform float u_fogDistance;
+
 uniform Material u_material;
 uniform DirLight u_dirLight;
-uniform PointLight u_pointLight[NR_POINT_LIGHTS];		//based on the definition of point lights 
+uniform PointLight u_pointLight[NR_POINT_LIGHTS];
 uniform SpotLight u_spotLight;
 
-//FUNCTION PROTOTYPES
-vec3 CalculateDirectionalLight(DirLight u_dirLight, vec3 norm, vec3 viewDirection);
-vec3 CalculatePointLight(PointLight u_pointLight, vec3 norm, vec3 fragPosOutput, vec3 viewDirection);
-vec3 CaluclateSpotLight(SpotLight u_spotLight, vec3 norm, vec3 fragPosOutput, vec3 viewDirection);
-float LinearizeDepth(float depth);
 
+//Depth buffer stuff
 float near = 0.1;
 float far = 100.0;
+
+
+//FUNCTION PROTOTYPES
+vec3 calculate_directional_lighting(DirLight u_dirLight, vec3 norm, vec3 view_direction);
+
+vec3 calculate_point_lighting(PointLight u_pointLight, vec3 norm, vec3 frag_pos, vec3 view_direction);
+
+vec3 calculate_spot_lighting(SpotLight u_spotLight, vec3 norm, vec3 frag_pos, vec3 view_direction);
+
+float linearize_depth(float depth);
+
 
 void main ()
 {
 	//Calulating lighting properties (PHONG SHADING)
-	vec3 norm = normalize(normalOutput);
-	vec3 viewDirection = normalize(u_viewPosition - fragPosOutput);
+	vec3 norm = normalize(fs_input.normal);
+	vec3 view_direction  = normalize(u_viewPosition - fs_input.frag_pos);
 
 	//Phase 1: Directional Lighting
-	vec3 result = CalculateDirectionalLight(u_dirLight, norm, viewDirection);
+	vec3 result = calculate_directional_lighting(u_dirLight, norm, view_direction);
 
 	//Phase 2: Point Lighting
 	for (int i = 0; i < NR_POINT_LIGHTS; i++){
-		result += CalculatePointLight(u_pointLight[i], norm, fragPosOutput, viewDirection);
+		result += calculate_point_lighting(u_pointLight[i], norm, fs_input.frag_pos, view_direction);
 	}
 
 	//Phase 3: Spot Lighting
-	result += CaluclateSpotLight(u_spotLight, norm, fragPosOutput, viewDirection);
+	result += calculate_spot_lighting(u_spotLight, norm, fs_input.frag_pos, view_direction);
 
 	//Phase 4: Emission handling
-	vec3 emissionMap = vec3(texture(u_material.textureEmission1, textureOutput));
-	vec3 specularMap = vec3(texture(u_material.textureSpecular1, textureOutput));
-	if (specularMap.r == 0.0 && specularMap.g == 0.0 && specularMap.b == 0.0) {
-		result += emissionMap;
+	vec3 emission_map = vec3(texture(u_material.textureEmission1, fs_input.texture_coords));
+	vec3 specular_map = vec3(texture(u_material.textureSpecular1, fs_input.texture_coords));
+	if (specular_map.r == 0.0 && specular_map.g == 0.0 && specular_map.b == 0.0) {
+		result += emission_map;
 	}
 
-	//Applying all lighting calculations - NO FOG
-	//FragColor = vec4(result, 1.0);
-
-
 	//visualizing the depth buffer with foggyness
-	float fogDensity = u_fogDistance;
-	float depth = LinearizeDepth(gl_FragCoord.z) / far;
+	float fog_density = u_fogDistance;
+	float depth = linearize_depth(gl_FragCoord.z) / far;
 	//FragColor = vec4(vec3(depth), 1.0);
-	float depthVec = exp(-pow(depth * fogDensity, 2.0));
+	float depth_vec = exp(-pow(depth * fog_density, 2.0));
 
 	//using different fog colors for testing
-	vec3 fogColor = u_skyColor;
+	vec3 fog_color = u_skyColor;
 
 	//mixing the result with the fog
-	vec3 mixedResult = mix(fogColor, result, depthVec);
-	FragColor = vec4(mixedResult, 1.0f);
+	vec3 mixed_result = mix(fog_color, result, depth_vec);
+	FragColor = vec4(mixed_result, 1.0f);
+
 }
 
 
 
 //for calculating any directional lighting in the scene
-vec3 CalculateDirectionalLight(DirLight u_dirLight, vec3 norm, vec3 viewDirection){
+vec3 calculate_directional_lighting(DirLight u_dirLight, vec3 norm, vec3 view_direction){
 	//getting light direction using the direction
-	vec3 lightDirecton = normalize(-u_dirLight.direction);												//normalizing the negative of dirLight's direction attribute
+	vec3 light_direction = normalize(-u_dirLight.direction);											//normalizing the negative of dirLight's direction attribute
 	
 	//diffuse 
-	float diff = max(dot(norm, lightDirecton), 0.0f);													//calculating diffuse with dot product of normals and lightDirection
+	float diff = max(dot(norm, light_direction), 0.0f);													//calculating diffuse with dot product of normals and lightDirection
+	
 	//specular
-	vec3 reflectDirection = reflect(-lightDirecton, norm);												//getting the reflect direction based on the negative lightDirection and the normals
-	float spec = pow(max(dot(viewDirection, reflectDirection), 0.0f), u_material.shininess);			//calculating specular with power based on shininess, dot prod on view + ref directions
+	vec3 reflect_direction = reflect(-light_direction, norm);												//getting the reflect direction based on the negative lightDirection and the normals
+	
+	float spec = pow(max(dot(view_direction, reflect_direction), 0.0f), u_material.shininess);			//calculating specular with power based on shininess, dot prod on view + ref directions
 
 	//combining results
-	vec3 ambient = u_dirLight.ambient * vec3(texture(u_material.textureDiffuse1, textureOutput));				//light ambient multiplied with material diffuse's texture
-	vec3 diffuse = u_dirLight.diffuse * diff * vec3(texture(u_material.textureDiffuse1, textureOutput));		//light diffuse multiplied with material diffuse's texture
-	vec3 specular = u_dirLight.specular * spec * vec3(texture(u_material.textureSpecular1, textureOutput));		//light specular multiplied with material specular's texture
+	vec3 ambient = u_dirLight.ambient * vec3(texture(u_material.textureDiffuse1, fs_input.texture_coords));				//light ambient multiplied with material diffuse's texture
+
+	vec3 diffuse = u_dirLight.diffuse * diff * vec3(texture(u_material.textureDiffuse1, fs_input.texture_coords));		//light diffuse multiplied with material diffuse's texture
+
+	vec3 specular = u_dirLight.specular * spec * vec3(texture(u_material.textureSpecular1, fs_input.texture_coords));		//light specular multiplied with material specular's texture
 
 	//returning vec3 result
 	return (ambient + diffuse + specular);
@@ -143,25 +153,27 @@ vec3 CalculateDirectionalLight(DirLight u_dirLight, vec3 norm, vec3 viewDirectio
 
 
 //for calculating any number of point lights that can exist within the scene
-vec3 CalculatePointLight(PointLight u_pointLight, vec3 norm, vec3 fragPosOutput, vec3 viewDirection) {
+vec3 calculate_point_lighting(PointLight u_pointLight, vec3 norm, vec3 frag_pos, vec3 view_direction) {
 	//getting light direction using the position
-	vec3 lightDirecton = normalize(u_pointLight.position - fragPosOutput);
+	vec3 light_direction = normalize(u_pointLight.position - frag_pos);
 
 	//diffuse
-	float diff = max(dot(norm, lightDirecton), 0.0f);
+	float diff = max(dot(norm, light_direction), 0.0f);
 
 	//specular
-	vec3 reflectDirection = reflect(-lightDirecton, norm);
-	float spec = pow(max(dot(viewDirection, reflectDirection), 0.0f), u_material.shininess);
+	vec3 reflect_direction = reflect(-light_direction, norm);
+	float spec = pow(max(dot(view_direction, reflect_direction), 0.0f), u_material.shininess);
 
 	//attenuation
-	float distance = length(u_pointLight.position - fragPosOutput);
+	float distance = length(u_pointLight.position - frag_pos);
 	float attenuation = 1.0f / (u_pointLight.constant + u_pointLight.linear * distance + u_pointLight.quadratic * (distance * distance));
 
 	//combining results
-	vec3 ambient = u_pointLight.ambient * vec3(texture(u_material.textureDiffuse1, textureOutput));
-	vec3 diffuse = u_pointLight.diffuse * diff * vec3(texture(u_material.textureDiffuse1, textureOutput));
-	vec3 specular = u_pointLight.specular * spec * vec3(texture(u_material.textureSpecular1, textureOutput));
+	vec3 ambient = u_pointLight.ambient * vec3(texture(u_material.textureDiffuse1, fs_input.texture_coords));
+
+	vec3 diffuse = u_pointLight.diffuse * diff * vec3(texture(u_material.textureDiffuse1, fs_input.texture_coords));
+
+	vec3 specular = u_pointLight.specular * spec * vec3(texture(u_material.textureSpecular1, fs_input.texture_coords));
 
 	//applying attenuation to lighting vectors
 	ambient *= attenuation;
@@ -171,29 +183,31 @@ vec3 CalculatePointLight(PointLight u_pointLight, vec3 norm, vec3 fragPosOutput,
 	return (ambient + diffuse + specular);
 }
 
-vec3 CaluclateSpotLight(SpotLight u_spotLight, vec3 norm, vec3 fragPosOutput, vec3 viewDirection) {
+vec3 calculate_spot_lighting(SpotLight u_spotLight, vec3 norm, vec3 frag_pos, vec3 view_direction) {
 	//getting the light direction by using the position of the player
-	vec3 lightDirecton = normalize(u_spotLight.position - fragPosOutput);
+	vec3 light_direction = normalize(u_spotLight.position - frag_pos);
 
 	//diffuse
-	float diff = max(dot(norm, lightDirecton), 0.0f);
+	float diff = max(dot(norm, light_direction), 0.0f);
 	//specular
-	vec3 reflectDirection = reflect(-lightDirecton, norm);
-	float spec = pow(max(dot(viewDirection, reflectDirection), 0.0f), u_material.shininess);
+	vec3 reflect_direction = reflect(-light_direction, norm);
+	float spec = pow(max(dot(view_direction, reflect_direction), 0.0f), u_material.shininess);
 
 	//attenuation
-	float distance = length(u_spotLight.position - fragPosOutput);
+	float distance = length(u_spotLight.position - frag_pos);
 	float attenuation = 1.0f / (u_spotLight.constant + u_spotLight.linear * distance + u_spotLight.quadratic * (distance * distance));
 
 	//intensity
-	float theta = dot(lightDirecton, normalize(-u_spotLight.direction));
+	float theta = dot(light_direction, normalize(-u_spotLight.direction));
 	float epsilon = u_spotLight.cutOff - u_spotLight.outerCutOff;
 	float intensity = clamp((theta - u_spotLight.outerCutOff) / epsilon, 0.0f, 1.0f);		//clamping the values between 0 and 1
 
 	//applying spotlight
-	vec3 ambient = u_spotLight.ambient * vec3(texture(u_material.textureDiffuse1, textureOutput));
-	vec3 diffuse = u_spotLight.diffuse * diff * vec3(texture(u_material.textureDiffuse1, textureOutput));
-	vec3 specular = u_spotLight.specular * spec * vec3(texture(u_material.textureSpecular1, textureOutput));
+	vec3 ambient = u_spotLight.ambient * vec3(texture(u_material.textureDiffuse1, fs_input.texture_coords));
+
+	vec3 diffuse = u_spotLight.diffuse * diff * vec3(texture(u_material.textureDiffuse1, fs_input.texture_coords));
+
+	vec3 specular = u_spotLight.specular * spec * vec3(texture(u_material.textureSpecular1, fs_input.texture_coords));
 
 	ambient *= attenuation * intensity;
 	diffuse *= attenuation * intensity;
@@ -202,7 +216,7 @@ vec3 CaluclateSpotLight(SpotLight u_spotLight, vec3 norm, vec3 fragPosOutput, ve
 	return (ambient + diffuse + specular);
 }
 
-float LinearizeDepth(float depth){
-    float z = depth * 2.0 - 1.0;
+float linearize_depth(float depth){
+	float z = depth * 2.0 - 1.0;
 	return (2.0 * near * far) / (far + near - z * (far - near) );
 }

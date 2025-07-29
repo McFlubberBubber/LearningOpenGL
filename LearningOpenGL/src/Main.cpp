@@ -41,10 +41,12 @@ bool firstMouse = true;
 
 int main()
 {
+	std::cout << "OpenGL Version 4.6.0 - LearningOpenGL by McFlubberBubber.\n";
+
 	//initializing GLFW
 	glfwInit();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);					//setting major version 3.0
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);					//setting minor version 0.3
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);					//setting major version 3.0
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);					//setting minor version 0.3
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);	//using core profile
 
 	//setting up GLFWwindow
@@ -74,11 +76,6 @@ int main()
 	
 	// Configuring global openGL state
 	/*
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);	
-	*/
-
-	/*
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_FRONT);
 	glFrontFace(GL_CCW);		// Incase we prefer clockwise faces instead of counter clockwise
@@ -86,7 +83,7 @@ int main()
 	
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
+	glEnable(GL_PROGRAM_POINT_SIZE);
 
 
 	// @TODO All these functions can be shrunk down to an initGame() or initScene()

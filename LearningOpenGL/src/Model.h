@@ -132,6 +132,12 @@ private:
 		return Mesh(vertices, indices, textures);
 	}
 
+	// @TODO: This function may need to get changed since some of the textures that get loaded
+	// within different model formats (for example, FBX models are currently not working since the
+	// texture naming is a bit different), don't work. This could just be because the naming of the
+	// textures within the corresponding model's folder is not matching the usual naming conventions
+	// that we use for the OBJ models, but that is something that we need to explore later on.
+	
 	//loading the material textures based on the type that was specified
 	std::vector<Texture> m_LoadMaterialTexture(aiMaterial* material, aiTextureType type, std::string typeName) {
 		std::vector<Texture> textures;
@@ -144,22 +150,11 @@ private:
 			
 			//if the texture has been loaded previously, break the loop
 			for (unsigned int j = 0; j < m_texturesLoaded.size(); j++) {
-				
-				//CURRENTLY: testing changes to ensure texture file names that match don't get reused in other models
-				/*
-				if (m_texturesLoaded[j].path == fullPath) {
-					textures.push_back(m_texturesLoaded[j]);
-					skip = true;
-					break;
-				}
-				*/
-
 				if (std::strcmp(m_texturesLoaded[j].path.data(), str.C_Str()) == 0) {
 					textures.push_back(m_texturesLoaded[j]);
 					skip = true;
 					break;
 				}
-				
 			}
 
 			//if the texture has not been loaded already, then load it
