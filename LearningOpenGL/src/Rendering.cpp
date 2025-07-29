@@ -1,5 +1,6 @@
 #include "Rendering.h"
 #include "Time.h"
+#include "text_rendering.h"
 #include <map>
 
 //
@@ -54,6 +55,8 @@ unsigned int textureColorBuffer = 0;
 // Matrixes - doing this instead of passing a camera reference to the draw calls because there isn't much else we want
 // the camera for, so we just store the pos and front of the cam here
 glm::mat4 projectionMatrix;
+glm::mat4 ortho_projection;
+
 glm::mat4 cameraView;
 glm::vec3 cameraPosition;
 glm::vec3 cameraFront;
@@ -312,6 +315,10 @@ void initBuffers(const unsigned int width, const unsigned int height) {
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// @TODO: We set the ortho_projection stuff here in the init_buffers
+	// but this probably be better off elsewhere
+	ortho_projection = glm::ortho(0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height));
 }
 
 
@@ -653,6 +660,9 @@ void renderScene(Camera& camera, const float ASPECT_RATIO) {
 	drawGrass();
 	drawWindows(camera);	
 
+	// Drawing text
+	draw_text(ortho_projection, font_shader, "Hello!", 100, 100, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+
 	// Using the screen shader for the frame buffer
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glDisable(GL_DEPTH_TEST);
@@ -675,6 +685,8 @@ void cleanupScene() {
 	glDeleteBuffers(1, 		 &UBO_matrices);	
 	glDeleteFramebuffers(1,  &FBO);
 	glDeleteRenderbuffers(1, &RBO);
+
+	cleanup_freetype();
 }
 
 

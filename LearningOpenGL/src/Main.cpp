@@ -11,6 +11,7 @@
 #include "Rendering.h"
 #include "Time.h"
 #include "UserInput.h"
+#include "text_rendering.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -98,6 +99,9 @@ int main()
 	init_reflection_cube();
 	init_refraction_cube();
 
+	init_font_buffers();
+	load_font();
+	
 	// @NOTE This can proably be done under an init function aswell
 	// but this is here just to test the processInput function if it
 	// works
