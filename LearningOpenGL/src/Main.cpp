@@ -94,14 +94,12 @@ int main()
 	initShaders();
 	initModels();
 	initTextures();
+	init_fonts();
 
 	init_skybox();
 	init_reflection_cube();
 	init_refraction_cube();
 
-	init_font_buffers();
-	load_font();
-	
 	// @NOTE This can proably be done under an init function aswell
 	// but this is here just to test the processInput function if it
 	// works

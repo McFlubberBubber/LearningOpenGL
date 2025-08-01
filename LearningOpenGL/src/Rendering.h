@@ -20,6 +20,7 @@ void initBuffers(const unsigned int width, const unsigned int height);
 void initShaders();
 void initModels();
 void initTextures();
+void init_fonts();
 
 
 // Will be used in render loop - utilises all the draw functions above

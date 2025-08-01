@@ -1,6 +1,7 @@
 #include "Rendering.h"
 #include "Time.h"
 #include "text_rendering.h"
+
 #include <map>
 
 //
@@ -13,6 +14,7 @@ unsigned int wallVAO, wallVBO, EBO;
 unsigned int FBO, RBO;
 unsigned int quadVAO, quadVBO;
 unsigned int UBO_matrices;
+
 
 // @TODO There's a lot of global state here with the shaders and the models, one of the suggestions was 
 // create an AssetManager struct 
@@ -31,7 +33,7 @@ Shader grassShader;
 Shader windowShader;
 
 Shader screenShader;
-
+Shader font_shader;
 
 // Models
 Model backpack;
@@ -61,6 +63,10 @@ glm::mat4 cameraView;
 glm::vec3 cameraPosition;
 glm::vec3 cameraFront;
 
+
+// Fonts
+Font regular_text;
+Font bold_text;
 
 // Consists of position, normals and textures
 static float cubeVertices[] = {
@@ -337,6 +343,8 @@ void initShaders() {
 	windowShader	= Shader("res/shaders/container.vert", "res/shaders/window.frag");
 
 	screenShader	= Shader("res/shaders/screenbuffer.vert", "res/shaders/screenbuffer.frag");
+	font_shader		= Shader("res/shaders/font.vert", "res/shaders/font.frag");
+	
 }
 
 
@@ -378,6 +386,11 @@ void initTextures() {
 	screenShader.setInt("u_render_mode", 0);
 }
 		
+
+void init_fonts() {
+	regular_text = Font("res/fonts/Merriweather_24pt-Regular.ttf", 48);
+	bold_text	 = Font("res/fonts/Merriweather_24pt-Bold.ttf", 48);
+}
 
 
 //        
@@ -660,9 +673,10 @@ void renderScene(Camera& camera, const float ASPECT_RATIO) {
 	drawGrass();
 	drawWindows(camera);	
 
-	// Drawing text
-	draw_text(ortho_projection, font_shader, "Hello!", 100, 100, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
-
+	// @TODO: Drawing text
+	regular_text.draw_text(ortho_projection, font_shader, "Hello! This is regular text.", 100, 100, 1.0f, glm::vec3(1.0f));
+	bold_text.draw_text(ortho_projection, font_shader, "This is BOLD text!", 100, 200, 1.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+	
 	// Using the screen shader for the frame buffer
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glDisable(GL_DEPTH_TEST);
@@ -685,8 +699,6 @@ void cleanupScene() {
 	glDeleteBuffers(1, 		 &UBO_matrices);	
 	glDeleteFramebuffers(1,  &FBO);
 	glDeleteRenderbuffers(1, &RBO);
-
-	cleanup_freetype();
 }
 
 
@@ -729,6 +741,7 @@ unsigned int loadTexture(const char* path) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+		std::cout << "Loaded texture at path: " << path << "\n";
 		stbi_image_free(data);
 	}
 	else {
