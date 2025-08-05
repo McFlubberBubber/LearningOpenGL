@@ -42,6 +42,8 @@ struct InputState {
 	}
 };
 
+void init_user_input();
+
 
 // Function to handle user input
 void processInput(GLFWwindow* window, Camera& camera, float deltaTime, InputState& input_state);

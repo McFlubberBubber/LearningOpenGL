@@ -24,7 +24,9 @@ void init_fonts();
 
 
 // Will be used in render loop - utilises all the draw functions above
+void display_fps(float delta_time);
 void renderScene(Camera& camera, const float ASPECT_RATIO);
+void render_UI();
 void cleanupScene();
 
 

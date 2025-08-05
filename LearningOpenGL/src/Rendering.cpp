@@ -8,6 +8,7 @@
 // ========== DATA / VARIABLES ==========
 // 
 
+
 // Buffers 
 unsigned int cubeVAO, cubeVBO;
 unsigned int wallVAO, wallVBO, EBO;
@@ -67,6 +68,9 @@ glm::vec3 cameraFront;
 // Fonts
 Font regular_text;
 Font bold_text;
+Font italic_text;
+Font fps_text;
+
 
 // Consists of position, normals and textures
 static float cubeVertices[] = {
@@ -390,6 +394,8 @@ void initTextures() {
 void init_fonts() {
 	regular_text = Font("res/fonts/Merriweather_24pt-Regular.ttf", 48);
 	bold_text	 = Font("res/fonts/Merriweather_24pt-Bold.ttf", 48);
+	italic_text	 = Font("res/fonts/Merriweather_24pt-Italic.ttf", 48);
+	fps_text	 = Font("res/fonts/Merriweather_24pt-Bold.ttf", 24);
 }
 
 
@@ -410,7 +416,7 @@ void drawWoodenContainers() {
 		cubeModel = glm::translate(cubeModel, glm::vec3(0.0f, 0.51f, 0.0f));
 		//enabling rotations
 		float angle = 20.0f + (i * 3);
-		cubeModel = glm::rotate(cubeModel, Time::getTime() * glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+		cubeModel = glm::rotate(cubeModel, Time::get_time() * glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 		containerShader.setMat4("u_modelMatrix", cubeModel);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 	}
@@ -428,7 +434,7 @@ void drawEmissionContainer() {
 	emissionCubeModel = glm::translate(emissionCubeModel, glm::vec3(5.0f, -2.0f, 7.0f));
 	//enabling rotations
 	float angle = 20.0f;
-	emissionCubeModel = glm::rotate(emissionCubeModel, Time::getTime() *glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+	emissionCubeModel = glm::rotate(emissionCubeModel, Time::get_time() *glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 	emissionShader.setMat4("u_modelMatrix", emissionCubeModel);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 }
@@ -482,7 +488,7 @@ void drawBackpack() {
 	glm::mat4 backpackModel = glm::mat4(1.0f);
 	backpackModel = glm::translate(backpackModel, glm::vec3(0.0f, 0.0f, -6.0f));
 	backpackModel = glm::scale(backpackModel, glm::vec3(0.5f));
-	backpackModel = glm::rotate(backpackModel, Time::getTime() * glm::radians(45.0f), glm::vec3(1.0f));
+	backpackModel = glm::rotate(backpackModel, Time::get_time() * glm::radians(45.0f), glm::vec3(1.0f));
 	backpackShader.setMat4("u_modelMatrix", backpackModel);
 	backpack.Draw(backpackShader);
 }
@@ -498,7 +504,7 @@ void drawBlahaj() {
 		glm::mat4 blahajModel = glm::mat4(1.0f);
 		blahajModel = glm::translate(blahajModel, blahajPositions[i]);
 		blahajModel = glm::scale(blahajModel, glm::vec3(1.5f));
-		blahajModel = glm::rotate(blahajModel, Time::getTime() * glm::radians(angle), glm::vec3(1.0f, 2.5f, 0.5f));
+		blahajModel = glm::rotate(blahajModel, Time::get_time() * glm::radians(angle), glm::vec3(1.0f, 2.5f, 0.5f));
 		blahajShader.setMat4("u_modelMatrix", blahajModel);
 		blahaj.Draw(blahajShader);
 	}
@@ -633,6 +639,36 @@ void drawRoom() {
 }
 
 
+// Drawing relevant text information (like a HUD)
+void display_fps() {
+	static std::string fps_ms_string;
+	static float current_time = 0.0f;
+	static float time_acc	  = 0.0f;
+	static uint32_t counter	  = 0;
+
+	const glm::vec3 fps_color = glm::vec3(0.0f, 1.0f, 0.0f);
+	const float alpha = 1.0f;
+	const float scale = 1.0f;
+
+
+	float delta_time = Time::get_delta_time();
+	current_time = Time::get_time();
+	counter++;
+
+	time_acc += delta_time;
+	if (time_acc >= 1.0f) {
+		std::string fps = std::to_string(counter);
+		std::string ms = std::to_string(1000.0f / (float)counter);
+		fps_ms_string = fps + "FPS / " + ms + "ms";
+		counter = 0;
+		time_acc = 0.0f;
+	}
+	
+	fps_text.draw_text(ortho_projection, font_shader, fps_ms_string, 0, 700, scale, fps_color, alpha); 
+
+}
+
+
 
 //
 // ========== RENDERING THE SCENE ==========
@@ -646,7 +682,7 @@ void renderScene(Camera& camera, const float ASPECT_RATIO) {
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 	glEnable(GL_DEPTH_TEST);
 
-	skyColor = calculateSkyColor(Time::getTime());
+	skyColor = calculateSkyColor(Time::get_time());
 	glClearColor(skyColor.r, skyColor.g, skyColor.b, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
@@ -673,21 +709,36 @@ void renderScene(Camera& camera, const float ASPECT_RATIO) {
 	drawGrass();
 	drawWindows(camera);	
 
-	// @TODO: Drawing text
-	regular_text.draw_text(ortho_projection, font_shader, "Hello! This is regular text.", 100, 100, 1.0f, glm::vec3(1.0f));
-	bold_text.draw_text(ortho_projection, font_shader, "This is BOLD text!", 100, 200, 1.0f, glm::vec3(1.0f, 0.0f, 0.0f));
-	
+
 	// Using the screen shader for the frame buffer
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glDisable(GL_DEPTH_TEST);
+
 	screenShader.useProgram();
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, textureColorBuffer);
 	glBindVertexArray(quadVAO);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
+	// Anything that doesn't want to be post processed gets drawn here
+	render_UI();
 }
 
+
+void render_UI(){
+/*
+	regular_text.draw_text(ortho_projection, font_shader, "Hello! This is regular text.", 100, 100, 1.0f, glm::vec3(1.0f), 1.0f);
+	
+	bold_text.draw_text(ortho_projection, font_shader, "This is BOLD text!", 100, 200, 1.0f, glm::vec3(1.0f, 0.0f, 0.0f), 1.0f);
+	
+	italic_text.draw_text(ortho_projection, font_shader, "This is ITALIC text!", 100, 300, 1.0f, glm::vec3(1.0f, 0.0f, 1.0f), 1.0f);
+*/
+	
+	
+	display_fps();	
+
+
+}
 
 void cleanupScene() {
 	delete_skybox_buffers();
@@ -741,7 +792,7 @@ unsigned int loadTexture(const char* path) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-		std::cout << "Loaded texture at path: " << path << "\n";
+		std::cout << "Texture loaded at path: " << path << "\n";
 		stbi_image_free(data);
 	}
 	else {
@@ -800,10 +851,10 @@ void processLighting(Shader& shader) {
 }
 
 
-glm::vec3 calculateSkyColor(float currentTime) {
+glm::vec3 calculateSkyColor(float current_t) {
 	// Changing the color of the sky to simulate a day / night cycle
 	float skyTransitionSpeed = 0.3f;
-	float t = 0.5f * (1.0f + sin(skyTransitionSpeed * currentTime));
+	float t = 0.5f * (1.0f + sin(skyTransitionSpeed * current_t));
 	return skyColor = glm::mix(darkSky, greySky, t);
 }
 

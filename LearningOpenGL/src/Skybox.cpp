@@ -216,7 +216,7 @@ void draw_reflection_cube(const glm::vec3& view_position) {
 	glBindVertexArray(reflection_VAO);
 	glm::mat4 reflection_model = glm::mat4(1.0f);
 	reflection_model = glm::translate(reflection_model, glm::vec3(0.0f, -4.0f, -7.0f));
-	reflection_model = glm::rotate(reflection_model, Time::getTime() * glm::radians(80.0f), glm::vec3(1.0f, 0.5f, 2.5f));
+	reflection_model = glm::rotate(reflection_model, Time::get_time() * glm::radians(80.0f), glm::vec3(1.0f, 0.5f, 2.5f));
 	reflection_shader.setMat4("u_modelMatrix", reflection_model);
 
 	glActiveTexture(GL_TEXTURE0);
@@ -232,7 +232,7 @@ void draw_refraction_cube(const glm::vec3& view_position) {
 	glBindVertexArray(reflection_VAO);
 	glm::mat4 refraction_model = glm::mat4(1.0f);
 	refraction_model = glm::translate(refraction_model, glm::vec3(2.0f, -4.0f, -7.0f));
-	refraction_model = glm::rotate(refraction_model, Time::getTime() * glm::radians(80.0f), glm::vec3(1.0f, 0.5f, 2.5f));
+	refraction_model = glm::rotate(refraction_model, Time::get_time() * glm::radians(80.0f), glm::vec3(1.0f, 0.5f, 2.5f));
 	refraction_shader.setMat4("u_modelMatrix", refraction_model);
 
 	glActiveTexture(GL_TEXTURE0);

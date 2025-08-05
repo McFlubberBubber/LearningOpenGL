@@ -2,8 +2,8 @@
 
 namespace Time {
 	void update();
-	float getDeltaTime();
-	float getTime();
+	float get_delta_time();
+	float get_time();
 
 	//float getUnscaledTime();
 }

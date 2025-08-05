@@ -2,22 +2,22 @@
 #include <GLFW/glfw3.h>
 
 namespace Time {
-	static float lastFrame = 0.0f;
-	static float deltaTime = 0.0f;
+	static float last_frame = 0.0f;
+	static float delta_time = 0.0f;
 
 	// Updating the time variables each render frame
 	void update() {
-		float currentFrame = static_cast<float>(glfwGetTime());
-		deltaTime = currentFrame - lastFrame;
-		lastFrame = currentFrame;
+		float current_frame = static_cast<float>(glfwGetTime());
+		delta_time = current_frame - last_frame;
+		last_frame = current_frame;
 	}
 
 	// Getters for time variables
-	float getDeltaTime() {
-		return deltaTime;
+	float get_delta_time() {
+		return delta_time;
 	}
 
-	float getTime() {
+	float get_time() {
 		return static_cast<float>(glfwGetTime());
 	}
 }

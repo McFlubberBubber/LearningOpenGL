@@ -40,6 +40,10 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
 		//d. converting the stream into a string
 		vertexCode = vShaderStream.str();
 		fragmentCode = fShaderStream.str();
+
+		//e. logging status
+		std::cout << "Vertex shader loaded at path: " << vertexPath << "\n";
+		std::cout << "Fragment shader loaded at path: " << fragmentPath << "\n";
 	}
 	catch (std::ifstream::failure error)
 	{

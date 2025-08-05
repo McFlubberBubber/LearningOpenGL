@@ -2,6 +2,7 @@
 #include "UserInput.h"
 #include "Rendering.h"
 
+
 // @TODO: So basically, this refactor has A LOT of if statement that
 // are being used in this file which is most likely not the most
 // optimized way of doing this. Therefore the user input system will
@@ -10,6 +11,7 @@
 
 static void apply_render_mode (RenderMode render_mode) {
 	apply_render_mode_to_screen_shader(render_mode);
+	std::cout << "RenderMode::" << render_mode_to_string(render_mode) << std::endl;	
 }
 
 
@@ -18,10 +20,8 @@ void increment_render_mode (InputState& input_state) {
 
 	input_state.render_mode = static_cast<RenderMode> (next_mode);
 	apply_render_mode(input_state.render_mode);
-	
-	std::cout << "RenderMode::" << render_mode_to_string(input_state.render_mode) << std::endl;
-	
 }
+
 
 void decrement_render_mode(InputState& input_state) {
 	int current_mode = static_cast<int> (input_state.render_mode);
@@ -30,9 +30,6 @@ void decrement_render_mode(InputState& input_state) {
 
 	input_state.render_mode = static_cast<RenderMode> (prev_mode);
 	apply_render_mode(input_state.render_mode);
-	
-	std::cout << "RenderMode::" << render_mode_to_string(input_state.render_mode) << std::endl;
-	
 }
 
 

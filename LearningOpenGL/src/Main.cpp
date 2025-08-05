@@ -27,10 +27,7 @@ const unsigned int SCREEN_HEIGHT = 720;
 const float ASPECT_RATIO = static_cast<float>(SCREEN_WIDTH) / SCREEN_HEIGHT;
 
 //Time variables
-float deltaTime;
-float currentTime;
-static float timeAccumulator; 
-unsigned int counter;
+float delta_time;
 
 //setting up camera
 Camera camera(glm::vec3(0.0f, -4.0f, 5.0f));
@@ -39,18 +36,26 @@ float lastY = SCREEN_HEIGHT / 2;
 bool firstMouse = true;
 
 
+// Game state
+enum class ApplicationState {
+	GAME,
+	MENU
+};
+
 
 int main()
 {
 	std::cout << "OpenGL Version 4.6.0 - LearningOpenGL by McFlubberBubber.\n";
 
-	//initializing GLFW
+	// Initializing GLFW
 	glfwInit();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);					//setting major version 3.0
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);					//setting minor version 0.3
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);	//using core profile
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 
-	//setting up GLFWwindow
+	// Using core profile instead of immediate
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+	// Setting up GLFWwindow
 	GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "LearningOpenGL", NULL, NULL);
 	if (window == NULL)
 	{
@@ -58,12 +63,18 @@ int main()
 		glfwTerminate();
 		return -1;
 	}
-	glfwMakeContextCurrent(window);											// setting the current context to the window 	
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);		// calling this function whenever the user resizes window
-	glfwSetCursorPosCallback(window, mouse_callback);						// calling the mouse callback to handle looking around
-	glfwSetScrollCallback(window, scroll_callback);							// calling scroll to allow zooming within the scene
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);			// capturing our mouse
-	glfwSwapInterval(1);													// this line enables v-sync
+	glfwMakeContextCurrent(window);
+
+	// Calling this function whenever the user resizes window
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+	// Capturing mouse, and enabling cursor pos + zoom
+	glfwSetCursorPosCallback(window, mouse_callback);					
+	glfwSetScrollCallback(window, scroll_callback);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+	// @HARDCODE: V-SYNC ENABLER (0: off / 1: on)
+	glfwSwapInterval(1);
 	stbi_set_flip_vertically_on_load(true);
 
 
@@ -87,6 +98,9 @@ int main()
 	glEnable(GL_PROGRAM_POINT_SIZE);
 
 
+	ApplicationState current_state = ApplicationState::GAME;
+
+
 	// @TODO All these functions can be shrunk down to an initGame() or initScene()
 	// but for now, it's nice to know what exactly we are initializing
 	// Initializing here...
@@ -100,38 +114,21 @@ int main()
 	init_reflection_cube();
 	init_refraction_cube();
 
-	// @NOTE This can proably be done under an init function aswell
-	// but this is here just to test the processInput function if it
-	// works
 	InputState input_state;
+
 
 	//-------------------------------- RENDER LOOP ----------------------------------------
 	while (!glfwWindowShouldClose(window)) {		//checks if glfw has been instructed to close
 		Time::update();
-		deltaTime = Time::getDeltaTime();
-		currentTime = Time::getTime();
-		counter++;
-
-		processInput(window, camera, deltaTime, input_state);
-
-		//FPS counter
-		timeAccumulator += deltaTime;
-		if (timeAccumulator >= 1.0f) {
-			std::string fps = std::to_string(counter);
-			std::string ms = std::to_string(1000.0f / (float)counter);
-			std::string applicationTitle = "LearningOpenGL: " + fps + "FPS / " + ms + "ms";
-			glfwSetWindowTitle(window, applicationTitle.c_str());
-			counter = 0;
-			timeAccumulator = 0.0f;
-		}
-
+		delta_time = Time::get_delta_time();
+		
+		processInput(window, camera, delta_time, input_state);
 		renderScene(camera, ASPECT_RATIO);
 
 		//checking call events and swapping buffers
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
-
 	
 	cleanupScene();
 	glfwTerminate();		//clearing resources that were allocated

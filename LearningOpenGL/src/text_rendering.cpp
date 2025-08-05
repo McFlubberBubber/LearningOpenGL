@@ -15,7 +15,7 @@ Font::Font(const char* font_path, uint32_t pixel_height){
 		std::cout << "ERORR::FREETYPE: Could not load font: " << font_path << "!\n";
 		return;
 	} else {
-		std::cout << "SUCCESS::FREETYPE: Font loaded at path: " << font_path << "\n";
+		std::cout << "Font loaded at path: " << font_path << "\n";
 	}
 
 	// Numbers represent width and height, width is kept at 0 so it can
@@ -77,7 +77,6 @@ Font& Font::operator=(Font&& other) noexcept {
 }
 
 
-
 void Font::init_font_buffers () {
 	glGenVertexArrays(1, &font_VAO);
 	glGenBuffers(1,		 &font_VBO);
@@ -94,10 +93,11 @@ void Font::init_font_buffers () {
 
 
 
-void Font::draw_text(const glm::mat4 &ortho_projection, Shader &shader, const std::string &text, float x, float y, float scale, const glm::vec3 &color) {
+void Font::draw_text(const glm::mat4 &ortho_projection, Shader &shader, const std::string &text, float x, float y, float scale, const glm::vec3 &color, float alpha) {
 	shader.useProgram();
 	shader.setMat4("u_projection", ortho_projection);
 	shader.setVec3("text_color", color);
+	shader.setFloat("text_alpha", alpha);
 	glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(font_VAO);
 
@@ -138,12 +138,11 @@ void Font::draw_text(const glm::mat4 &ortho_projection, Shader &shader, const st
 }
 
 
+
 // Destructor that will clean up FreeType resources
 Font::~Font(){
 	cleanup_freetype();
 }
-
-
 
 
 

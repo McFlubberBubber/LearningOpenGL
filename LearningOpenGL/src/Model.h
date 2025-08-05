@@ -56,6 +56,7 @@ private:
 
 		m_directory = path.substr(0, path.find_last_of('/'));
 		m_ProcessNode(scene->mRootNode, scene);
+		std::cout << "Model loaded at path: " << path << "\n";
 	}
 
 	//recursively processing each node

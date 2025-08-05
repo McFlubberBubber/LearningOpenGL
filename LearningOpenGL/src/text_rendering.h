@@ -20,6 +20,7 @@ struct Character {
 	unsigned int advance;		// Offset to advance to next glyph
 };
 
+
 class Font {
 public:
 	uint32_t font_VAO = 0;
@@ -58,8 +59,8 @@ public:
 	void init_font_buffers();
 	void load_character_glyphs();
 	
-	void draw_text(const glm::mat4 &ortho_projection, Shader &shader, const std::string &text, float x, float y, float scale, const glm::vec3 &color);
-	
+	void draw_text(const glm::mat4 &ortho_projection, Shader &shader, const std::string &text, float x, float y, float scale, const glm::vec3 &color, float alpha);
+
 	void cleanup_freetype();
 };
 
