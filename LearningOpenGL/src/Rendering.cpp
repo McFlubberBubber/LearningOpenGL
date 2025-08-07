@@ -672,6 +672,7 @@ void display_fps() {
 		time_acc = 0.0f;
 	}
 	
+	// @Hardcode: needs to adjust x and y coords to screen resolution.
 	bold_text.draw_text(ortho_projection, font_shader, string, 0, 875, scale, color, alpha); 
 
 }
@@ -698,7 +699,7 @@ void display_world_coords(Camera &camera) {
 	y_pos = format_coord("Y", camera.position.y);
 	z_pos = format_coord("Z", camera.position.z);
 
-	
+	// @Hardcode: needs to adjust x and y coords to screen resolution.
 	bold_text.draw_text(ortho_projection, font_shader, x_pos, 0, 850, scale, color, alpha);
 	
 	bold_text.draw_text(ortho_projection, font_shader, y_pos, 125, 850, scale, color, alpha);
@@ -765,18 +766,10 @@ void renderScene(Camera& camera, const float ASPECT_RATIO) {
 
 
 void render_UI(Camera& camera){
-/*
-	regular_text.draw_text(ortho_projection, font_shader, "Hello! This is regular text.", 100, 100, 1.0f, glm::vec3(1.0f), 1.0f);
-	
-	bold_text.draw_text(ortho_projection, font_shader, "This is BOLD text!", 100, 200, 1.0f, glm::vec3(1.0f, 0.0f, 0.0f), 1.0f);
-	
-	italic_text.draw_text(ortho_projection, font_shader, "This is ITALIC text!", 100, 300, 1.0f, glm::vec3(1.0f, 0.0f, 1.0f), 1.0f);
-*/
-	
-	
 	display_fps();	
 	display_world_coords(camera);
 
+	bold_text.update_and_draw_fading_texts(ortho_projection, font_shader, Time::get_delta_time());
 }
 
 void cleanupScene() {

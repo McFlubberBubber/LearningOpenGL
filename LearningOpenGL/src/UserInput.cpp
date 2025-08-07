@@ -1,6 +1,12 @@
 #include <iostream>
 #include "UserInput.h"
 #include "Rendering.h"
+#include "text_rendering.h"
+
+extern Font bold_text;
+
+const float lifetime = 1.0f;
+const float fade_duration = 1.0f;
 
 
 // @TODO: So basically, this refactor has A LOT of if statement that
@@ -10,8 +16,18 @@
 
 
 static void apply_render_mode (RenderMode render_mode) {
+	// @Hardcode: needs to adjust x and y coords to screen resolution.
+	const float x = 800.0f - 100.0f;
+	const float y = 700.0f;
+	const float scale = 1.0f;
+	const glm::vec3 color = glm::vec3(1.0f, 0.0f, 0.0f);
+	const std::string tag = "render_mode";
+
 	apply_render_mode_to_screen_shader(render_mode);
-	std::cout << "RenderMode::" << render_mode_to_string(render_mode) << std::endl;	
+	// std::cout << "RenderMode::" << render_mode_to_string(render_mode) << std::endl;
+	
+	bold_text.trigger_fading_text(tag, render_mode_to_string(render_mode), x, y, scale, color, lifetime, fade_duration);
+
 }
 
 
@@ -35,6 +51,14 @@ void decrement_render_mode(InputState& input_state) {
 
 
 void switch_camera_mode(InputState& input_state) {
+	// @Hardcode: needs to adjust x and y coords to screen resolution.
+	const float x = 100.0f;
+	const float y = 100.0f;
+	const float scale = 1.0f;
+	const glm::vec3 color = glm::vec3(1.0f);
+	const std::string tag = "camera_mode";
+	
+
 	// This line increments the enum by adding 1 and then using the
 	// modular with the help of the extra enum type at the end to cycle
 	// back to the start of the enums
@@ -43,9 +67,11 @@ void switch_camera_mode(InputState& input_state) {
 	input_state.camera_mode = static_cast<CameraMode> (next_mode);
 
 	if(input_state.camera_mode == CameraMode::FPS) {
-		std::cout << "FPS MODE ENABLED!" << std::endl;
+		// std::cout << "FPS MODE ENABLED!" << std::endl;
+		bold_text.trigger_fading_text(tag, "FPS Mode", x, y, scale, color, lifetime, fade_duration);
 	} else {
-		std::cout << "FREE FLY MODE ENABLED!" << std::endl;
+		// std::cout << "FREE FLY MODE ENABLED!" << std::endl;
+		bold_text.trigger_fading_text(tag, "Freefly Mode", x, y, scale, color, lifetime, fade_duration);
 	}
 }
 
@@ -109,7 +135,7 @@ void do_freefly_movement(GLFWwindow* window, Camera& camera, float deltaTime) {
 		camera.processMovement(RIGHT, deltaTime);
 }
 
-const char* render_mode_to_string(RenderMode render_mode) {
+std::string render_mode_to_string(RenderMode render_mode) {
 	switch (render_mode) {
 	case RenderMode::NORMAL:			return "NORMAL";
 	case RenderMode::INVERT:			return "INVERT";

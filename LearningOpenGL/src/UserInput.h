@@ -61,5 +61,5 @@ void do_fps_movement(GLFWwindow* window, Camera& camera, float deltaTime);
 void do_freefly_movement(GLFWwindow* window, Camera& camera, float deltaTime);
 
 // Function to store RenderMode state for future printing requirements
-const char* render_mode_to_string(RenderMode render_mode);
+std::string render_mode_to_string(RenderMode render_mode);
 #endif

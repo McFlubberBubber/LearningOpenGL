@@ -92,7 +92,57 @@ void Font::init_font_buffers () {
 }
 
 
+// Functions to draw the fading texts
+void Font::trigger_fading_text(const std::string& tag, const std::string& text, float x, float y, float scale, const glm::vec3& color, float lifetime, float fade_duration) {
 
+	// @Speed
+	// Check for matching tags to reuse fading texts
+	for (auto& ft : fading_texts) {
+		if(ft.tag == tag) {
+			// Updating ft with new data
+			ft.text  = text;
+			ft.x 	 = x;
+			ft.y	 = y;
+			ft.scale = scale;
+			ft.color = color;
+			ft.alpha = 1.0f;
+
+			ft.lifetime 	 = lifetime;
+			ft.fade_duration = fade_duration;
+			ft.time_elapsed  = 0.0f;
+		}
+	}
+
+	// Otherwise, add a new fading text
+	fading_texts.emplace_back(tag, text, x, y, scale, color, lifetime, fade_duration);
+}
+
+void Font::update_and_draw_fading_texts(const glm::mat4& ortho_projection, Shader& shader, float delta_time) {
+	for ( auto it = fading_texts.begin(); it != fading_texts.end(); ) {
+		it->time_elapsed += delta_time;
+
+		if (it->time_elapsed >= it->lifetime + it->fade_duration) {
+			it = fading_texts.erase(it);	// Once the text is fully faded
+			continue;
+		}
+
+
+		// Updating the alpha
+		float current_alpha = 1.0f;
+		if (it->time_elapsed > it->lifetime) {
+			float fade_progress = (it->time_elapsed - it->lifetime) / it->fade_duration;
+			current_alpha = glm::clamp(1.0f - fade_progress, 0.0f, 1.0f);
+		}
+	
+
+	   	// Drawing the text to the screen
+		draw_text(ortho_projection, shader, it->text, it->x, it->y, it->scale, it->color, current_alpha);
+		++it;
+	}
+}
+
+
+// Function to draw text normally within render loop
 void Font::draw_text(const glm::mat4 &ortho_projection, Shader &shader, const std::string &text, float x, float y, float scale, const glm::vec3 &color, float alpha) {
 	shader.useProgram();
 	shader.setMat4("u_projection", ortho_projection);

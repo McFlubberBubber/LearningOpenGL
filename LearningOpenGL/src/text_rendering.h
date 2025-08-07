@@ -5,6 +5,7 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+#include <vector>
 #include <map>
 #include <glad/glad.h>
 #include <glm/glm.hpp>
@@ -21,6 +22,25 @@ struct Character {
 };
 
 
+struct FadingText {
+	std::string tag;
+	std::string text;
+	float x, y;
+	float scale;
+	glm::vec3 color;
+	float alpha = 1.0f;
+
+	float lifetime 		= 1.0f;
+	float fade_duration = 1.0f;
+	float time_elapsed	= 0.0f;
+
+	// Constructor for FadingText
+	FadingText(const std::string& tag_name, const std::string& txt, float x_pos, float y_pos, float scl, const glm::vec3& col, float life, float fade)
+		: tag(tag_name), text(txt), x(x_pos), y(y_pos), scale(scl), color(col), alpha(1.0f), lifetime(life), fade_duration(fade), time_elapsed(0.0f) {} 
+};
+
+
+
 class Font {
 public:
 	uint32_t font_VAO = 0;
@@ -31,7 +51,7 @@ public:
 	FT_Face font_face	= nullptr;
 
 	std::map<char, Character> characters;
-
+	std::vector<FadingText> fading_texts;
 	
 	// Default constructor + destructor
 	Font() = default;
@@ -59,7 +79,13 @@ public:
 	void init_font_buffers();
 	void load_character_glyphs();
 	
+
+	void trigger_fading_text(const std::string& tag, const std::string& text, float x, float y, float scale, const glm::vec3& color, float lifetime, float fade_duration);
+
+	void update_and_draw_fading_texts(const glm::mat4& ortho_projection, Shader& shader, float delta_time);
+	
 	void draw_text(const glm::mat4 &ortho_projection, Shader &shader, const std::string &text, float x, float y, float scale, const glm::vec3 &color, float alpha);
+
 
 	void cleanup_freetype();
 };
