@@ -1,8 +1,12 @@
 #include "Rendering.h"
 #include "Time.h"
 #include "text_rendering.h"
+#include "Camera.h"
 
 #include <map>
+#include <iomanip>
+#include <sstream>
+
 
 //
 // ========== DATA / VARIABLES ==========
@@ -395,7 +399,7 @@ void init_fonts() {
 	regular_text = Font("res/fonts/Merriweather_24pt-Regular.ttf", 48);
 	bold_text	 = Font("res/fonts/Merriweather_24pt-Bold.ttf", 48);
 	italic_text	 = Font("res/fonts/Merriweather_24pt-Italic.ttf", 48);
-	fps_text	 = Font("res/fonts/Merriweather_24pt-Bold.ttf", 24);
+	//fps_text	 = Font("res/fonts/Merriweather_24pt-Bold.ttf", 24);
 }
 
 
@@ -641,14 +645,14 @@ void drawRoom() {
 
 // Drawing relevant text information (like a HUD)
 void display_fps() {
-	static std::string fps_ms_string;
+	static std::string string;
 	static float current_time = 0.0f;
 	static float time_acc	  = 0.0f;
 	static uint32_t counter	  = 0;
 
-	const glm::vec3 fps_color = glm::vec3(0.0f, 1.0f, 0.0f);
+	const glm::vec3 color = glm::vec3(0.0f, 1.0f, 0.0f);
 	const float alpha = 1.0f;
-	const float scale = 1.0f;
+	const float scale = 0.5f;
 
 
 	float delta_time = Time::get_delta_time();
@@ -659,14 +663,49 @@ void display_fps() {
 	if (time_acc >= 1.0f) {
 		std::string fps = std::to_string(counter);
 		std::string ms = std::to_string(1000.0f / (float)counter);
-		fps_ms_string = fps + "FPS / " + ms + "ms";
+
+		// Displaying only fps for now
+		// string = fps + "FPS / " + ms + "ms";
+		string = fps + "FPS";
+
 		counter = 0;
 		time_acc = 0.0f;
 	}
 	
-	fps_text.draw_text(ortho_projection, font_shader, fps_ms_string, 0, 700, scale, fps_color, alpha); 
+	bold_text.draw_text(ortho_projection, font_shader, string, 0, 875, scale, color, alpha); 
 
 }
+
+
+// Rendering world coordinates (with rounded floats to 2dp)
+std::string format_coord(const std::string& label, float value){
+	std::ostringstream string;
+	string << label << ": " << std::fixed << std::setw(6) << std::setprecision(2) << value;
+	return string.str();
+}
+
+
+void display_world_coords(Camera &camera) {
+	static std::string x_pos;
+	static std::string y_pos;
+	static std::string z_pos;
+
+	const glm::vec3 color = glm::vec3(0.0f, 1.0f, 0.0f);
+	const float alpha = 1.0f;
+	const float scale = 0.5f;
+	
+	x_pos = format_coord("X", camera.position.x);
+	y_pos = format_coord("Y", camera.position.y);
+	z_pos = format_coord("Z", camera.position.z);
+
+	
+	bold_text.draw_text(ortho_projection, font_shader, x_pos, 0, 850, scale, color, alpha);
+	
+	bold_text.draw_text(ortho_projection, font_shader, y_pos, 125, 850, scale, color, alpha);
+	
+	bold_text.draw_text(ortho_projection, font_shader, z_pos, 250,  850, scale, color, alpha);
+}
+
 
 
 
@@ -721,11 +760,11 @@ void renderScene(Camera& camera, const float ASPECT_RATIO) {
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	// Anything that doesn't want to be post processed gets drawn here
-	render_UI();
+	render_UI(camera);
 }
 
 
-void render_UI(){
+void render_UI(Camera& camera){
 /*
 	regular_text.draw_text(ortho_projection, font_shader, "Hello! This is regular text.", 100, 100, 1.0f, glm::vec3(1.0f), 1.0f);
 	
@@ -736,7 +775,7 @@ void render_UI(){
 	
 	
 	display_fps();	
-
+	display_world_coords(camera);
 
 }
 
