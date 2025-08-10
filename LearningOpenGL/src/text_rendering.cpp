@@ -1,4 +1,5 @@
 #include "text_rendering.h"
+#include "render_state.h"
 #include <iostream>
 
 
@@ -92,10 +93,23 @@ void Font::init_font_buffers () {
 }
 
 
-// Functions to draw the fading texts
-void Font::trigger_fading_text(const std::string& tag, const std::string& text, float x, float y, float scale, const glm::vec3& color, float lifetime, float fade_duration) {
+// Helper function to get the total string width
+float Font::get_string_width_in_pixels(const std::string& text, float scale) const {
+	float width = 0.0f;
+	
+	for (auto c = text.begin(); c != text.end(); c++) {
+		Character character = characters.at(*c);
+		width += (character.advance >> 6) * scale;
+	}
 
-	// @Speed
+	return width;
+}
+
+
+
+// Functions to draw the fading texts
+void Font::trigger_fading_text(const std::string& tag, const std::string& text, float x, float y, float scale, const glm::vec3& color, float lifetime, float fade_duration, TextAlign align) {
+
 	// Check for matching tags to reuse fading texts
 	for (auto& ft : fading_texts) {
 		if(ft.tag == tag) {
@@ -110,14 +124,17 @@ void Font::trigger_fading_text(const std::string& tag, const std::string& text, 
 			ft.lifetime 	 = lifetime;
 			ft.fade_duration = fade_duration;
 			ft.time_elapsed  = 0.0f;
+
+			ft.align = align;
+			return;
 		}
 	}
 
 	// Otherwise, add a new fading text
-	fading_texts.emplace_back(tag, text, x, y, scale, color, lifetime, fade_duration);
+	fading_texts.emplace_back(tag, text, x, y, scale, color, lifetime, fade_duration, align);
 }
 
-void Font::update_and_draw_fading_texts(const glm::mat4& ortho_projection, Shader& shader, float delta_time) {
+void Font::update_and_draw_fading_texts(Shader& shader, float delta_time) {
 	for ( auto it = fading_texts.begin(); it != fading_texts.end(); ) {
 		it->time_elapsed += delta_time;
 
@@ -136,20 +153,48 @@ void Font::update_and_draw_fading_texts(const glm::mat4& ortho_projection, Shade
 	
 
 	   	// Drawing the text to the screen
-		draw_text(ortho_projection, shader, it->text, it->x, it->y, it->scale, it->color, current_alpha);
+		draw_text(shader, it->text, it->x, it->y, it->scale, it->color, current_alpha, it->align);
 		++it;
 	}
 }
 
 
 // Function to draw text normally within render loop
-void Font::draw_text(const glm::mat4 &ortho_projection, Shader &shader, const std::string &text, float x, float y, float scale, const glm::vec3 &color, float alpha) {
+void Font::draw_text(Shader &shader, const std::string &text, float x, float y, float scale, const glm::vec3 &color, float alpha, TextAlign align) {
+	const glm::mat4& ortho_projection = RenderState::ORTHO_PROJECTION;
+
+	const float width   = RenderState::SCREEN_WIDTH;
+	const float height  = RenderState::SCREEN_HEIGHT;	// We may need this if we want to do vertical centering in the future, but for now it is unused.
+
+	
 	shader.useProgram();
 	shader.setMat4("u_projection", ortho_projection);
 	shader.setVec3("text_color", color);
 	shader.setFloat("text_alpha", alpha);
 	glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(font_VAO);
+
+
+	// Getting the alignment offset
+	float total_width = get_string_width_in_pixels(text, scale);
+	switch (align){
+		case TextAlign::CENTER:
+			x -= total_width / 2.0f;
+			break;
+
+		case TextAlign::RIGHT:
+			x -= total_width;
+			break;
+
+		case TextAlign::SCREEN_CENTER:
+			x = (width - total_width) / 2.0f;
+			break;
+
+		case TextAlign::LEFT:
+		default:
+			break;
+	}
+
 
 	// Iterating through all the characters
 	std::string::const_iterator c;

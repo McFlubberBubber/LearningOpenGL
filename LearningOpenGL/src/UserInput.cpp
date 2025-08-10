@@ -2,6 +2,7 @@
 #include "UserInput.h"
 #include "Rendering.h"
 #include "text_rendering.h"
+#include "render_state.h"
 
 extern Font bold_text;
 
@@ -14,19 +15,18 @@ const float fade_duration = 1.0f;
 // optimized way of doing this. Therefore the user input system will
 // need to be re-iterated if we want to further improve this mess.
 
-
 static void apply_render_mode (RenderMode render_mode) {
 	// @Hardcode: needs to adjust x and y coords to screen resolution.
-	const float x = 800.0f - 100.0f;
-	const float y = 700.0f;
+	const float x = RenderState::SCREEN_WIDTH / 2.0f;
+	const float y = RenderState::SCREEN_HEIGHT / 1.5f;
 	const float scale = 1.0f;
 	const glm::vec3 color = glm::vec3(1.0f, 0.0f, 0.0f);
 	const std::string tag = "render_mode";
 
 	apply_render_mode_to_screen_shader(render_mode);
 	// std::cout << "RenderMode::" << render_mode_to_string(render_mode) << std::endl;
-	
-	bold_text.trigger_fading_text(tag, render_mode_to_string(render_mode), x, y, scale, color, lifetime, fade_duration);
+	std::cout << "X: " << x << " / Y: " << y << std::endl;	
+	bold_text.trigger_fading_text(tag, render_mode_to_string(render_mode), x, y, scale, color, lifetime, fade_duration, TextAlign::CENTER);
 
 }
 
@@ -51,13 +51,12 @@ void decrement_render_mode(InputState& input_state) {
 
 
 void switch_camera_mode(InputState& input_state) {
-	// @Hardcode: needs to adjust x and y coords to screen resolution.
 	const float x = 100.0f;
 	const float y = 100.0f;
 	const float scale = 1.0f;
 	const glm::vec3 color = glm::vec3(1.0f);
 	const std::string tag = "camera_mode";
-	
+	const TextAlign align = TextAlign::LEFT;
 
 	// This line increments the enum by adding 1 and then using the
 	// modular with the help of the extra enum type at the end to cycle
@@ -68,10 +67,10 @@ void switch_camera_mode(InputState& input_state) {
 
 	if(input_state.camera_mode == CameraMode::FPS) {
 		// std::cout << "FPS MODE ENABLED!" << std::endl;
-		bold_text.trigger_fading_text(tag, "FPS Mode", x, y, scale, color, lifetime, fade_duration);
+		bold_text.trigger_fading_text(tag, "FPS Mode", x, y, scale, color, lifetime, fade_duration, align);
 	} else {
 		// std::cout << "FREE FLY MODE ENABLED!" << std::endl;
-		bold_text.trigger_fading_text(tag, "Freefly Mode", x, y, scale, color, lifetime, fade_duration);
+		bold_text.trigger_fading_text(tag, "Freefly Mode", x, y, scale, color, lifetime, fade_duration, align);
 	}
 }
 

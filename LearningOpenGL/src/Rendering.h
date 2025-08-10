@@ -16,7 +16,7 @@
 extern Shader screenShader;
 
 // Initializing things for the game objects
-void initBuffers(const unsigned int width, const unsigned int height);
+void initBuffers();
 void initShaders();
 void initModels();
 void initTextures();
@@ -28,7 +28,7 @@ void render_UI(Camera &camera);
 void display_fps();
 void display_world_coords(Camera &camera);
 
-void renderScene(Camera& camera, const float ASPECT_RATIO);
+void renderScene(Camera& camera);
 void cleanupScene();
 
 

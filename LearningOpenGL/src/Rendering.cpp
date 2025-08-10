@@ -2,6 +2,7 @@
 #include "Time.h"
 #include "text_rendering.h"
 #include "Camera.h"
+#include "render_state.h"
 
 #include <map>
 #include <iomanip>
@@ -62,7 +63,6 @@ unsigned int textureColorBuffer = 0;
 // Matrixes - doing this instead of passing a camera reference to the draw calls because there isn't much else we want
 // the camera for, so we just store the pos and front of the cam here
 glm::mat4 projectionMatrix;
-glm::mat4 ortho_projection;
 
 glm::mat4 cameraView;
 glm::vec3 cameraPosition;
@@ -238,7 +238,11 @@ glm::vec3 skyColor;
 //
 // ========== INITIALIZATION ==========
 //
-void initBuffers(const unsigned int width, const unsigned int height) {
+void initBuffers() {
+	const uint32_t width   = RenderState::SCREEN_WIDTH;
+	const uint32_t height  = RenderState::SCREEN_HEIGHT;
+
+	
 	// Generating the relevant buffers
 	// REMEMBER since some of these objects are not arrays, they need to be
 	// referenced if they are a single obj
@@ -330,9 +334,6 @@ void initBuffers(const unsigned int width, const unsigned int height) {
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	// @TODO: We set the ortho_projection stuff here in the init_buffers
-	// but this probably be better off elsewhere
-	ortho_projection = glm::ortho(0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height));
 }
 
 
@@ -653,7 +654,10 @@ void display_fps() {
 	const glm::vec3 color = glm::vec3(0.0f, 1.0f, 0.0f);
 	const float alpha = 1.0f;
 	const float scale = 0.5f;
+	const TextAlign align = TextAlign::LEFT;
 
+	const float x = 0;
+	const float y = RenderState::SCREEN_HEIGHT - 25;
 
 	float delta_time = Time::get_delta_time();
 	current_time = Time::get_time();
@@ -672,9 +676,7 @@ void display_fps() {
 		time_acc = 0.0f;
 	}
 	
-	// @Hardcode: needs to adjust x and y coords to screen resolution.
-	bold_text.draw_text(ortho_projection, font_shader, string, 0, 875, scale, color, alpha); 
-
+	bold_text.draw_text(font_shader, string, x, y, scale, color, alpha, align); 
 }
 
 
@@ -687,24 +689,29 @@ std::string format_coord(const std::string& label, float value){
 
 
 void display_world_coords(Camera &camera) {
-	static std::string x_pos;
-	static std::string y_pos;
-	static std::string z_pos;
+	static std::string x_str;
+	static std::string y_str;
+	static std::string z_str;
 
 	const glm::vec3 color = glm::vec3(0.0f, 1.0f, 0.0f);
 	const float alpha = 1.0f;
 	const float scale = 0.5f;
+	const TextAlign align = TextAlign::LEFT;
 	
-	x_pos = format_coord("X", camera.position.x);
-	y_pos = format_coord("Y", camera.position.y);
-	z_pos = format_coord("Z", camera.position.z);
+	const float x = 0.0f;
+	const float y = RenderState::SCREEN_HEIGHT - 50;
+//	const float y = 800.0f;
 
-	// @Hardcode: needs to adjust x and y coords to screen resolution.
-	bold_text.draw_text(ortho_projection, font_shader, x_pos, 0, 850, scale, color, alpha);
+	x_str = format_coord("X", camera.position.x);
+	y_str = format_coord("Y", camera.position.y);
+	z_str = format_coord("Z", camera.position.z);
+
+
+	bold_text.draw_text(font_shader, x_str, x, y, scale, color, alpha, align);
 	
-	bold_text.draw_text(ortho_projection, font_shader, y_pos, 125, 850, scale, color, alpha);
+	bold_text.draw_text(font_shader, y_str, x + 110, y, scale, color, alpha, align);
 	
-	bold_text.draw_text(ortho_projection, font_shader, z_pos, 250,  850, scale, color, alpha);
+	bold_text.draw_text(font_shader, z_str, x + 220, y, scale, color, alpha, align);
 }
 
 
@@ -713,8 +720,8 @@ void display_world_coords(Camera &camera) {
 //
 // ========== RENDERING THE SCENE ==========
 //
-void renderScene(Camera& camera, const float ASPECT_RATIO) {
-	projectionMatrix = glm::perspective(glm::radians(camera.zoom), ASPECT_RATIO, 0.1f, 100.0f);		//radians = FOV, width/height (aspect ratio), near and far plane	
+void renderScene(Camera& camera) {
+	projectionMatrix = glm::perspective(glm::radians(camera.zoom), RenderState::ASPECT_RATIO, 0.1f, 100.0f);		//radians = FOV, width/height (aspect ratio), near and far plane	
 	cameraView = camera.GetViewMatrix();
 	cameraPosition = camera.position;
 	cameraFront = camera.front;
@@ -769,7 +776,7 @@ void render_UI(Camera& camera){
 	display_fps();	
 	display_world_coords(camera);
 
-	bold_text.update_and_draw_fading_texts(ortho_projection, font_shader, Time::get_delta_time());
+	bold_text.update_and_draw_fading_texts(font_shader, Time::get_delta_time());
 }
 
 void cleanupScene() {

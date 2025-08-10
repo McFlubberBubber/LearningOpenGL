@@ -22,8 +22,16 @@ struct Character {
 };
 
 
+enum class TextAlign {
+	LEFT,
+	CENTER,
+	RIGHT,
+	SCREEN_CENTER,		// Relative to the screen
+};
+
+
 struct FadingText {
-	std::string tag;
+	std::string tag;			// For reusing fading texts
 	std::string text;
 	float x, y;
 	float scale;
@@ -34,30 +42,37 @@ struct FadingText {
 	float fade_duration = 1.0f;
 	float time_elapsed	= 0.0f;
 
+	TextAlign align = TextAlign::LEFT;		// Default alignment
+
+
 	// Constructor for FadingText
-	FadingText(const std::string& tag_name, const std::string& txt, float x_pos, float y_pos, float scl, const glm::vec3& col, float life, float fade)
-		: tag(tag_name), text(txt), x(x_pos), y(y_pos), scale(scl), color(col), alpha(1.0f), lifetime(life), fade_duration(fade), time_elapsed(0.0f) {} 
+	FadingText(const std::string& tag_name, const std::string& txt, float x_pos, float y_pos, float scl, const glm::vec3& col, float life, float fade, TextAlign text_align = TextAlign::LEFT)
+		: tag(tag_name), text(txt), x(x_pos), y(y_pos), scale(scl), color(col), alpha(1.0f), lifetime(life), fade_duration(fade), time_elapsed(0.0f), align(text_align) {} 
 };
 
 
 
+// @TODO: The way that characters get drawn should probably be moved to instanced
+// rendering since each glyph is spending a draw call. In addition, we are also
+// spending a draw call per space that is within a sentence, which is not good.
 class Font {
 public:
 	uint32_t font_VAO = 0;
 	uint32_t font_VBO = 0;
-	bool is_valid = false;
-	
+
 	FT_Library freetype = nullptr;
 	FT_Face font_face	= nullptr;
 
 	std::map<char, Character> characters;
 	std::vector<FadingText> fading_texts;
+
+	bool is_valid = false;
 	
+
 	// Default constructor + destructor
 	Font() = default;
 	~Font();
 	
-
 	// Constructor to font paths, and set pixel_height
 	Font(const char* path, uint32_t pixel_height);
 
@@ -80,11 +95,13 @@ public:
 	void load_character_glyphs();
 	
 
-	void trigger_fading_text(const std::string& tag, const std::string& text, float x, float y, float scale, const glm::vec3& color, float lifetime, float fade_duration);
+	void trigger_fading_text(const std::string& tag, const std::string& text, float x, float y, float scale, const glm::vec3& color, float lifetime, float fade_duration, TextAlign align);
 
-	void update_and_draw_fading_texts(const glm::mat4& ortho_projection, Shader& shader, float delta_time);
+	void update_and_draw_fading_texts(Shader& shader, float delta_time);
 	
-	void draw_text(const glm::mat4 &ortho_projection, Shader &shader, const std::string &text, float x, float y, float scale, const glm::vec3 &color, float alpha);
+	void draw_text(Shader &shader, const std::string &text, float x, float y, float scale, const glm::vec3 &color, float alpha, TextAlign align);
+
+	float get_string_width_in_pixels(const std::string& text, float scale) const;
 
 
 	void cleanup_freetype();

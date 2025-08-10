@@ -12,6 +12,7 @@
 #include "Time.h"
 #include "UserInput.h"
 #include "text_rendering.h"
+#include "render_state.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -21,18 +22,22 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xPos, double yPos);
 void scroll_callback(GLFWwindow* window, double xOffset, double yOffset);
 
+
+/*
 //window settings
 const unsigned int SCREEN_WIDTH = 1600;
 const unsigned int SCREEN_HEIGHT = 900;
 const float ASPECT_RATIO = static_cast<float>(SCREEN_WIDTH) / SCREEN_HEIGHT;
+*/
+
 
 //Time variables
 float delta_time;
 
 //setting up camera
 Camera camera(glm::vec3(0.0f, -4.0f, 5.0f));
-float lastX = SCREEN_WIDTH / 2;
-float lastY = SCREEN_HEIGHT / 2;
+float lastX = RenderState::SCREEN_WIDTH / 2;
+float lastY = RenderState::SCREEN_HEIGHT / 2;
 bool firstMouse = true;
 
 
@@ -56,7 +61,8 @@ int main()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	// Setting up GLFWwindow
-	GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "LearningOpenGL", NULL, NULL);
+	RenderState::set_screen_size(1600, 900);
+	GLFWwindow* window = glfwCreateWindow(RenderState::SCREEN_WIDTH, RenderState::SCREEN_HEIGHT, "LearningOpenGL", NULL, NULL);
 	if (window == NULL)
 	{
 		std::cout << "Failed to load GLFW window!" << std::endl;
@@ -104,7 +110,7 @@ int main()
 	// @TODO All these functions can be shrunk down to an initGame() or initScene()
 	// but for now, it's nice to know what exactly we are initializing
 	// Initializing here...
-	initBuffers(SCREEN_WIDTH, SCREEN_HEIGHT);
+	initBuffers();
 	initShaders();
 	initModels();
 	initTextures();
@@ -123,7 +129,7 @@ int main()
 		delta_time = Time::get_delta_time();
 		
 		processInput(window, camera, delta_time, input_state);
-		renderScene(camera, ASPECT_RATIO);
+		renderScene(camera);
 
 		//checking call events and swapping buffers
 		glfwSwapBuffers(window);
@@ -136,8 +142,9 @@ int main()
 }
 
 //ensuring the viewport gets resized if the user does so
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+void framebuffer_size_callback(GLFWwindow* window, int32_t width, int32_t height) {
 	glViewport(0, 0, width, height);
+	RenderState::set_screen_size(width, height);
 	resize_framebuffer(width, height);
 }
 
