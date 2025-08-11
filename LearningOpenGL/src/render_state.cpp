@@ -20,6 +20,7 @@ void RenderState::set_screen_size(uint32_t width, uint32_t height) {
 	std::cout << "Width: " << width << " / Height: " << height << std::endl;
 }
 
+
 void RenderState::update_ortho_projection() {
 	ORTHO_PROJECTION = glm::ortho(0.0f, (float)SCREEN_WIDTH, 0.0f, (float)SCREEN_HEIGHT);
 }

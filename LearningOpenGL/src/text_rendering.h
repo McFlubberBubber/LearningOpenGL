@@ -99,7 +99,7 @@ public:
 
 	void update_and_draw_fading_texts(Shader& shader, float delta_time);
 	
-	void draw_text(Shader &shader, const std::string &text, float x, float y, float scale, const glm::vec3 &color, float alpha, TextAlign align);
+	void draw_text(Shader &shader, const std::string &text, float x, float y, float scale, const glm::vec3 &color, float alpha, TextAlign align, bool drop_shadow);
 
 	float get_string_width_in_pixels(const std::string& text, float scale) const;
 

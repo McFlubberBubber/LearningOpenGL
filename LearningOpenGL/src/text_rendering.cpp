@@ -135,6 +135,10 @@ void Font::trigger_fading_text(const std::string& tag, const std::string& text, 
 }
 
 void Font::update_and_draw_fading_texts(Shader& shader, float delta_time) {
+	// Currently, this means each fading text will have a drop shadow by default,
+	// but we can make some fading texts not fade by changing the FadingText struct.
+	bool do_drop_shadow = true;
+
 	for ( auto it = fading_texts.begin(); it != fading_texts.end(); ) {
 		it->time_elapsed += delta_time;
 
@@ -153,14 +157,14 @@ void Font::update_and_draw_fading_texts(Shader& shader, float delta_time) {
 	
 
 	   	// Drawing the text to the screen
-		draw_text(shader, it->text, it->x, it->y, it->scale, it->color, current_alpha, it->align);
+		draw_text(shader, it->text, it->x, it->y, it->scale, it->color, current_alpha, it->align, do_drop_shadow);
 		++it;
 	}
 }
 
 
 // Function to draw text normally within render loop
-void Font::draw_text(Shader &shader, const std::string &text, float x, float y, float scale, const glm::vec3 &color, float alpha, TextAlign align) {
+void Font::draw_text(Shader &shader, const std::string &text, float x, float y, float scale, const glm::vec3 &color, float alpha, TextAlign align, bool drop_shadow) {
 	const glm::mat4& ortho_projection = RenderState::ORTHO_PROJECTION;
 
 	const float width   = RenderState::SCREEN_WIDTH;
@@ -195,6 +199,17 @@ void Font::draw_text(Shader &shader, const std::string &text, float x, float y, 
 			break;
 	}
 
+	// Helper function for drawing drop shadow on text
+	auto draw_glyph = [&](float verts[6][4], const glm::vec3& col, float a) {
+		shader.setVec3("text_color", col);
+		shader.setFloat("text_alpha", a);
+		glBindBuffer(GL_ARRAY_BUFFER, font_VBO);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * 6 * 4, verts);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+	};
+
+
 
 	// Iterating through all the characters
 	std::string::const_iterator c;
@@ -220,10 +235,25 @@ void Font::draw_text(Shader &shader, const std::string &text, float x, float y, 
 
 		// Rendering the glyph over each quad
 		glBindTexture(GL_TEXTURE_2D, character.texture_id);
-		glBindBuffer(GL_ARRAY_BUFFER, font_VBO);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+
+		// Drawing a drop shadow behind the text for clarity
+		if (drop_shadow) {
+			float shadow_offset = 2.0f;
+			float shadow_verts[6][4];
+
+			for (uint32_t i = 0; i < 6; i++) {
+				shadow_verts[i][0] = vertices[i][0] + shadow_offset;
+				shadow_verts[i][1] = vertices[i][1] - shadow_offset;
+				shadow_verts[i][2] = vertices[i][2];
+				shadow_verts[i][3] = vertices[i][3];
+			}
+
+			draw_glyph(shadow_verts, glm::vec3(0.0f), alpha * 0.75f);
+		}
+
+		// Drawing the regular text
+		draw_glyph(vertices, color, alpha);
 
 		// Advancing cursors for the next glyph
 		x += (character.advance >> 6) * scale;

@@ -655,6 +655,7 @@ void display_fps() {
 	const float alpha = 1.0f;
 	const float scale = 0.5f;
 	const TextAlign align = TextAlign::LEFT;
+	const bool do_drop_shadow = true;
 
 	const float x = 0;
 	const float y = RenderState::SCREEN_HEIGHT - 25;
@@ -676,7 +677,7 @@ void display_fps() {
 		time_acc = 0.0f;
 	}
 	
-	bold_text.draw_text(font_shader, string, x, y, scale, color, alpha, align); 
+	bold_text.draw_text(font_shader, string, x, y, scale, color, alpha, align, do_drop_shadow); 
 }
 
 
@@ -697,7 +698,8 @@ void display_world_coords(Camera &camera) {
 	const float alpha = 1.0f;
 	const float scale = 0.5f;
 	const TextAlign align = TextAlign::LEFT;
-	
+	const bool do_drop_shadow = true;
+
 	const float x = 0.0f;
 	const float y = RenderState::SCREEN_HEIGHT - 50;
 //	const float y = 800.0f;
@@ -707,11 +709,11 @@ void display_world_coords(Camera &camera) {
 	z_str = format_coord("Z", camera.position.z);
 
 
-	bold_text.draw_text(font_shader, x_str, x, y, scale, color, alpha, align);
+	bold_text.draw_text(font_shader, x_str, x, y, scale, color, alpha, align, do_drop_shadow);
 	
-	bold_text.draw_text(font_shader, y_str, x + 110, y, scale, color, alpha, align);
+	bold_text.draw_text(font_shader, y_str, x + 110, y, scale, color, alpha, align, do_drop_shadow);
 	
-	bold_text.draw_text(font_shader, z_str, x + 220, y, scale, color, alpha, align);
+	bold_text.draw_text(font_shader, z_str, x + 220, y, scale, color, alpha, align, do_drop_shadow);
 }
 
 
