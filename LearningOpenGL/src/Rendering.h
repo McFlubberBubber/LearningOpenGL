@@ -28,7 +28,7 @@ void render_UI(Camera &camera);
 void display_fps();
 void display_world_coords(Camera &camera);
 
-void renderScene(Camera& camera);
+void render_scene(Camera& camera);
 void cleanupScene();
 
 

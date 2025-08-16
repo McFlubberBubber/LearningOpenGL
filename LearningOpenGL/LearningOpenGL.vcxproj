@@ -120,6 +120,9 @@
       <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\GLFW\lib;$(SolutionDir)Dependencies\ASSIMP\lib;$(SolutionDir)Dependencies\FREETYPE\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);glfw3.lib;opengl32.lib;assimp-vc143-mtd.lib;freetyped.lib</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy "$(SolutionDir)Dependencies\DLLs\*.dll" "$(OutDir)" /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -142,8 +145,9 @@
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\glad.c" />
+    <ClCompile Include="src\menu.cpp" />
     <ClCompile Include="src\Rendering.cpp" />
-    <ClCompile Include="src\render_state.cpp" />
+    <ClCompile Include="src\program_state.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\Skybox.cpp" />
     <ClCompile Include="src\text_rendering.cpp" />
@@ -152,10 +156,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Camera.h" />
+    <ClInclude Include="src\menu.h" />
     <ClInclude Include="src\Rendering.h" />
     <ClInclude Include="src\Mesh.h" />
     <ClInclude Include="src\Model.h" />
-    <ClInclude Include="src\render_state.h" />
+    <ClInclude Include="src\program_state.h" />
     <ClInclude Include="src\Shader.h" />
     <ClInclude Include="src\Skybox.h" />
     <ClInclude Include="src\stb_image.h" />

@@ -2,7 +2,7 @@
 #include "Time.h"
 #include "text_rendering.h"
 #include "Camera.h"
-#include "render_state.h"
+#include "program_state.h"
 
 #include <map>
 #include <iomanip>
@@ -722,7 +722,7 @@ void display_world_coords(Camera &camera) {
 //
 // ========== RENDERING THE SCENE ==========
 //
-void renderScene(Camera& camera) {
+void render_scene(Camera& camera) {
 	projectionMatrix = glm::perspective(glm::radians(camera.zoom), RenderState::ASPECT_RATIO, 0.1f, 100.0f);		//radians = FOV, width/height (aspect ratio), near and far plane	
 	cameraView = camera.GetViewMatrix();
 	cameraPosition = camera.position;

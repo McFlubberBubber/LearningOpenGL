@@ -6,6 +6,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "Camera.h"
+#include "program_state.h"
+#include "menu.h"
 
 enum class RenderMode {
 	NORMAL,
@@ -27,27 +29,18 @@ struct InputState {
 	CameraMode camera_mode { CameraMode::FREEFLY };
 	RenderMode render_mode { RenderMode::NORMAL };
 
-	bool is_key_pressed (GLFWwindow* window, int key) {
-		bool current_key 	 = glfwGetKey(window, key) == GLFW_PRESS;
-		bool key_was_pressed = last_key_states[key];
-		last_key_states[key] = current_key;
-		return current_key && !key_was_pressed;
-	}
-
-	bool is_key_released (GLFWwindow* window, int key) {
-		bool current_key 	 = glfwGetKey(window, key) == GLFW_PRESS;
-		bool key_was_pressed = last_key_states[key];
-		last_key_states[key] = current_key;
-		return !current_key && key_was_pressed;		
-	}
+	bool is_key_pressed (GLFWwindow* window, int key);
+	bool is_key_released (GLFWwindow* window, int key);
 };
 
-void init_user_input();
+
+// Currently not even being defined
+// void init_user_input();
 
 
 // Function to handle user input
-void processInput(GLFWwindow* window, Camera& camera, float deltaTime, InputState& input_state);
-
+void process_input(GLFWwindow* window, Camera& camera, InputState& input_state, ApplicationState& app_state);
+void process_menu_navigation(GLFWwindow* window, InputState& input_state, ApplicationState& app_state, Menu& menu);
 
 // Utility functions to help cycle through the enums
 void switch_camera_mode(InputState& input);
@@ -62,4 +55,5 @@ void do_freefly_movement(GLFWwindow* window, Camera& camera, float deltaTime);
 
 // Function to store RenderMode state for future printing requirements
 std::string render_mode_to_string(RenderMode render_mode);
+
 #endif

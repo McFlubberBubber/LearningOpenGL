@@ -5,6 +5,13 @@
 #include <glm/glm.hpp>
 
 
+// Game state
+enum class ApplicationState {
+	GAME,
+	MENU
+};
+
+// Handles screen resolution
 struct RenderState {
 	static uint32_t SCREEN_WIDTH;
 	static uint32_t SCREEN_HEIGHT;
@@ -14,5 +21,4 @@ struct RenderState {
 
 	static void set_screen_size(uint32_t width, uint32_t height);
 	static void update_ortho_projection();
-	
 };	
