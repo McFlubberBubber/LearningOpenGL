@@ -7,10 +7,10 @@
 #include "text_rendering.h"
 #include "Shader.h"
 #include "Rendering.h"
+#include "Time.h"
+
 
 // @TODO: Using global variables here from rendering files
-extern Font bold_text;
-extern Font italic_text;
 extern Shader font_shader;
 
 Font title_text;
@@ -99,10 +99,17 @@ void draw_menu_choices() {
 	
 	const float spacing = 125.0f;
 	const float scale 	= 1.0f;
+	const glm::vec3 unselected_color = glm::vec3(0.5f);
+	
+	float t = Time::get_time();
+	const float interp_speed = 5.0f;
+	float blue_value = (1.0f + sin(t * interp_speed)) * 0.5f;
+	glm::vec3 selected_color = glm::vec3(1.0f, 1.0f, blue_value);
+
 
 	for (int32_t i = 0; i < menu.items.size(); i++) {
 		const bool selected = (menu.current_item == menu.items[i]);
-		const glm::vec3 color = selected ? glm::vec3(1.0f, 1.0f, 0.0f) : glm::vec3(1.0f);
+		const glm::vec3 color = selected ? selected_color : unselected_color;
 
 		const float alpha = 1.0f;
 		const TextAlign align = TextAlign::CENTER;
