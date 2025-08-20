@@ -1,7 +1,5 @@
-// @TODO: Most of the strings here are using std::string which is a
-// little more overhead that just using const char*, therefore some
-// refactoring could be done here to make using the utility functions
-// more efficient.
+// @TODO: We may refactor this shader file to the new naming convention that we are
+// using lately (snake_case).
 
 #include "Shader.h"
 
@@ -10,17 +8,21 @@
 #include <sstream>		//string stream
 
 //constructor
-Shader::Shader(const char* vertexPath, const char* fragmentPath)
+Shader::Shader(const char* vertexPath, const char* fragmentPath, const char* geometry_path = nullptr)
 {
 	//1. retrieving the vertex + fragment source codes
 	std::string vertexCode;
 	std::string fragmentCode;
+	std::string geometry_code;
+
 	std::ifstream vShaderFile;
 	std::ifstream fShaderFile;
+	std::ifstream g_shader_file;
 
 	//error handling
 	vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 	fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+	g_shader_file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 
 	try
 	{
@@ -41,9 +43,21 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
 		vertexCode = vShaderStream.str();
 		fragmentCode = fShaderStream.str();
 
+		// OPTIONAL: if there is geometry shader that is present
+		if (geometry_path != nullptr) {
+			g_shader_file.open(geometry_path);
+
+			std::stringstream g_shader_stream;
+			g_shader_stream << g_shader_file.rdbuf();
+			g_shader_file.close();
+			geometry_code = g_shader_stream.str();
+			std::cout << "Geometry shader loaded at path: " << geometry_path << "\n";
+		}
+
 		//e. logging status
 		std::cout << "Vertex shader loaded at path: " << vertexPath << "\n";
 		std::cout << "Fragment shader loaded at path: " << fragmentPath << "\n";
+		
 	}
 	catch (std::ifstream::failure error)
 	{
@@ -53,7 +67,7 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
 	const char* fShaderCode = fragmentCode.c_str();
 
 	//2. compiling shaders
-	unsigned int vertex, fragment;
+	unsigned int vertex, fragment, geometry;
 
 	//vertex shader compilation
 	vertex = glCreateShader(GL_VERTEX_SHADER);
@@ -67,16 +81,31 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
 	glCompileShader(fragment);
 	m_checkCompileErrors(fragment, "FRAGMENT");
 
+	//geometry shader compilation
+	if (geometry_path != nullptr) {
+		const char* g_shader_code = geometry_code.c_str();
+		geometry = glCreateShader(GL_GEOMETRY_SHADER);
+		glShaderSource(geometry, 1, &g_shader_code, NULL);
+		glCompileShader(geometry);
+		m_checkCompileErrors(geometry, "GEOMETRY");
+	}
+
+
 	//creating the shader program
 	programID = glCreateProgram();
 	glAttachShader(programID, vertex);
 	glAttachShader(programID, fragment);
+	if (geometry_path != nullptr)
+		glAttachShader(programID, geometry);
+
 	glLinkProgram(programID);
 	m_checkCompileErrors(programID, "PROGRAM");
 
 	//deleting unused shaders since they are linked to program
 	glDeleteShader(vertex);
 	glDeleteShader(fragment);
+	if (geometry_path != nullptr)
+		glDeleteShader(geometry);
 }
 
 void Shader::useProgram() {

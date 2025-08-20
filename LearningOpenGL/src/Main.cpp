@@ -64,6 +64,7 @@ int main()
 		glfwTerminate();
 		return -1;
 	}
+	glfwSetWindowPos(window, 0, 40);
 	glfwMakeContextCurrent(window);
 
 	// Calling this function whenever the user resizes window

@@ -132,9 +132,10 @@ void init_skybox() {
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
-
+	
+	// @TODO: Again, we are specifying nullptr here again
 	//Initializing the skybox's textures
-	skybox_shader   = Shader("res/shaders/skybox.vert", "res/shaders/skybox.frag");
+	skybox_shader   = Shader("res/shaders/skybox.vert", "res/shaders/skybox.frag", nullptr);
 	cubemap_texture = load_cubemap(faces);
 	skybox_shader.useProgram();
 	skybox_shader.setInt("u_skybox", 0);
@@ -156,7 +157,7 @@ void init_reflection_cube() {
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 	
-	reflection_shader = Shader("res/shaders/reflection.vert", "res/shaders/reflection.frag");
+	reflection_shader = Shader("res/shaders/reflection.vert", "res/shaders/reflection.frag", nullptr);
 	reflection_shader.useProgram();
 	reflection_shader.setInt("u_skybox", 0);	
 	reflection_shader.set_uniform_buffer("u_matrices", 0);
@@ -177,7 +178,7 @@ void init_refraction_cube() {
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 	
-	refraction_shader = Shader("res/shaders/reflection.vert", "res/shaders/refraction.frag");
+	refraction_shader = Shader("res/shaders/reflection.vert", "res/shaders/refraction.frag", nullptr);
 	refraction_shader.useProgram();
 	refraction_shader.setInt("u_skybox", 0);	
 	refraction_shader.set_uniform_buffer("u_matrices", 0);

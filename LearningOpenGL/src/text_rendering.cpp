@@ -167,8 +167,8 @@ void Font::update_and_draw_fading_texts(Shader& shader, float delta_time) {
 void Font::draw_text(Shader &shader, const std::string &text, float x, float y, float scale, const glm::vec3 &color, float alpha, TextAlign align, bool drop_shadow) {
 	const glm::mat4& ortho_projection = RenderState::ORTHO_PROJECTION;
 
-	const float width   = RenderState::SCREEN_WIDTH;
-	const float height  = RenderState::SCREEN_HEIGHT;	// We may need this if we want to do vertical centering in the future, but for now it is unused.
+	const float width   = (float)RenderState::SCREEN_WIDTH;
+	const float height  = (float)RenderState::SCREEN_HEIGHT;	// We may need this if we want to do vertical centering in the future, but for now it is unused.
 
 	
 	shader.useProgram();
@@ -178,7 +178,7 @@ void Font::draw_text(Shader &shader, const std::string &text, float x, float y, 
 	glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(font_VAO);
 
-
+	
 	// Getting the alignment offset
 	float total_width = get_string_width_in_pixels(text, scale);
 	switch (align){

@@ -107,5 +107,10 @@
     <None Include="res\shaders\reflection.frag" />
     <None Include="res\shaders\reflection.vert" />
     <None Include="res\shaders\refraction.frag" />
+    <None Include="res\shaders\geometry.vert" />
+    <None Include="res\shaders\geometry.geom" />
+    <None Include="res\shaders\geometry.frag" />
+    <None Include="res\shaders\font.frag" />
+    <None Include="res\shaders\font.vert" />
   </ItemGroup>
 </Project>

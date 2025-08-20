@@ -12,7 +12,7 @@ public:
 	Shader() = default;
 
 	// constructor + using the program based on ID
-	Shader(const char* vertexPath, const char* fragmentPath);
+	Shader(const char* vertexPath, const char* fragmentPath, const char* geometry_path);
 	void useProgram();
 
 	//utilities for setting uniforms

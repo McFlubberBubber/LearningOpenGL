@@ -17,8 +17,10 @@
 // Buffers 
 unsigned int cubeVAO, cubeVBO;
 unsigned int wallVAO, wallVBO, EBO;
-unsigned int FBO, RBO;
 unsigned int quadVAO, quadVBO;
+unsigned int line_VAO, line_VBO;
+
+unsigned int FBO, RBO;
 unsigned int UBO_matrices;
 
 
@@ -35,6 +37,8 @@ Shader houseShader;
 
 Shader floorShader;
 Shader wallShader;
+Shader line_shader;
+
 Shader grassShader;
 Shader windowShader;
 
@@ -149,6 +153,15 @@ static float quadVertices[] = {
 };	
 
 
+// FOR GEOMETRY SHADER TESTING:
+float points[] = {
+    -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, // top-left
+     0.5f,  0.5f, 0.0f, 1.0f, 0.0f, // top-right
+     0.5f, -0.5f, 0.0f, 0.0f, 1.0f, // bottom-right
+    -0.5f, -0.5f, 1.0f, 1.0f, 0.0f  // bottom-left
+};  
+
+
 // World positions of objects
 std::vector<glm::vec3> cubePositions = {
 	glm::vec3(0.0f,  0.0f,  0.0f),
@@ -248,17 +261,17 @@ void initBuffers() {
 	// referenced if they are a single obj
 	glGenVertexArrays(1, &cubeVAO);
 	glGenBuffers(1,		 &cubeVBO);
-
 	glGenVertexArrays(1, &wallVAO);
 	glGenBuffers(1,	     &wallVBO);
-	glGenBuffers(1,		 &EBO);
+	glGenVertexArrays(1, &quadVAO);
+	glGenBuffers(1,		 &quadVBO);
+	glGenVertexArrays(1, &line_VAO);
+	glGenBuffers(1, 	 &line_VBO);
 
+	glGenBuffers(1,		 &EBO);
 	glGenFramebuffers(1,  &FBO);
 	glGenTextures(1, 	  &textureColorBuffer);
 	glGenRenderbuffers(1, &RBO);
-	
-	glGenVertexArrays(1, &quadVAO);
-	glGenBuffers(1,		 &quadVBO);
 
 	glGenBuffers(1, &UBO_matrices);
 
@@ -287,6 +300,16 @@ void initBuffers() {
 	glEnableVertexAttribArray(2);
 
 
+	// 2D line rendering
+	glBindVertexArray(line_VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, line_VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+
 	// Currently not being used, but it's a good reminder as to how to
 	// render a rectangle with the indices being utilised.
 	/*
@@ -294,7 +317,7 @@ void initBuffers() {
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(wallIndices), wallIndices, GL_STATIC_DRAW);
 	*/
 
-
+	// Binding a uniform buffer
 	glBindBuffer(GL_UNIFORM_BUFFER, UBO_matrices);
 	glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -337,23 +360,28 @@ void initBuffers() {
 }
 
 
+// @TODO: The specification of "nullptr" for these shaders that don't even need a
+// geometry shader may need to get improved, therefore we should probably work on
+// refactoring the whole init_shader() function by splitting the different shader
+// objects that we construct.
 void initShaders() {
-	containerShader		= Shader("res/shaders/container.vert", "res/shaders/container.frag");
-	emissionShader		= Shader("res/shaders/container.vert", "res/shaders/emission.frag");
-	lightCubeShader		= Shader("res/shaders/container.vert", "res/shaders/lightCube.frag");
+	containerShader		= Shader("res/shaders/container.vert", "res/shaders/container.frag", nullptr);
+	emissionShader		= Shader("res/shaders/container.vert", "res/shaders/emission.frag", nullptr);
+	lightCubeShader		= Shader("res/shaders/container.vert", "res/shaders/lightCube.frag", nullptr);
 
-	backpackShader	= Shader("res/shaders/backpack.vert", "res/shaders/backpack.frag");
-	blahajShader	= Shader("res/shaders/blahaj.vert", "res/shaders/blahaj.frag");
-	houseShader		= Shader("res/shaders/container.vert", "res/shaders/container.frag");
+	backpackShader	= Shader("res/shaders/backpack.vert", "res/shaders/backpack.frag", nullptr);
+	blahajShader	= Shader("res/shaders/blahaj.vert", "res/shaders/blahaj.frag", nullptr);
+	houseShader		= Shader("res/shaders/container.vert", "res/shaders/container.frag", nullptr);
 
-	floorShader		= Shader("res/shaders/wall.vert", "res/shaders/wall.frag");
-	wallShader		= Shader("res/shaders/wall.vert", "res/shaders/wall.frag");
-	grassShader		= Shader("res/shaders/container.vert", "res/shaders/grass.frag");
-	windowShader	= Shader("res/shaders/container.vert", "res/shaders/window.frag");
+	floorShader		= Shader("res/shaders/wall.vert", "res/shaders/wall.frag", nullptr);
+	wallShader		= Shader("res/shaders/wall.vert", "res/shaders/wall.frag", nullptr);
+	grassShader		= Shader("res/shaders/container.vert", "res/shaders/grass.frag", nullptr);
+	windowShader	= Shader("res/shaders/container.vert", "res/shaders/window.frag", nullptr);
 
-	screenShader	= Shader("res/shaders/screenbuffer.vert", "res/shaders/screenbuffer.frag");
-	font_shader		= Shader("res/shaders/font.vert", "res/shaders/font.frag");
+	screenShader	= Shader("res/shaders/screenbuffer.vert", "res/shaders/screenbuffer.frag", nullptr);
+	font_shader		= Shader("res/shaders/font.vert", "res/shaders/font.frag", nullptr);
 	
+	line_shader		= Shader("res/shaders/geometry.vert", "res/shaders/geometry.frag", "res/shaders/geometry.geom");
 }
 
 
@@ -644,6 +672,13 @@ void drawRoom() {
 }
 
 
+void draw_lines() {
+	line_shader.useProgram();
+	glBindVertexArray(line_VAO);
+	glDrawArrays(GL_POINTS, 0, 4);
+}
+
+
 // Drawing relevant text information (like a HUD)
 void display_fps() {
 	static std::string string;
@@ -658,7 +693,7 @@ void display_fps() {
 	const bool do_drop_shadow = true;
 
 	const float x = 0;
-	const float y = RenderState::SCREEN_HEIGHT - 25;
+	const float y = (float)RenderState::SCREEN_HEIGHT - 25;
 
 	float delta_time = Time::get_delta_time();
 	current_time = Time::get_time();
@@ -701,7 +736,7 @@ void display_world_coords(Camera &camera) {
 	const bool do_drop_shadow = true;
 
 	const float x = 0.0f;
-	const float y = RenderState::SCREEN_HEIGHT - 50;
+	const float y = (float)RenderState::SCREEN_HEIGHT - 50;
 //	const float y = 800.0f;
 
 	x_str = format_coord("X", camera.position.x);
@@ -757,7 +792,7 @@ void render_scene(Camera& camera) {
 	drawRoom();
 	drawGrass();
 	drawWindows(camera);	
-
+	draw_lines();
 
 	// Using the screen shader for the frame buffer
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
