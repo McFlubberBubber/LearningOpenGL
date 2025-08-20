@@ -34,6 +34,7 @@ Shader lightCubeShader;
 Shader backpackShader;
 Shader blahajShader;
 Shader houseShader;
+Shader explode_model_shader;
 
 Shader floorShader;
 Shader wallShader;
@@ -373,6 +374,10 @@ void initShaders() {
 	blahajShader	= Shader("res/shaders/blahaj.vert", "res/shaders/blahaj.frag", nullptr);
 	houseShader		= Shader("res/shaders/container.vert", "res/shaders/container.frag", nullptr);
 
+
+	explode_model_shader = Shader("res/shaders/explode_model.vert", "res/shaders/explode_model.frag", "res/shaders/explode_model.geom");
+
+
 	floorShader		= Shader("res/shaders/wall.vert", "res/shaders/wall.frag", nullptr);
 	wallShader		= Shader("res/shaders/wall.vert", "res/shaders/wall.frag", nullptr);
 	grassShader		= Shader("res/shaders/container.vert", "res/shaders/grass.frag", nullptr);
@@ -561,10 +566,29 @@ void drawHouse() {
 	house.Draw(houseShader);
 }
 
+
+void draw_exploding_backpack() {
+	explode_model_shader.useProgram();
+	applyMatrixes(explode_model_shader);
+	explode_model_shader.setFloat("u_material.shininess", 32.0f);
+	explode_model_shader.setFloat("u_time", Time::get_time());
+ 	processLighting(explode_model_shader);
+
+	glm::mat4 explode_model = glm::mat4(1.0f);
+	explode_model = glm::translate(explode_model, glm::vec3(0.0f, -3.0f, 0.0f));
+	explode_model = glm::scale(explode_model, glm::vec3(0.25f));
+	explode_model = glm::rotate(explode_model, Time::get_time() * glm::radians(20.0f), glm::vec3(1.0f));
+	explode_model_shader.setMat4("u_modelMatrix", explode_model);
+	backpack.Draw(explode_model_shader);
+}
+
+
 void drawModels() {
 	drawBackpack();
 	drawBlahaj();
 	drawHouse();
+
+	draw_exploding_backpack();
 }
 
 
@@ -792,7 +816,7 @@ void render_scene(Camera& camera) {
 	drawRoom();
 	drawGrass();
 	drawWindows(camera);	
-	draw_lines();
+//	draw_lines();
 
 	// Using the screen shader for the frame buffer
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -834,7 +858,7 @@ void cleanupScene() {
 //
 void applyMatrixes(Shader& shader) {
 	shader.set_uniform_buffer("u_matrices", 0);
-	shader.setMat4("u_viewMatrix", cameraView);
+//	shader.setMat4("u_viewMatrix", cameraView);
 }
 
 

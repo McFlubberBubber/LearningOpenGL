@@ -50,7 +50,7 @@ struct SpotLight {
 };
 
 // Inputs
-in VS_OUT {
+in GS_OUT {
 	vec2 texture_coords;
 	vec3 normal;
 	vec3 frag_pos;
@@ -221,3 +221,4 @@ float linearize_depth(float depth){
 	float z = depth * 2.0 - 1.0;
 	return (2.0 * near * far) / (far + near - z * (far - near) );
 }
+
