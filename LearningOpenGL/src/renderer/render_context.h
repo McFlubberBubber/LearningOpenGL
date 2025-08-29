@@ -1,0 +1,21 @@
+#pragma once
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#include "renderer/render_data.h"
+#include "renderer/camera.h"
+#include "renderer/post_processing.h"
+#include "core/program_state.h"
+
+
+struct RenderingContext {
+	Assets assets;
+	CameraData camera_data;
+	BufferData buffers;
+	GeometryData geometry;
+	WorldObjectData world;
+	LightingData lighting;
+	ViewportState viewport;
+	PostProcessingData post_processing;
+};

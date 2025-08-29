@@ -21,69 +21,114 @@
     <ClCompile Include="src\glad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Shader.cpp">
+    <ClCompile Include="src\renderer\camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Camera.cpp">
+    <ClCompile Include="src\ui\menu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Rendering.cpp">
+    <ClCompile Include="src\renderer\mesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Time.cpp">
+    <ClCompile Include="src\renderer\model.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\UserInput.cpp">
+    <ClCompile Include="src\renderer\render_system.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Skybox.cpp">
+    <ClCompile Include="src\core\program_state.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\text_rendering.cpp">
+    <ClCompile Include="src\renderer\shader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\program_state.cpp">
+    <ClCompile Include="src\world\skybox.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\menu.cpp">
+    <ClCompile Include="src\renderer\texture_handler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\text_rendering.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\time.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\input\user_input.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\world\obj_init.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\world\scene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\post_processing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\debug_overlay.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Shader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\stb_image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Camera.h">
+    <ClInclude Include="src\renderer\camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Mesh.h">
+    <ClInclude Include="src\ui\menu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Model.h">
+    <ClInclude Include="src\renderer\render_system.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Rendering.h">
+    <ClInclude Include="src\renderer\mesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Time.h">
+    <ClInclude Include="src\renderer\model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\UserInput.h">
+    <ClInclude Include="src\core\program_state.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Skybox.h">
+    <ClInclude Include="src\renderer\render_context.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\text_rendering.h">
+    <ClInclude Include="src\renderer\render_data.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\program_state.h">
+    <ClInclude Include="src\renderer\shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\menu.h">
+    <ClInclude Include="src\world\skybox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\texture_handler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\text_rendering.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\time.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\input\user_input.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world\scene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world\obj_init.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\post_processing.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\debug_overlay.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -105,12 +150,16 @@
     <None Include="res\shaders\skybox.vert" />
     <None Include="res\shaders\skybox.frag" />
     <None Include="res\shaders\reflection.frag" />
-    <None Include="res\shaders\reflection.vert" />
+    <None Include="res\shaders\special_cube.vert" />
     <None Include="res\shaders\refraction.frag" />
     <None Include="res\shaders\geometry.vert" />
     <None Include="res\shaders\geometry.geom" />
     <None Include="res\shaders\geometry.frag" />
     <None Include="res\shaders\font.frag" />
     <None Include="res\shaders\font.vert" />
+    <None Include="res\shaders\light_cube.frag" />
+    <None Include="res\shaders\explode_model.frag" />
+    <None Include="res\shaders\explode_model.geom" />
+    <None Include="res\shaders\explode_model.vert" />
   </ItemGroup>
 </Project>

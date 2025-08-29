@@ -1,4 +1,4 @@
-#include "Time.h"
+#include "time.h"
 #include <GLFW/glfw3.h>
 
 namespace Time {

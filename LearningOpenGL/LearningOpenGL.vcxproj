@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -114,7 +114,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\GLAD\include;$(SolutionDir)Dependencies\GLM\include;$(SolutionDir)Dependencies\ASSIMP\include;$(SolutionDir)Dependencies\FREETYPE\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\GLAD\include;$(SolutionDir)Dependencies\GLM\include;$(SolutionDir)Dependencies\ASSIMP\include;$(SolutionDir)Dependencies\FREETYPE\include;$(ProjectDir)src</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -144,37 +144,55 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\Main.cpp" />
-    <ClCompile Include="src\Camera.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\renderer\camera.cpp" />
     <ClCompile Include="src\glad.c" />
-    <ClCompile Include="src\menu.cpp" />
-    <ClCompile Include="src\Rendering.cpp" />
-    <ClCompile Include="src\program_state.cpp" />
-    <ClCompile Include="src\Shader.cpp" />
-    <ClCompile Include="src\Skybox.cpp" />
-    <ClCompile Include="src\text_rendering.cpp" />
-    <ClCompile Include="src\Time.cpp" />
-    <ClCompile Include="src\UserInput.cpp" />
+    <ClCompile Include="src\renderer\post_processing.cpp" />
+    <ClCompile Include="src\ui\debug_overlay.cpp" />
+    <ClCompile Include="src\ui\menu.cpp" />
+    <ClCompile Include="src\renderer\mesh.cpp" />
+    <ClCompile Include="src\renderer\model.cpp" />
+    <ClCompile Include="src\renderer\render_system.cpp" />
+    <ClCompile Include="src\core\program_state.cpp" />
+    <ClCompile Include="src\renderer\shader.cpp" />
+    <ClCompile Include="src\world\obj_init.cpp" />
+    <ClCompile Include="src\world\scene.cpp" />
+    <ClCompile Include="src\world\skybox.cpp" />
+    <ClCompile Include="src\renderer\texture_handler.cpp" />
+    <ClCompile Include="src\renderer\text_rendering.cpp" />
+    <ClCompile Include="src\core\time.cpp" />
+    <ClCompile Include="src\input\user_input.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Camera.h" />
-    <ClInclude Include="src\menu.h" />
-    <ClInclude Include="src\Rendering.h" />
-    <ClInclude Include="src\Mesh.h" />
-    <ClInclude Include="src\Model.h" />
-    <ClInclude Include="src\program_state.h" />
-    <ClInclude Include="src\Shader.h" />
-    <ClInclude Include="src\Skybox.h" />
+    <ClInclude Include="src\renderer\camera.h" />
+    <ClInclude Include="src\renderer\post_processing.h" />
+    <ClInclude Include="src\ui\debug_overlay.h" />
+    <ClInclude Include="src\ui\menu.h" />
+    <ClInclude Include="src\renderer\render_system.h" />
+    <ClInclude Include="src\renderer\mesh.h" />
+    <ClInclude Include="src\renderer\model.h" />
+    <ClInclude Include="src\core\program_state.h" />
+    <ClInclude Include="src\renderer\render_context.h" />
+    <ClInclude Include="src\renderer\render_data.h" />
+    <ClInclude Include="src\renderer\shader.h" />
+    <ClInclude Include="src\world\obj_init.h" />
+    <ClInclude Include="src\world\scene.h" />
+    <ClInclude Include="src\world\skybox.h" />
     <ClInclude Include="src\stb_image.h" />
-    <ClInclude Include="src\text_rendering.h" />
-    <ClInclude Include="src\Time.h" />
-    <ClInclude Include="src\UserInput.h" />
+    <ClInclude Include="src\renderer\texture_handler.h" />
+    <ClInclude Include="src\renderer\text_rendering.h" />
+    <ClInclude Include="src\core\time.h" />
+    <ClInclude Include="src\core\types.h" />
+    <ClInclude Include="src\input\user_input.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\backpack.frag" />
     <None Include="res\shaders\backpack.vert" />
     <None Include="res\shaders\container.frag" />
     <None Include="res\shaders\container.vert" />
+    <None Include="res\shaders\explode_model.frag" />
+    <None Include="res\shaders\explode_model.geom" />
+    <None Include="res\shaders\explode_model.vert" />
     <None Include="res\shaders\font.frag" />
     <None Include="res\shaders\font.vert" />
     <None Include="res\shaders\geometry.frag" />
@@ -185,8 +203,9 @@
     <None Include="res\shaders\emission.frag" />
     <None Include="res\shaders\blahaj.frag" />
     <None Include="res\shaders\blahaj.vert" />
+    <None Include="res\shaders\light_cube.frag" />
     <None Include="res\shaders\reflection.frag" />
-    <None Include="res\shaders\reflection.vert" />
+    <None Include="res\shaders\special_cube.vert" />
     <None Include="res\shaders\refraction.frag" />
     <None Include="res\shaders\screenbuffer.frag" />
     <None Include="res\shaders\screenbuffer.vert" />

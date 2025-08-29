@@ -1,8 +1,7 @@
 #pragma once
-#ifndef SKYBOX_H
-#define SKYBOX_H
 
-#include "Camera.h"
+/*
+#include "renderer/camera.h"
 
 #include <vector>
 #include <string>
@@ -10,8 +9,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-extern Shader skybox_shader;
-// extern Shader reflection_shader;
 
 unsigned int load_cubemap(std::vector<std::string> faces);
 void init_skybox();
@@ -23,5 +20,4 @@ void draw_reflection_cube(const glm::vec3& view_position);
 void draw_refraction_cube(const glm::vec3& view_position);
 
 void delete_skybox_buffers();
-
-#endif
+*/
