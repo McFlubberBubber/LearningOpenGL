@@ -7,8 +7,7 @@
 #include "renderer/camera.h"
 #include "renderer/post_processing.h"
 #include "core/program_state.h"
-
-
+ 
 struct RenderingContext {
 	Assets assets;
 	CameraData camera_data;

@@ -83,7 +83,7 @@ bool update_camera_from_input(GLFWwindow* window, CameraData* camera_data, Input
 	else
 		camera->movement_speed = DEFAULT_SPEED;
 
-
+//	update_camera_vectors(camera);
 	return mode_changed;
 }
 
@@ -165,11 +165,10 @@ void process_mouse_scroll(Camera* camera, float y_offset) {
 	camera->zoom -= y_offset;
 
 	// Constraining zoom levels
-	if (camera->zoom < 1.0f)
-		camera->zoom = 1.0f;
-	if (camera->zoom > 45.0f)
-		camera->zoom = 45.0f;
-	
+	if (camera->zoom < 5.0f)
+		camera->zoom = 5.0f;
+	if (camera->zoom > 90.0f)
+		camera->zoom = 90.0f;
 }
 
 

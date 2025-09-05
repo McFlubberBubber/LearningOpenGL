@@ -62,6 +62,7 @@ void destroy_font(Font* font) {
 void draw_text(const Font* font, const RenderingContext* context, const std::string& text, float x, float y, float scale, const glm::vec3& color, float alpha, TextAlign align, bool drop_shadow) {
 	if (!font->is_valid) return;
 	// We constantly use the one SHADER_FONT so we just keep using it.
+	// const auto shader	 = &context->assets.shaders[SHADER_FONT];
 	const Shader* shader 	 = &context->assets.shaders[SHADER_FONT];
 
 	const glm::mat4 ortho 	 = context->viewport.ortho_projection;

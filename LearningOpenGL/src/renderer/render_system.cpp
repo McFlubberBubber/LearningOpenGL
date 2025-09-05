@@ -1015,7 +1015,7 @@ void delete_vertex_data (unsigned int& VAO, unsigned int& VBO) {
 
 // @TODO: MASSIVE refactor of rendering things
 bool init_camera(CameraData* camera_data, ViewportState* viewport) {
-	camera_data->camera = create_camera(glm::vec3(0.0f, -4.0f, 5.0f));
+	camera_data->camera = create_camera(glm::vec3(0.0f, -4.0f, 10.0f));
 	camera_data->aspect_ratio = viewport->aspect_ratio;
 
 	camera_data->near_plane = 0.1f;
@@ -1402,7 +1402,7 @@ bool cleanup_rendering_system (RenderingContext* context) {
 
 
 // Helper functions
-void apply_matrices(const Shader* shader, const RenderingContext* context) {
+void apply_matrices(const Shader* shader) {
 	set_uniform_buffer(shader, "u_matrices", 0);
 }
 
@@ -1414,7 +1414,7 @@ void process_lighting(const Shader* shader, const RenderingContext* context) {
 	set_vec3(shader, "u_dirLight.specular", context->lighting.directional_specular);
 
 	// Point lighting
-	for (uint32_t i = 0; i < (context->lighting.get_point_light_count()); i++) {
+	for (u32 i = 0; i < (context->lighting.get_point_light_count()); i++) {
 		std::string base = "u_pointLight[" + std::to_string(i) + "]";
 
 		set_vec3(shader, (base + ".position").c_str(), context->lighting.point_light_positions[i]);
@@ -1474,12 +1474,22 @@ void set_texture_uniforms(const Shader* shader, bool do_emission) {
 }
 
 
-void update_camera_projection(CameraData* camera_data, ViewportState* viewport) {
-	camera_data->projection_matrix = glm::perspective(
-		glm::radians(camera_data->camera.zoom),
+void update_camera_projection(RenderingContext* ctx) {
+	CameraData* cd = &ctx->camera_data;
+	ViewportState* viewport = &ctx->viewport;
+
+	cd->projection_matrix = glm::perspective(
+		glm::radians(cd->camera.zoom),
 		viewport->aspect_ratio,
-		camera_data->near_plane,
-		camera_data->far_plane);
+		cd->near_plane,
+		cd->far_plane);
+
+	// Updating the matrices block
+	glm::mat4 view = get_view_matrix(&cd->camera);
+	glBindBuffer(GL_UNIFORM_BUFFER, ctx->buffers.UBO_matrices);	
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(view));
+    glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(cd->projection_matrix));
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
 void resize_framebuffer(const RenderingContext* context, u32 width, u32 height) {

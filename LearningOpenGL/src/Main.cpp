@@ -9,11 +9,11 @@
 #include "core/time.h"
 #include "core/program_state.h"
 #include "core/types.h"
-//#include "renderer/camera.h"
 #include "renderer/render_context.h"
 #include "renderer/render_system.h"
 #include "input/user_input.h"
 #include "ui/menu.h"
+#include "world/obj_init.h"
 #include "world/scene.h"
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -62,6 +62,15 @@ int main()
 	// Calling this function whenever the user resizes window
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	setup_input_callbacks(window, &callback_context);
+
+	// Initialize mouse position BEFORE disabling cursor
+    double mouse_x, mouse_y;
+    glfwGetCursorPos(window, &mouse_x, &mouse_y);
+    input_state.mouse_x = mouse_x;
+    input_state.mouse_y = mouse_y;
+    input_state.last_mouse_x = mouse_x;
+    input_state.last_mouse_y = mouse_y;
+    input_state.first_mouse = true;
 	
 	if (app_state == ApplicationState::GAME) {
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -87,7 +96,10 @@ int main()
 	if (!init_rendering_system(&render_context)) {
 		return -1;
 	}
+	
 	init_menu(&menu);
+	init_world_objects(&render_context.world);
+	init_lighting(&render_context.lighting);
 
 
 	// ----- RENDER LOOP -----
@@ -95,7 +107,7 @@ int main()
 		Time::update();
 		float dt = Time::get_delta_time();
 
-		update_camera_projection(&render_context.camera_data, &render_context.viewport);
+		update_camera_projection(&render_context);
 		// Handling input states
 		if (app_state != prev_app_state) {
 			if (app_state == ApplicationState::GAME) {

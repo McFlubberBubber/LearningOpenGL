@@ -67,7 +67,7 @@ void draw_small_text(const RenderingContext* context) {
 	
 	draw_text(&font[FONT_SMALL], context, text, x, y, scale, color, alpha, align, do_drop_shadow);
 
-	std::cout << "Drawing credits text at: " << x << "x" << y << std::endl;
+	// std::cout << "Drawing credits text at: " << x << "x" << y << std::endl;
 }
 
 

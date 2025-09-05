@@ -20,7 +20,7 @@ void update_input_state(InputState* input, GLFWwindow* window) {
 		input->key_states[key] = (state == GLFW_PRESS);
 	}
 
-	input->scroll_delta = 0.0f;
+//	input->scroll_delta = 0.0f;
 }
 
 
@@ -64,19 +64,30 @@ void handle_game_input(GLFWwindow* window, InputState* input, RenderingContext* 
 	if(is_key_pressed(input, GLFW_KEY_ESCAPE) && app == ApplicationState::GAME)
 		app = ApplicationState::MENU;
 	
+    // Handle first mouse movement to prevent camera jump
+    if (input->first_mouse) {
+        input->last_mouse_x = input->mouse_x;
+        input->last_mouse_y = input->mouse_y;
+        input->first_mouse = false;
+        // Skip mouse processing this frame
+    } else {
+        // Calculate mouse deltas
+        float x_offset = input->mouse_x - input->last_mouse_x;
+        float y_offset = input->last_mouse_y - input->mouse_y;
+        
+        // Update last mouse position for next frame
+        input->last_mouse_x = input->mouse_x;
+        input->last_mouse_y = input->mouse_y;
 
-	float x_offset = input->mouse_x - input->last_mouse_x;
-	float y_offset = input->last_mouse_y - input->mouse_y;
-	
-	input->last_mouse_x = input->mouse_x;
-	input->last_mouse_y = input->mouse_y;
+        // Only process if there's actual movement
+        if (x_offset != 0.0f || y_offset != 0.0f)
+            process_mouse_movement(&context->camera_data.camera, x_offset, y_offset);
+    }
 
-	if (x_offset != 0.0f || y_offset != 0.0f)
-		process_mouse_movement(&context->camera_data.camera, x_offset, y_offset);
-
-	if (input->scroll_delta != 0.0f)
+	if (input->scroll_delta != 0.0f) {
 		process_mouse_scroll(&context->camera_data.camera, input->scroll_delta);
-
+		display_zoom(&context->assets, &context->viewport, &context->camera_data);
+	}
 
 	// Processing camera updates
 	if (update_camera_from_input(window, &context->camera_data, input, dt))
@@ -109,6 +120,8 @@ void process_input(GLFWwindow* window, InputState* input, ApplicationState& app,
 		handle_game_input(window, input, context, dt, app);
 		break;
 	}
+
+	input->scroll_delta = 0.0f;
 }
 
 

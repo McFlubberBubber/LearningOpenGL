@@ -12,6 +12,7 @@ enum class RenderMode;
 struct Assets;
 struct ViewportState;
 struct RenderingContext;
+struct CameraData;
 
 
 // Main function that will keep rendering all UI elements
@@ -20,10 +21,12 @@ void render_debug_overlay(RenderingContext* context, float dt);
 // Pop up texts
 void display_camera_mode_status(Assets* assets, CameraMode mode);
 void display_render_mode_status(Assets* assets, const ViewportState* viewport, RenderMode mode);
+void display_zoom(Assets* assets, const ViewportState* viewport, const CameraData* cd);
 
 // Consistent UI
 void display_fps(const RenderingContext* context, float dt);
 void display_coords(const RenderingContext* context);
+void display_euler_angles(const RenderingContext* ctx);
 
 
 // Helper functions

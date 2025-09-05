@@ -7,16 +7,17 @@
 #include "renderer/render_context.h"
 
 
-void render_debug_overlay(RenderingContext* context, float dt) {
+void render_debug_overlay(RenderingContext* ctx, float dt) {
 	// Drawing consistent UI
-	display_fps(context, dt);
-	display_coords(context);
+	display_fps(ctx, dt);
+	display_coords(ctx);
+	display_euler_angles(ctx);
 
 	// @NOTE: This could be moved into the render_scene directly? But this
 	// function is the only function currently that is rendering any 'interface'
 	// to the screen so currently we will be updating the fading texts under this
 	// function.
-	update_and_draw_fading_texts(&context->assets.fonts[FONT_BOLD], context, dt);
+	update_and_draw_fading_texts(&ctx->assets.fonts[FONT_BOLD], ctx, dt);
 }
 
 
@@ -50,10 +51,27 @@ void display_render_mode_status(Assets* assets, const ViewportState* viewport, R
 	trigger_fading_text(&assets->fonts[FONT_BOLD], tag, render_mode_to_string(mode), x, y, scale, color, lifetime, fade_duration, align);
 }
 
+void display_zoom(Assets* assets, const ViewportState* viewport, const CameraData* cd) {
+	const std::string tag 	  = "zoom_status";
+	const float x 			  = viewport->width / 2.0f;
+	const float y 			  = 100.0f;
+	const float scale 		  = 1.0f;
+	const glm::vec3 color 	  = glm::vec3(1.0f);
+	const float lifetime	  = 1.0f;
+	const float fade_duration = 1.0f;
+	const TextAlign align	  = TextAlign::CENTER;
+
+	std::string zoom_text = "Zoom: ";
+	u32 zoom_value = (u32)cd->camera.zoom;
+	zoom_text += std::to_string(zoom_value);
+
+	trigger_fading_text(&assets->fonts[FONT_BOLD], tag, zoom_text, x, y, scale, color, lifetime, fade_duration, align);
+}
+
 
 // Consistent texts on the overlay
-void display_fps(const RenderingContext* context, float dt) {
-	const Assets* assets = &context->assets;
+void display_fps(const RenderingContext* ctx, float dt) {
+	const Assets* assets = &ctx->assets;
 	
 	static std::string fps_string;
 	static float current_time = 0.0f;
@@ -67,7 +85,7 @@ void display_fps(const RenderingContext* context, float dt) {
 	const bool do_drop_shadow = true;
 
 	const float x = 0;
-	const float y = (float)context->viewport.height - 25;
+	const float y = (float)ctx->viewport.height - 25;
 
 	//current_time = Time::get_time();
 	counter++;
@@ -81,12 +99,12 @@ void display_fps(const RenderingContext* context, float dt) {
 		time_acc = 0.0f;
 	}
 	
-	draw_text(&assets->fonts[FONT_BOLD], context, fps_string, x, y, scale, color, alpha, align, do_drop_shadow);
+	draw_text(&assets->fonts[FONT_BOLD], ctx, fps_string, x, y, scale, color, alpha, align, do_drop_shadow);
 }
 
-void display_coords(const RenderingContext* context) {
-	const Assets* assets = &context->assets;
-	const Camera* camera = &context->camera_data.camera;
+void display_coords(const RenderingContext* ctx) {
+	const Assets* assets = &ctx->assets;
+	const Camera* camera = &ctx->camera_data.camera;
 
 	static std::string x_str;
 	static std::string y_str;
@@ -99,18 +117,42 @@ void display_coords(const RenderingContext* context) {
 	const bool do_drop_shadow = true;
 
 	const float x = 0.0f;
-	const float y = (float)context->viewport.height - 50;
+	const float y = (float)ctx->viewport.height - 50;
 
 	x_str = format_coord("X", (float)camera->position.x);
 	y_str = format_coord("Y", (float)camera->position.y);
 	z_str = format_coord("Z", (float)camera->position.z);
 
-	draw_text(&assets->fonts[FONT_BOLD], context, x_str, x, y, scale, color, alpha, align, do_drop_shadow);
+	draw_text(&assets->fonts[FONT_BOLD], ctx, x_str, x, y, scale, color, alpha, align, do_drop_shadow);
 	
-	draw_text(&assets->fonts[FONT_BOLD], context, y_str, (x + 110), y, scale, color, alpha, align, do_drop_shadow);
+	draw_text(&assets->fonts[FONT_BOLD], ctx, y_str, (x + 110), y, scale, color, alpha, align, do_drop_shadow);
 	
-	draw_text(&assets->fonts[FONT_BOLD], context, z_str, (x + 220), y, scale, color, alpha, align, do_drop_shadow);
+	draw_text(&assets->fonts[FONT_BOLD], ctx, z_str, (x + 220), y, scale, color, alpha, align, do_drop_shadow);
 }
+
+void display_euler_angles(const RenderingContext* ctx) {
+	const Assets* assets = &ctx->assets;
+	const Camera* camera = &ctx->camera_data.camera;
+
+	static std::string yaw_text;
+	static std::string pitch_text;
+
+	const glm::vec3 color = glm::vec3(0.0f, 1.0f, 0.0f);
+	const float alpha = 1.0f;
+	const float scale = 0.5f;
+	const TextAlign align = TextAlign::LEFT;
+	const bool do_drop_shadow = true;
+
+	const float y = (float)ctx->viewport.height - 75;
+	
+	yaw_text = format_coord("Yaw: ", (float)camera->yaw);
+	pitch_text = format_coord("Pitch: ", (float)camera->pitch);
+	
+	draw_text(&assets->fonts[FONT_BOLD], ctx, yaw_text, 0, y, scale, color, alpha, align, do_drop_shadow);
+
+	draw_text(&assets->fonts[FONT_BOLD], ctx, pitch_text, 0, y - 25, scale, color, alpha, align, do_drop_shadow);
+}
+
 
 
 // Internal helpers

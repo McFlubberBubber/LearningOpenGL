@@ -97,11 +97,11 @@ void render_scene(const RenderingContext* context);
 */
 
 // Utility functions
-void apply_matrices(const Shader* shader, const RenderingContext* context);
+void apply_matrices(const Shader* shader);
 void process_lighting(const Shader* shader, const RenderingContext* context);
-//void bind_textures(const Shader* shader, const RenderingContext* context);
+void bind_textures(const Shader* shader, u32 diffuse, u32 specular, u32 emission);
 void set_texture_uniforms(const Shader* shader, bool do_emission);
-void update_camera_projection(CameraData* camera_data, ViewportState* viewport);
+void update_camera_projection(RenderingContext* ctx);
 void resize_framebuffer(const RenderingContext* context, u32 width, u32 height);
 
 // @TODO: This is required by the input thing, will probably be moved
