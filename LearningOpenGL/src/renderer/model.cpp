@@ -64,7 +64,7 @@ void destroy_model(Model* model) {
 }
 
 
-void draw_model(const Model* model, const Shader* shader, const Assets* assets) {
+void draw_model(const Model* model, const Shader* shader) {
 	if (!model->is_loaded) return;
 
 	for (u32 i = 0; i < model->meshes.size(); i++) {

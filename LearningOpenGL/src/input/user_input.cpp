@@ -134,14 +134,15 @@ void setup_input_callbacks(GLFWwindow* window, CallbackContext* context) {
 
 void mouse_callback(GLFWwindow* window, double x_pos, double y_pos) {
 	CallbackContext* ctx = static_cast<CallbackContext*>(glfwGetWindowUserPointer(window));
-    
-    if (!ctx || !ctx->input_state || !ctx->app_state || *ctx->app_state != ApplicationState::GAME) {
-        return;
-    }
-    
-    InputState* input = ctx->input_state;
-    input->mouse_x = x_pos;
-    input->mouse_y = y_pos;
+
+	if (!ctx || !ctx->input_state) {
+		return;
+	}
+
+	// Always update mouse position regardless of state
+	InputState* input = ctx->input_state;
+	input->mouse_x = x_pos;
+	input->mouse_y = y_pos;
 }
 
 void scroll_callback(GLFWwindow* window, double x_offset, double y_offset) {

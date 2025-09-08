@@ -37,7 +37,7 @@ Model create_model();
 bool load_model(Model* model, const char* path, bool flip_UVs, Assets* assets);
 void destroy_model(Model* model);
 
-void draw_model(const Model* model, const Shader* shader, const Assets* assets);
+void draw_model(const Model* model, const Shader* shader);
 
 
 // Internal helper functions

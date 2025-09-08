@@ -63,14 +63,14 @@ int main()
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	setup_input_callbacks(window, &callback_context);
 
-	// Initialize mouse position BEFORE disabling cursor
-    double mouse_x, mouse_y;
-    glfwGetCursorPos(window, &mouse_x, &mouse_y);
-    input_state.mouse_x = mouse_x;
-    input_state.mouse_y = mouse_y;
-    input_state.last_mouse_x = mouse_x;
-    input_state.last_mouse_y = mouse_y;
-    input_state.first_mouse = true;
+	// Initialize values for input_state.
+	double mouse_x, mouse_y;
+	glfwGetCursorPos(window, &mouse_x, &mouse_y);
+	input_state.mouse_x = mouse_x;
+	input_state.mouse_y = mouse_y;
+	input_state.last_mouse_x = mouse_x;
+	input_state.last_mouse_y = mouse_y;
+	input_state.first_mouse = true;
 	
 	if (app_state == ApplicationState::GAME) {
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -111,7 +111,13 @@ int main()
 		// Handling input states
 		if (app_state != prev_app_state) {
 			if (app_state == ApplicationState::GAME) {
+				glfwGetCursorPos(window, &mouse_x, &mouse_y);
+				input_state.mouse_x = mouse_x;
+				input_state.mouse_y = mouse_y;
+				input_state.last_mouse_x = mouse_x;
+				input_state.last_mouse_y = mouse_y;
 				input_state.first_mouse = true;
+
 				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 			} else {
 				glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);

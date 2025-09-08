@@ -5,16 +5,20 @@
 #include "ui/debug_overlay.h"
 #include "core/time.h"
 
+// NOTE: We are declaring most of these draw functions as static for the time being. Not
+// sure if that is a worthy optimization to be making or not, but we will stick with it
+// for the time being.
+#define DEFAULT_SHININESS 32.0f
 
-// @TODO: Specular lighting seems kinda messed up?
-void draw_wooden_containers(const RenderingContext* ctx) {
+// @TODO: Specular lighting seems kinda messed up? 
+static void draw_wooden_containers(const RenderingContext* ctx) {
 	const Shader* shader = &ctx->assets.shaders[SHADER_CONTAINER];
 	// use_shader(shader);
 	const u32 diffuse    = ctx->assets.textures[TEXTURE_DIFFUSE];
 	const u32 specular   = ctx->assets.textures[TEXTURE_SPECULAR];
 	
 	bind_textures(shader, diffuse, specular, 0);
-	set_float(shader, "u_material.shininess", 32.0f);
+	set_float(shader, "u_material.shininess", DEFAULT_SHININESS);
 	apply_matrices(shader);
 	process_lighting(shader, ctx);
 
@@ -24,7 +28,6 @@ void draw_wooden_containers(const RenderingContext* ctx) {
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::translate(model, ctx->world.cube_positions[i]);
 		model = glm::translate(model, glm::vec3(0.0f, 0.51f, 0.0f));
-		//enabling rotations
 		float angle = 20.0f + (i * 3);
 		model = glm::rotate(model, Time::get_time() * glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 		set_mat4(shader, "u_modelMatrix", model);
@@ -33,8 +36,79 @@ void draw_wooden_containers(const RenderingContext* ctx) {
 }
 
 
+static void draw_light_sources(const RenderingContext* ctx) {
+	const Shader* shader = &ctx->assets.shaders[SHADER_LIGHT_CUBE];
+	use_shader(shader);
+
+	apply_matrices(shader);
+	glBindVertexArray(ctx->buffers.cube_VAO);
+
+	// Drawing point lights.
+	for (int i = 0; i < ctx->lighting.get_point_light_count(); i++) {
+		set_vec3(shader, "u_lightColor", ctx->lighting.point_light_colors[i]);
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, ctx->lighting.point_light_positions[i]);
+		model = glm::scale(model, glm::vec3(0.5f));
+		set_mat4(shader, "u_modelMatrix", model);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+	}
+
+	// Drawing the one directional light (currently).
+	// set_vec3(shader, "u_skyColor", skyColor);	We haven't re-implemented the sky cycle.
+	glm::mat4 model = glm::mat4(1.0f);
+	set_vec3(shader, "u_lightColor", glm::vec3(1.0f));
+	model = glm::translate(model, ctx->lighting.directional_light_dir);
+	set_mat4(shader, "u_modelMatrix", model);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
+
+// @TODO: The specular lighting doesn't seem to be breaking for the models (could be because they use their
+// own texture loading functions rather than using the texture_handler functions), so if we are loading textures
+// manually, we may need to check out why the textures could be causing incorrect specular lighting.
+static void draw_world_models(const RenderingContext* ctx) {
+	const Shader* bp_shader = &ctx->assets.shaders[SHADER_BACKPACK];
+	const Model* bp_model = &ctx->assets.models[MODEL_BACKPACK];
+
+	const Shader* blahaj_shader = &ctx->assets.shaders[SHADER_BLAHAJ];
+	const Model* blahaj_model = &ctx->assets.models[MODEL_BLAHAJ];
+	glm::mat4 model;
+
+	// Drawing backpack model
+	use_shader(bp_shader);
+	apply_matrices(bp_shader);
+	set_float(bp_shader, "u_material.shininess", DEFAULT_SHININESS);
+	process_lighting(bp_shader, ctx);
+	
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0.0f, 0.0f, -6.0f));
+	model = glm::scale(model, glm::vec3(0.5f));
+	model = glm::rotate(model, Time::get_time() * glm::radians(45.0f), glm::vec3(1.0f));
+	set_mat4(bp_shader, "u_modelMatrix", model);
+	draw_model(bp_model, bp_shader);	// @TODO: Do we need to be passing a pointer to the assets?
+
+
+	// Drawing blahaj models
+	use_shader(blahaj_shader);
+	apply_matrices(blahaj_shader);
+	set_float(blahaj_shader, "u_material.shininess", DEFAULT_SHININESS);
+	process_lighting(blahaj_shader, ctx);
+
+	for (int i = 0; i < ctx->world.blahaj_positions.size(); i++) {
+		float angle = 20.0f * i;
+
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, ctx->world.blahaj_positions[i]);
+		model = glm::scale(model, glm::vec3(1.5f));
+		model = glm::rotate(model, Time::get_time() * glm::radians(angle), glm::vec3(1.0f, 2.5f, 0.5f));
+		set_mat4(blahaj_shader, "u_modelMatrix", model);
+		draw_model(blahaj_model, blahaj_shader);	// @TODO: Do we need to be passing a pointer to the assets?
+	}
+}
+
+
 // @Incomplete: Do this.
-void draw_world(const RenderingContext* ctx) {
+static void draw_world(const RenderingContext* ctx) {
 	//
 	// Draw skybox-related things first.
 	//
@@ -44,8 +118,9 @@ void draw_world(const RenderingContext* ctx) {
 	//
 	// Draw actual world objects (the spinning, floating ones + models + lights)
 	//
-	draw_wooden_containers(ctx);
-
+	// draw_wooden_containers(ctx);
+	draw_light_sources(ctx);
+	draw_world_models(ctx);
 
 	// 
 	// Draw room + grass (includes grassland and grass) + windows last
@@ -64,7 +139,7 @@ void render_scene(RenderingContext* ctx, float dt) {
 
 	// @TODO: ----- Clearing screen and calculating sky color -----
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+	glClearColor(0.01f, 0.01f, 0.01f, 1.0f);
 
 	// ----- Updating uniform buffer with camera matrices -----
 	glBindBuffer(GL_UNIFORM_BUFFER, ctx->buffers.UBO_matrices);
@@ -73,7 +148,7 @@ void render_scene(RenderingContext* ctx, float dt) {
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 
-	// @TODO: ----- Draw world objects -----
+	// ----- Draw world objects -----
 	draw_world(ctx);
 
 	// ----- Unbinding the framebuffer + disabling depth testing -----

@@ -47,6 +47,7 @@ bool update_camera_from_input(GLFWwindow* window, CameraData* camera_data, Input
 	bool mode_changed = false;
 	if (is_key_pressed(input, GLFW_KEY_E)) {
 		switch_camera_mode(camera_data);
+		camera_data->camera.position.y = 0.0f;	// Setting camera y pos to ground immediately.
 		mode_changed = true;
 	}
 	
@@ -120,6 +121,7 @@ void process_fps_movement(Camera* camera, CameraMovement direction, float dt) {
 	float velocity = camera->movement_speed * dt;
 
 	// FPS Movement
+	camera->position.y = 0.0f;
 	glm::vec3 forward = glm::normalize(glm::vec3(camera->front.x, 0.0f, camera->front.z));
 	glm::vec3 right = glm::normalize(glm::cross(forward, camera->world_up));
 
