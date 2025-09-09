@@ -89,7 +89,7 @@ void handle_game_input(GLFWwindow* window, InputState* input, RenderingContext* 
 		display_zoom(&context->assets, &context->viewport, &context->camera_data);
 	}
 
-	// Processing camera updates
+	// Processing camera mode switches between FPS and freefly
 	if (update_camera_from_input(window, &context->camera_data, input, dt))
 		display_camera_mode_status(&context->assets, context->camera_data.mode);
 

@@ -1015,7 +1015,7 @@ void delete_vertex_data (unsigned int& VAO, unsigned int& VBO) {
 
 // @TODO: MASSIVE refactor of rendering things
 bool init_camera(CameraData* camera_data, ViewportState* viewport) {
-	camera_data->camera = create_camera(glm::vec3(0.0f, -4.0f, 10.0f));
+	camera_data->camera = create_camera(glm::vec3(0.0f, 0.0f, 10.0f));
 	camera_data->aspect_ratio = viewport->aspect_ratio;
 
 	camera_data->near_plane = 0.1f;
@@ -1485,11 +1485,10 @@ void update_camera_projection(RenderingContext* ctx) {
 		cd->far_plane);
 
 	// Updating the matrices block
-	glm::mat4 view = get_view_matrix(&cd->camera);
-	glBindBuffer(GL_UNIFORM_BUFFER, ctx->buffers.UBO_matrices);	
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(view));
-    glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(cd->projection_matrix));
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	glBindBuffer(GL_UNIFORM_BUFFER, ctx->buffers.UBO_matrices);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(ctx->camera_data.projection_matrix));
+	glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(ctx->camera_data.camera.view_matrix));
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
 void resize_framebuffer(const RenderingContext* context, u32 width, u32 height) {

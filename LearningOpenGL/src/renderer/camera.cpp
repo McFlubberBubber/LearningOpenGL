@@ -41,13 +41,13 @@ glm::mat4 get_view_matrix(Camera* camera) {
 	return camera->view_matrix;
 }
 
-
+// @TODO: Should this function be moved to the user_input file since this handles
+// input? Or should we be keeping this here?
 bool update_camera_from_input(GLFWwindow* window, CameraData* camera_data, InputState* input, float dt) {
 	// Switching camera modes between freefly and fps.
 	bool mode_changed = false;
 	if (is_key_pressed(input, GLFW_KEY_E)) {
 		switch_camera_mode(camera_data);
-		camera_data->camera.position.y = 0.0f;	// Setting camera y pos to ground immediately.
 		mode_changed = true;
 	}
 	

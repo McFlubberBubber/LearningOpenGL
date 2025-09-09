@@ -10,6 +10,7 @@
 // for the time being.
 #define DEFAULT_SHININESS 32.0f
 
+
 static void draw_skybox(RenderingContext* ctx) {
 	const Shader* shader = &ctx->assets.shaders[SHADER_SKYBOX];
 	glm::mat4 view_matrix = glm::mat4(glm::mat3(get_view_matrix(&ctx->camera_data.camera)));
@@ -70,7 +71,7 @@ static void draw_light_sources(const RenderingContext* ctx) {
 	glBindVertexArray(ctx->buffers.cube_VAO);
 
 	// Drawing point lights.
-	for (int i = 0; i < ctx->lighting.get_point_light_count(); i++) {
+	for (u32 i = 0; i < ctx->lighting.get_point_light_count(); i++) {
 		set_vec3(shader, "u_lightColor", ctx->lighting.point_light_colors[i]);
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::translate(model, ctx->lighting.point_light_positions[i]);
@@ -94,13 +95,15 @@ static void draw_light_sources(const RenderingContext* ctx) {
 // manually, we may need to check out why the textures could be causing incorrect specular lighting.
 static void draw_world_models(const RenderingContext* ctx) {
 	const Shader* bp_shader = &ctx->assets.shaders[SHADER_BACKPACK];
-	const Model* bp_model = &ctx->assets.models[MODEL_BACKPACK];
+	const Model* bp_model 	= &ctx->assets.models[MODEL_BACKPACK];
 
 	const Shader* blahaj_shader = &ctx->assets.shaders[SHADER_BLAHAJ];
-	const Model* blahaj_model = &ctx->assets.models[MODEL_BLAHAJ];
+	const Model* blahaj_model 	= &ctx->assets.models[MODEL_BLAHAJ];
+	
+	const Shader* explode_shader = &ctx->assets.shaders[SHADER_EXPLODE_MODEL];
 	glm::mat4 model;
 
-	// Drawing backpack model
+	// Drawing backpack model.
 	use_shader(bp_shader);
 	apply_matrices(bp_shader);
 	set_float(bp_shader, "u_material.shininess", DEFAULT_SHININESS);
@@ -111,10 +114,10 @@ static void draw_world_models(const RenderingContext* ctx) {
 	model = glm::scale(model, glm::vec3(0.5f));
 	model = glm::rotate(model, Time::get_time() * glm::radians(45.0f), glm::vec3(1.0f));
 	set_mat4(bp_shader, "u_modelMatrix", model);
-	draw_model(bp_model, bp_shader);	// @TODO: Do we need to be passing a pointer to the assets?
+	draw_model(bp_model, bp_shader);
 
 
-	// Drawing blahaj models
+	// Drawing blahaj models.
 	use_shader(blahaj_shader);
 	apply_matrices(blahaj_shader);
 	set_float(blahaj_shader, "u_material.shininess", DEFAULT_SHININESS);
@@ -128,8 +131,28 @@ static void draw_world_models(const RenderingContext* ctx) {
 		model = glm::scale(model, glm::vec3(1.5f));
 		model = glm::rotate(model, Time::get_time() * glm::radians(angle), glm::vec3(1.0f, 2.5f, 0.5f));
 		set_mat4(blahaj_shader, "u_modelMatrix", model);
-		draw_model(blahaj_model, blahaj_shader);	// @TODO: Do we need to be passing a pointer to the assets?
+		draw_model(blahaj_model, blahaj_shader);
 	}
+
+	
+	// Drawing the weird exploding backpack thingy with the geometry shader.
+	// @TODO: This model kinda acts up when the 'explosion' is at its furthest point.
+	// Not sure if that's intentional? In addition, I found out that the FOV of the
+	// camera actually affects the maginitude of the model. The less the zoom, the
+	// smaller the magnitude is. 
+	use_shader(explode_shader);
+	apply_matrices(explode_shader);
+	set_float(explode_shader, "u_material.shininess", DEFAULT_SHININESS);
+	set_float(explode_shader, "u_time", Time::get_time());
+	process_lighting(explode_shader, ctx);
+
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+	model = glm::scale(model, glm::vec3(0.25f));
+	model = glm::rotate(model, Time::get_time() * glm::radians(20.0f), glm::vec3(1.0f));
+	set_mat4(explode_shader, "u_modelMatrix", model);
+	draw_model(bp_model, explode_shader);
+	
 }
 
 
@@ -167,15 +190,14 @@ void render_scene(RenderingContext* ctx, float dt) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glClearColor(0.01f, 0.01f, 0.01f, 1.0f);
 
+
 	// ----- Updating uniform buffer with camera matrices -----
-	glBindBuffer(GL_UNIFORM_BUFFER, ctx->buffers.UBO_matrices);
-	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(ctx->camera_data.projection_matrix));
-	glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(ctx->camera_data.camera.view_matrix));
-	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	update_camera_projection(ctx);
 
-
+	
 	// ----- Draw world objects -----
 	draw_world(ctx);
+
 
 	// ----- Unbinding the framebuffer + disabling depth testing -----
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
