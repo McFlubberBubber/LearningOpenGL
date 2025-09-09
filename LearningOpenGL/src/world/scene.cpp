@@ -10,6 +10,32 @@
 // for the time being.
 #define DEFAULT_SHININESS 32.0f
 
+static void draw_skybox(RenderingContext* ctx) {
+	const Shader* shader = &ctx->assets.shaders[SHADER_SKYBOX];
+	glm::mat4 view_matrix = glm::mat4(glm::mat3(get_view_matrix(&ctx->camera_data.camera)));
+
+	// Depth test passes when values are equal to the depth buffer's content
+	glDepthMask(GL_FALSE);
+	glDepthFunc(GL_LEQUAL);
+
+	// Adjusting the shader uniforms
+	use_shader(shader);
+	set_mat4(shader, "u_projectionMatrix", ctx->camera_data.projection_matrix);
+	set_mat4(shader, "u_viewMatrix", view_matrix);
+
+	// Drawing the skybox
+	glBindVertexArray(ctx->buffers.skybox_VAO);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, ctx->assets.textures[TEXTURE_SKYBOX]);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+
+	// Resetting depth function
+	glDepthMask(GL_TRUE);
+}
+
+
+
+
 // @TODO: Specular lighting seems kinda messed up? 
 static void draw_wooden_containers(const RenderingContext* ctx) {
 	const Shader* shader = &ctx->assets.shaders[SHADER_CONTAINER];
@@ -108,11 +134,11 @@ static void draw_world_models(const RenderingContext* ctx) {
 
 
 // @Incomplete: Do this.
-static void draw_world(const RenderingContext* ctx) {
+static void draw_world(RenderingContext* ctx) {
 	//
 	// Draw skybox-related things first.
 	//
-	
+	draw_skybox(ctx);
 
 
 	//
