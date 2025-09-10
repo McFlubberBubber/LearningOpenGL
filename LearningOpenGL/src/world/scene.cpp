@@ -161,13 +161,13 @@ static void draw_world(RenderingContext* ctx) {
 	//
 	// Draw skybox-related things first.
 	//
-	draw_skybox(ctx);
+//	draw_skybox(ctx);
 
 
 	//
 	// Draw actual world objects (the spinning, floating ones + models + lights)
 	//
-	// draw_wooden_containers(ctx);
+//  draw_wooden_containers(ctx);
 	draw_light_sources(ctx);
 	draw_world_models(ctx);
 
@@ -187,8 +187,12 @@ void render_scene(RenderingContext* ctx, float dt) {
 
 
 	// @TODO: ----- Clearing screen and calculating sky color -----
+	ctx->lighting.apply_sky_color(Time::get_time());
+	glClearColor(ctx->lighting.current_sky_color.r,
+				 ctx->lighting.current_sky_color.g,
+			     ctx->lighting.current_sky_color.b,
+				 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glClearColor(0.01f, 0.01f, 0.01f, 1.0f);
 
 
 	// ----- Updating uniform buffer with camera matrices -----

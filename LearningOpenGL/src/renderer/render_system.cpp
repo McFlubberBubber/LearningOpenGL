@@ -1484,10 +1484,12 @@ void update_camera_projection(RenderingContext* ctx) {
 		cd->near_plane,
 		cd->far_plane);
 
+	glm::mat4 view_matrix = get_view_matrix(&cd->camera);
+
 	// Updating the matrices block
 	glBindBuffer(GL_UNIFORM_BUFFER, ctx->buffers.UBO_matrices);
 	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(ctx->camera_data.projection_matrix));
-	glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(ctx->camera_data.camera.view_matrix));
+	glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view_matrix));
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 

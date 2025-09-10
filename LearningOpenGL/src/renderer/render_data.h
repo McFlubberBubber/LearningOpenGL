@@ -347,13 +347,18 @@ struct LightingData {
 	glm::vec3 current_sky_color;
 
 
-	void reserve_point_lights(u32 count) {
+	inline void reserve_point_lights(u32 count) {
 		point_light_positions.reserve(count);
 		point_light_colors.reserve(count);
 	}
 
-
-	u32 get_point_light_count() const {
+	inline u32 get_point_light_count() const {
 		return (u32)point_light_positions.size();
+	}
+
+	inline void apply_sky_color(float current_time) {
+		const float transition_speed = 0.3f;
+		const float t = 0.5f * (1.0f + sin(transition_speed * current_time));
+		current_sky_color = glm::mix(dark_sky_color, grey_sky_color, t);
 	}
 };
