@@ -6,6 +6,23 @@
 
 #include "renderer/render_context.h"
 
+namespace DebugOverlay {
+	constexpr float SCALE = 1.0f;
+	constexpr float ALPHA = 1.0f;
+
+	constexpr float LIFETIME 	  = 1.0f;
+	constexpr float FADE_DURATION = 1.0f;
+	constexpr bool DO_DROP_SHADOW = true;
+
+	// GLM stuff doesn't have much constexpr support in this version.
+	const glm::vec3 GREEN_COLOR {0.0f, 1.0f, 0.0f};
+	const glm::vec3 WHITE_COLOR {1.0f, 1.0f, 1.0f};
+	const glm::vec3 RED_COLOR   {1.0f, 0.0f, 0.0f};
+
+	constexpr float LINE_HEIGHT = 25.0f;
+	constexpr float COORD_SPACING = 110.0f;
+}
+
 
 void render_debug_overlay(RenderingContext* ctx, float dt) {
 	// Drawing consistent UI
@@ -23,67 +40,55 @@ void render_debug_overlay(RenderingContext* ctx, float dt) {
 
 // Pop up texts
 void display_camera_mode_status(Assets* assets, CameraMode mode) {
+	using namespace DebugOverlay;
 	const std::string tag 	  = "camera_mode";
 	const float x 			  = 100.0f;
 	const float y 			  = 100.0f;
-	const float scale 		  = 1.0f;
-	const glm::vec3 color 	  = glm::vec3(1.0f);
-	const float lifetime	  = 1.0f;
-	const float fade_duration = 1.0f;
 	const TextAlign align	  = TextAlign::LEFT;
 
 	if (mode == CameraMode::FPS) 
-		trigger_fading_text(&assets->fonts[FONT_BOLD], tag, "FPS Mode", x, y, scale, color, lifetime, fade_duration, align);
+		trigger_fading_text(&assets->fonts[FONT_BOLD], tag, "FPS Mode", x, y, SCALE, WHITE_COLOR, LIFETIME, FADE_DURATION, align);
 	else
-		trigger_fading_text(&assets->fonts[FONT_BOLD], tag, "Freefly Mode", x, y, scale, color, lifetime, fade_duration, align);
+		trigger_fading_text(&assets->fonts[FONT_BOLD], tag, "Freefly Mode", x, y, SCALE, WHITE_COLOR, LIFETIME, FADE_DURATION, align);
 }
 
 void display_render_mode_status(Assets* assets, const ViewportState* viewport, RenderMode mode) {
+	using namespace DebugOverlay;
 	const std::string tag 	  = "render_mode";
 	const float x			  = viewport->width / 2.0f;
 	const float y			  = viewport->height / 1.5f;
-	const float scale 		  = 1.0f;
-	const glm::vec3 color 	  = glm::vec3(1.0f, 0.0f, 0.0f);
-	const float lifetime	  = 1.0f;
-	const float fade_duration = 1.0f;
 	const TextAlign align	  = TextAlign::CENTER;
 
-	trigger_fading_text(&assets->fonts[FONT_BOLD], tag, render_mode_to_string(mode), x, y, scale, color, lifetime, fade_duration, align);
+	trigger_fading_text(&assets->fonts[FONT_BOLD], tag, render_mode_to_string(mode), x, y, SCALE, RED_COLOR, LIFETIME, FADE_DURATION, align);
 }
 
 void display_zoom(Assets* assets, const ViewportState* viewport, const CameraData* cd) {
+	using namespace DebugOverlay;
 	const std::string tag 	  = "zoom_status";
 	const float x 			  = viewport->width / 2.0f;
 	const float y 			  = 100.0f;
-	const float scale 		  = 1.0f;
-	const glm::vec3 color 	  = glm::vec3(1.0f);
-	const float lifetime	  = 1.0f;
-	const float fade_duration = 1.0f;
 	const TextAlign align	  = TextAlign::CENTER;
 
 	std::string zoom_text = "Zoom: ";
 	u32 zoom_value = (u32)cd->camera.zoom;
 	zoom_text += std::to_string(zoom_value);
 
-	trigger_fading_text(&assets->fonts[FONT_BOLD], tag, zoom_text, x, y, scale, color, lifetime, fade_duration, align);
+	trigger_fading_text(&assets->fonts[FONT_BOLD], tag, zoom_text, x, y, SCALE, WHITE_COLOR, LIFETIME, FADE_DURATION, align);
 }
 
 
 // Consistent texts on the overlay
 void display_fps(const RenderingContext* ctx, float dt) {
-	const Assets* assets = &ctx->assets;
+	using namespace DebugOverlay;
+	const Font* bold_font = &ctx->assets.fonts[FONT_BOLD];
 	
 	static std::string fps_string;
 	static float current_time = 0.0f;
 	static float time_acc	  = 0.0f;
 	static u32 counter	 	  = 0;
 
-	const glm::vec3 color = glm::vec3(0.0f, 1.0f, 0.0f);
-	const float alpha = 1.0f;
 	const float scale = 0.5f;
 	const TextAlign align = TextAlign::LEFT;
-	const bool do_drop_shadow = true;
-
 	const float x = 0;
 	const float y = (float)ctx->viewport.height - 25;
 
@@ -99,11 +104,12 @@ void display_fps(const RenderingContext* ctx, float dt) {
 		time_acc = 0.0f;
 	}
 	
-	draw_text(&assets->fonts[FONT_BOLD], ctx, fps_string, x, y, scale, color, alpha, align, do_drop_shadow);
+	draw_text(bold_font, ctx, fps_string, x, y, scale, GREEN_COLOR, ALPHA, align, DO_DROP_SHADOW);
 }
 
 void display_coords(const RenderingContext* ctx) {
-	const Assets* assets = &ctx->assets;
+	using namespace DebugOverlay;
+	const Font* bold_font = &ctx->assets.fonts[FONT_BOLD];
 	const Camera* camera = &ctx->camera_data.camera;
 
 	static std::string x_str;
@@ -123,34 +129,30 @@ void display_coords(const RenderingContext* ctx) {
 	y_str = format_coord("Y", (float)camera->position.y);
 	z_str = format_coord("Z", (float)camera->position.z);
 
-	draw_text(&assets->fonts[FONT_BOLD], ctx, x_str, x, y, scale, color, alpha, align, do_drop_shadow);
-	
-	draw_text(&assets->fonts[FONT_BOLD], ctx, y_str, (x + 110), y, scale, color, alpha, align, do_drop_shadow);
-	
-	draw_text(&assets->fonts[FONT_BOLD], ctx, z_str, (x + 220), y, scale, color, alpha, align, do_drop_shadow);
+	draw_text(bold_font, ctx, x_str, x, y, scale, GREEN_COLOR, ALPHA, align, DO_DROP_SHADOW);
+	draw_text(bold_font, ctx, x_str, (x + COORD_SPACING), y, scale, GREEN_COLOR, ALPHA, align, DO_DROP_SHADOW);
+	draw_text(bold_font, ctx, x_str, (x + COORD_SPACING * 2), y, scale, GREEN_COLOR, ALPHA, align, DO_DROP_SHADOW);
 }
 
 void display_euler_angles(const RenderingContext* ctx) {
-	const Assets* assets = &ctx->assets;
+	using namespace DebugOverlay;
+	const Font* bold_font = &ctx->assets.fonts[FONT_BOLD];
 	const Camera* camera = &ctx->camera_data.camera;
+
+	const float scale = 0.5f;
+	const TextAlign align = TextAlign::LEFT;
+
+	const float x = 0;
+	const float y = (float)ctx->viewport.height - 75;
 
 	static std::string yaw_text;
 	static std::string pitch_text;
-
-	const glm::vec3 color = glm::vec3(0.0f, 1.0f, 0.0f);
-	const float alpha = 1.0f;
-	const float scale = 0.5f;
-	const TextAlign align = TextAlign::LEFT;
-	const bool do_drop_shadow = true;
-
-	const float y = (float)ctx->viewport.height - 75;
 	
 	yaw_text = format_coord("Yaw: ", (float)camera->yaw);
 	pitch_text = format_coord("Pitch: ", (float)camera->pitch);
 	
-	draw_text(&assets->fonts[FONT_BOLD], ctx, yaw_text, 0, y, scale, color, alpha, align, do_drop_shadow);
-
-	draw_text(&assets->fonts[FONT_BOLD], ctx, pitch_text, 0, y - 25, scale, color, alpha, align, do_drop_shadow);
+	draw_text(bold_font, ctx, yaw_text, x, y, scale, GREEN_COLOR, ALPHA, align, DO_DROP_SHADOW);
+	draw_text(bold_font, ctx, pitch_text, x, y - LINE_HEIGHT, scale, GREEN_COLOR, ALPHA, align, DO_DROP_SHADOW);
 }
 
 

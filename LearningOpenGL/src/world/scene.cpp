@@ -178,15 +178,12 @@ static void draw_world(RenderingContext* ctx) {
 
 
 void render_scene(RenderingContext* ctx, float dt) {
-	// We call update_camera_projection() and view_matrix should be getting
-	// updated on every process_mouse_movement call.
-		
 	// ----- Binding framebuffer + enabling depth testing
 	glBindFramebuffer(GL_FRAMEBUFFER, ctx->buffers.FBO);
 	glEnable(GL_DEPTH_TEST);
 
 
-	// @TODO: ----- Clearing screen and calculating sky color -----
+	// ----- Clearing screen and calculating sky color -----
 	ctx->lighting.apply_sky_color(Time::get_time());
 	glClearColor(ctx->lighting.current_sky_color.r,
 				 ctx->lighting.current_sky_color.g,

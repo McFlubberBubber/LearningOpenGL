@@ -107,7 +107,6 @@ int main()
 		Time::update();
 		float dt = Time::get_delta_time();
 
-//		update_camera_projection(&render_context);
 		// Handling input states
 		if (app_state != prev_app_state) {
 			if (app_state == ApplicationState::GAME) {
