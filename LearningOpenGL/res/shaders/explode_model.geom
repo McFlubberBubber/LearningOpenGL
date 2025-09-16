@@ -18,7 +18,7 @@ out GS_OUT {
 } gs_out;
 
 // UNIFORMS
-uniform float u_time;
+uniform float time;
 
 // Function prototypes
 vec3 get_normal();
@@ -61,6 +61,6 @@ vec3 get_normal() {
 // Handling the exploding effect of each traingle strip moving away
 vec4 explode_model(vec4 position, vec3 normal) {
 	float magnitude = 1.25f;
-	vec3 direction = normal * ((sin(u_time) + 1.0f) / 2.0f) * magnitude;
+	vec3 direction = normal * ((sin(time) + 1.0f) / 2.0f) * magnitude;
 	return position + vec4(direction, 0.0f);
 }

@@ -1,13 +1,12 @@
 #version 460 core
 
 // INPUTS
-in vec3 fColor;
+in vec3 f_color;
 
 // OUTPUTS
-out vec4 FragColor;
-
+out vec4 frag_color;
 
 void main() {
 	// Outputting a green color.
-	FragColor = vec4(fColor, 1.0f);
+	frag_color = vec4(f_color, 1.0f);
 }

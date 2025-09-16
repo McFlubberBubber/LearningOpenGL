@@ -1,14 +1,14 @@
 #version 460 core
 
 //INPUTS
-in vec3 textureOutput;
+in vec3 texture_output;
 
 //OUTPUTS
-out vec4 FragColor;
+out vec4 frag_color;
 
-//UNIFORMS
-uniform samplerCube u_skybox;
+//UNIFORMS - automatically initialized to 0.
+uniform samplerCube skybox;
 
 void main () {
-	FragColor = texture(u_skybox, textureOutput);
+	frag_color = texture(skybox, texture_output);
 }

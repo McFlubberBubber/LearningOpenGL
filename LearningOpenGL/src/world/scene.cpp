@@ -21,10 +21,11 @@ static void draw_skybox(RenderingContext* ctx) {
 
 	// Adjusting the shader uniforms
 	use_shader(shader);
-	set_mat4(shader, "u_projectionMatrix", ctx->camera_data.projection_matrix);
-	set_mat4(shader, "u_viewMatrix", view_matrix);
+	set_mat4(shader, "projection", ctx->camera_data.projection_matrix);
+	set_mat4(shader, "view", view_matrix);
 
-	// Drawing the skybox
+	// Drawing the skybox - we aren't using several active textures other
+	// than the one cubemap, so we don't need to set the texture uniform.
 	glBindVertexArray(ctx->buffers.skybox_VAO);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, ctx->assets.textures[TEXTURE_SKYBOX]);
@@ -45,7 +46,7 @@ static void draw_wooden_containers(const RenderingContext* ctx) {
 	const u32 specular   = ctx->assets.textures[TEXTURE_SPECULAR];
 	
 	bind_textures(shader, diffuse, specular, 0);
-	set_float(shader, "u_material.shininess", DEFAULT_SHININESS);
+	set_float(shader, "material.shininess", DEFAULT_SHININESS);
 	apply_matrices(shader);
 	process_lighting(shader, ctx);
 
@@ -57,7 +58,7 @@ static void draw_wooden_containers(const RenderingContext* ctx) {
 		model = glm::translate(model, glm::vec3(0.0f, 0.51f, 0.0f));
 		float angle = 20.0f + (i * 3);
 		model = glm::rotate(model, Time::get_time() * glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-		set_mat4(shader, "u_modelMatrix", model);
+		set_mat4(shader, "model_matrix", model);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 	}
 }
@@ -68,24 +69,24 @@ static void draw_light_sources(const RenderingContext* ctx) {
 	use_shader(shader);
 
 	apply_matrices(shader);
+	process_lighting(shader, ctx);
 	glBindVertexArray(ctx->buffers.cube_VAO);
 
 	// Drawing point lights.
 	for (u32 i = 0; i < ctx->lighting.get_point_light_count(); i++) {
-		set_vec3(shader, "u_lightColor", ctx->lighting.point_light_colors[i]);
+		set_vec3(shader, "light_color", ctx->lighting.point_light_colors[i]);
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::translate(model, ctx->lighting.point_light_positions[i]);
 		model = glm::scale(model, glm::vec3(0.5f));
-		set_mat4(shader, "u_modelMatrix", model);
+		set_mat4(shader, "model_matrix", model);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 	}
 
 	// Drawing the one directional light (currently).
-	// set_vec3(shader, "u_skyColor", skyColor);	We haven't re-implemented the sky cycle.
 	glm::mat4 model = glm::mat4(1.0f);
-	set_vec3(shader, "u_lightColor", glm::vec3(1.0f));
+	set_vec3(shader, "light_color", glm::vec3(1.0f));
 	model = glm::translate(model, ctx->lighting.directional_light_dir);
-	set_mat4(shader, "u_modelMatrix", model);
+	set_mat4(shader, "model_matrix", model);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
@@ -106,21 +107,21 @@ static void draw_world_models(const RenderingContext* ctx) {
 	// Drawing backpack model.
 	use_shader(bp_shader);
 	apply_matrices(bp_shader);
-	set_float(bp_shader, "u_material.shininess", DEFAULT_SHININESS);
+	set_float(bp_shader, "material.shininess", DEFAULT_SHININESS);
 	process_lighting(bp_shader, ctx);
 	
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, -6.0f));
 	model = glm::scale(model, glm::vec3(0.5f));
 	model = glm::rotate(model, Time::get_time() * glm::radians(45.0f), glm::vec3(1.0f));
-	set_mat4(bp_shader, "u_modelMatrix", model);
+	set_mat4(bp_shader, "model_matrix", model);
 	draw_model(bp_model, bp_shader);
 
 
 	// Drawing blahaj models.
 	use_shader(blahaj_shader);
 	apply_matrices(blahaj_shader);
-	set_float(blahaj_shader, "u_material.shininess", DEFAULT_SHININESS);
+	set_float(blahaj_shader, "material.shininess", DEFAULT_SHININESS);
 	process_lighting(blahaj_shader, ctx);
 
 	for (int i = 0; i < ctx->world.blahaj_positions.size(); i++) {
@@ -130,7 +131,7 @@ static void draw_world_models(const RenderingContext* ctx) {
 		model = glm::translate(model, ctx->world.blahaj_positions[i]);
 		model = glm::scale(model, glm::vec3(1.5f));
 		model = glm::rotate(model, Time::get_time() * glm::radians(angle), glm::vec3(1.0f, 2.5f, 0.5f));
-		set_mat4(blahaj_shader, "u_modelMatrix", model);
+		set_mat4(blahaj_shader, "model_matrix", model);
 		draw_model(blahaj_model, blahaj_shader);
 	}
 
@@ -142,15 +143,15 @@ static void draw_world_models(const RenderingContext* ctx) {
 	// smaller the magnitude is. 
 	use_shader(explode_shader);
 	apply_matrices(explode_shader);
-	set_float(explode_shader, "u_material.shininess", DEFAULT_SHININESS);
-	set_float(explode_shader, "u_time", Time::get_time());
+	set_float(explode_shader, "material.shininess", DEFAULT_SHININESS);
+	set_float(explode_shader, "time", Time::get_time());
 	process_lighting(explode_shader, ctx);
 
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
 	model = glm::scale(model, glm::vec3(0.25f));
 	model = glm::rotate(model, Time::get_time() * glm::radians(20.0f), glm::vec3(1.0f));
-	set_mat4(explode_shader, "u_modelMatrix", model);
+	set_mat4(explode_shader, "model_matrix", model);
 	draw_model(bp_model, explode_shader);
 	
 }
@@ -161,13 +162,13 @@ static void draw_world(RenderingContext* ctx) {
 	//
 	// Draw skybox-related things first.
 	//
-//	draw_skybox(ctx);
+	draw_skybox(ctx);
 
 
 	//
 	// Draw actual world objects (the spinning, floating ones + models + lights)
 	//
-//  draw_wooden_containers(ctx);
+//	draw_wooden_containers(ctx);
 	draw_light_sources(ctx);
 	draw_world_models(ctx);
 

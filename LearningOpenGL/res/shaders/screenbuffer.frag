@@ -1,14 +1,14 @@
 #version 460 core
 
 //INPUTS
-in vec2 textureOutput;
+in vec2 texture_output;
 
 //OUTPUTS
-out vec4 FragColor;
+out vec4 frag_color;
 
 //UNIFORMS
-uniform sampler2D u_screenTexture;
-uniform int u_render_mode;
+uniform sampler2D screen_texture;		// Initialized to 0 already.
+uniform int render_mode;
 
 //VARIBLES
 const float offset = 1.0f / 300.0f;		// Configurable to our liking
@@ -24,9 +24,9 @@ const int DARK_SHARPEN_MODE	= 4;
 vec4 process_sharpening(bool do_dark_sharpening);
 
 void main() {
-	vec4 color = texture(u_screenTexture, textureOutput);
+	vec4 color = texture(screen_texture, texture_output);
 
-	switch (u_render_mode) {
+	switch (render_mode) {
 		case INVERT_MODE:
 			color.rgb = 1.0f - color.rgb;
 			break;
@@ -48,7 +48,7 @@ void main() {
 			break;
 	}
 
-	FragColor = color;
+	frag_color = color;
 }
 
 vec4 process_sharpening (bool do_dark_sharpening) {
@@ -79,7 +79,7 @@ vec4 process_sharpening (bool do_dark_sharpening) {
 
 	vec3 acc = vec3(0.0f);
 	for (int i = 0; i < 9; i++) {
-		acc += vec3(texture(u_screenTexture, textureOutput + offsets[i])) * kernal[i];
+		acc += vec3(texture(screen_texture, texture_output + offsets[i])) * kernal[i];
 	}
 
 	return vec4(acc, 1.0f);

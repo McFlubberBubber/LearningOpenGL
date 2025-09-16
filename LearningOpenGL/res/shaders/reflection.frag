@@ -10,21 +10,21 @@ in vec3 position;
 in VS_OUT {
 	vec3 normal;
 	vec3 position;
-} fs_input;
+} fs_in;
 
 
 // OUTPUTS
-out vec4 FragColor;
+out vec4 frag_color;
 
 
 // UNIFORMS
-uniform vec3 u_viewPosition;
-uniform samplerCube u_skybox;
+uniform vec3 view_position;
+uniform samplerCube skybox;
 
 
 void main () {
-	vec3 i = normalize(fs_input.position - u_viewPosition);
-	vec3 r = reflect(i, normalize(fs_input.normal));
+	vec3 i = normalize(fs_in.position - view_position);
+	vec3 r = reflect(i, normalize(fs_in.normal));
 
-	FragColor = vec4(texture(u_skybox, r).rgb, 1.0f);
+	frag_color = vec4(texture(skybox, r).rgb, 1.0f);
 }

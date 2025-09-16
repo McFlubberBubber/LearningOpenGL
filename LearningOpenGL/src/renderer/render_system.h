@@ -98,7 +98,7 @@ void render_scene(const RenderingContext* context);
 
 // Utility functions
 void apply_matrices(const Shader* shader);
-void process_lighting(const Shader* shader, const RenderingContext* context);
+void process_lighting(const Shader* shader, const RenderingContext* ctx);
 void bind_textures(const Shader* shader, u32 diffuse, u32 specular, u32 emission);
 void set_texture_uniforms(const Shader* shader, bool do_emission);
 void update_camera_projection(RenderingContext* ctx);

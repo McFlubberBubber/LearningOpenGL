@@ -69,7 +69,7 @@ void draw_text(const Font* font, const RenderingContext* context, const std::str
 	const float screen_width = (float)context->viewport.width;
 
 	use_shader(shader);
-	set_mat4(shader, "u_projection", ortho);
+	set_mat4(shader, "projection", ortho);
 	set_vec3(shader, "text_color", color);
 	set_float(shader, "text_alpha", alpha);
 

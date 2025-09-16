@@ -19,7 +19,7 @@ in VS_OUT {
 } gs_in[];
 
 // OUTPUT
-out vec3 fColor;
+out vec3 f_color;
 
 // Function to help draw the points of a 2D house
 void build_house(vec4 position);
@@ -44,7 +44,7 @@ void main() {
 
 // Modifying the position points passed from the vertex shader
 void build_house(vec4 position) {
-	fColor = gs_in[0].color;
+	f_color = gs_in[0].color;
 
 	gl_Position = position + vec4(-0.2, -0.2, 0.0, 0.0);    // 1:bottom-left
 	EmitVertex();   
@@ -62,7 +62,7 @@ void build_house(vec4 position) {
 	// You can change the color of each vertex by just changing the outputted color
 	// vector. For example, we can make a white gradient at the top of the house
 	// like so:
-	fColor = vec3(1.0f, 1.0f, 1.0f);
+	f_color = vec3(1.0f, 1.0f, 1.0f);
 	EmitVertex();		// Just make sure this call is done afterwards.
 
 	EndPrimitive();	
