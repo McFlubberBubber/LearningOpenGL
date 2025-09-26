@@ -68,15 +68,14 @@ void draw_mesh(const Mesh* mesh, const Shader* shader) {
 		std::string name = mesh->textures[i].type;
 
 		// Determining texture number based on the type
-		if (name == "textureDiffuse")
+		if (name == "diffuse")
 			number = std::to_string(diffuse_nr++);
-		if (name == "textureSpecular")
+		if (name == "specular")
 			number = std::to_string(specular_nr++);
-		if (name == "textureEmission")
+		if (name == "emission")
 			number = std::to_string(emission_nr++);
 		
-		// @TODO: The model shaders may need their naming conventions updated.
-		set_int(shader, ("u_material." + name + number).c_str(), i);
+		set_int(shader, ("material." + name + number).c_str(), i);
 		glBindTexture(GL_TEXTURE_2D, mesh->textures[i].id);
 	}
 

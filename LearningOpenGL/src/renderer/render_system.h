@@ -46,9 +46,6 @@ void bind_textures(const Shader* shader, u32 diffuse, u32 specular, u32 emission
 void set_texture_uniforms(const Shader* shader, bool do_emission);
 void update_camera_projection(RenderingContext* ctx);
 void resize_framebuffer(const RenderingContext* context, u32 width, u32 height);
-
-// @TODO: This is required by the input thing, will probably be moved
-// void apply_render_mode_to_screen_shader(RenderMode render_mode);
 void apply_render_mode_to_screen_shader(const RenderingContext* context);
 
 

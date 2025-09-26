@@ -139,12 +139,16 @@ Mesh process_mesh(Model* model, aiMesh* mesh, const aiScene* scene, Assets* asse
 		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
 		// Diffuse
-		std::vector<MeshTexture> diffuse_maps = load_material_textures(model, material, aiTextureType_DIFFUSE, "textureDiffuse");
+		std::vector<MeshTexture> diffuse_maps = load_material_textures(model, material, aiTextureType_DIFFUSE, "diffuse");
 		textures.insert(textures.end(), diffuse_maps.begin(), diffuse_maps.end());
 
 		// Specular
-		std::vector<MeshTexture> specular_maps = load_material_textures(model, material, aiTextureType_SPECULAR, "textureSpecular");
+		std::vector<MeshTexture> specular_maps = load_material_textures(model, material, aiTextureType_SPECULAR, "specular");
 		textures.insert(textures.end(), specular_maps.begin(), specular_maps.end());
+
+		// Emission
+		std::vector<MeshTexture> emission_maps = load_material_textures(model, material, aiTextureType_EMISSIVE, "emission");
+		textures.insert(textures.end(), emission_maps.begin(), emission_maps.end());
 	}
 
 	return create_mesh(vertices, indices, textures);
@@ -205,9 +209,9 @@ u32 texture_from_file(const char* path, const std::string &directory) {
 		GLenum texture_format{};
 		if (nr_components == 1)
 			texture_format = GL_RED;
-		if (nr_components == 3)
+		else if (nr_components == 3)
 			texture_format = GL_RGB;
-		if (nr_components == 4)
+		else if (nr_components == 4)
 			texture_format = GL_RGBA;
 
 		// Binding texture

@@ -35,27 +35,27 @@ bool add_cubemap_texture(Assets* assets, TextureType texture, const std::vector<
 
 // Internal helper functions - private?
 u32 load_2D_texture(const char* path) {
-	u32 textureID{};
-	s32 width, height, nrComponents;
-	unsigned char* data = stbi_load(path, &width, &height, &nrComponents, 0);
-	glGenTextures(1, &textureID);
+	u32 texture_id{};
+	s32 width, height, nr_components;
+	unsigned char* data = stbi_load(path, &width, &height, &nr_components, 0);
+	glGenTextures(1, &texture_id);
 
 	if (data) {
-		GLenum textureFormat{};
-		if (nrComponents == 1)
-			textureFormat = GL_RED;
-		else if (nrComponents == 3)
-			textureFormat = GL_RGB;
-		else if (nrComponents == 4)
-			textureFormat = GL_RGBA;
+		GLenum texture_format{};
+		if (nr_components == 1)
+			texture_format = GL_RED;
+		else if (nr_components == 3)
+			texture_format = GL_RGB;
+		else if (nr_components == 4)
+			texture_format = GL_RGBA;
 
 		//binding the texture
-		glBindTexture(GL_TEXTURE_2D, textureID);
-		glTexImage2D(GL_TEXTURE_2D, 0, textureFormat, width, height, 0, textureFormat, GL_UNSIGNED_BYTE, data);
+		glBindTexture(GL_TEXTURE_2D, texture_id);
+		glTexImage2D(GL_TEXTURE_2D, 0, texture_format, width, height, 0, texture_format, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
 
-		if (textureFormat != GL_RGBA) {
+		if (texture_format != GL_RGBA) {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		}
@@ -76,7 +76,7 @@ u32 load_2D_texture(const char* path) {
 		stbi_image_free(data);
 	}
 
-	return textureID;
+	return texture_id;
 }
 
 

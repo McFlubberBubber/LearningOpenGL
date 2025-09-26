@@ -166,7 +166,6 @@
     <ClCompile Include="src\renderer\shader.cpp" />
     <ClCompile Include="src\world\obj_init.cpp" />
     <ClCompile Include="src\world\scene.cpp" />
-    <ClCompile Include="src\world\skybox.cpp" />
     <ClCompile Include="src\renderer\texture_handler.cpp" />
     <ClCompile Include="src\renderer\text_rendering.cpp" />
     <ClCompile Include="src\core\time.cpp" />
@@ -186,7 +185,6 @@
     <ClInclude Include="src\renderer\shader.h" />
     <ClInclude Include="src\world\obj_init.h" />
     <ClInclude Include="src\world\scene.h" />
-    <ClInclude Include="src\world\skybox.h" />
     <ClInclude Include="src\stb_image.h" />
     <ClInclude Include="src\renderer\texture_handler.h" />
     <ClInclude Include="src\renderer\text_rendering.h" />
