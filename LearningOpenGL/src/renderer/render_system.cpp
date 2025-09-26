@@ -178,7 +178,7 @@ void cleanupScene() {
 */
 
 
-bool init_camera(CameraData* camera_data, ViewportState* viewport) {
+static bool init_camera(CameraData* camera_data, ViewportState* viewport) {
 	camera_data->camera = create_camera(glm::vec3(0.0f, 0.0f, 10.0f));
 	camera_data->aspect_ratio = viewport->aspect_ratio;
 
@@ -192,12 +192,12 @@ bool init_camera(CameraData* camera_data, ViewportState* viewport) {
 		camera_data->near_plane,
 		camera_data->far_plane);
 
-	std::cout << "----- Finished initializing camera! -----" << std::endl;
+	std::cout << "----- Finished initializing camera! -----\n" << std::endl;
 	return true;
 }
 
 
-bool init_buffers(BufferData* buffers, GeometryData* geometry, ViewportState* viewport, u32 texture_color_buffer) {
+static bool init_buffers(BufferData* buffers, GeometryData* geometry, ViewportState* viewport, u32 texture_color_buffer) {
 	const u32 width  = viewport->width;
 	const u32 height = viewport->height;
 
@@ -324,13 +324,13 @@ bool init_buffers(BufferData* buffers, GeometryData* geometry, ViewportState* vi
 	glBindBufferRange(GL_UNIFORM_BUFFER, 0, buffers->UBO_matrices, 0, 2 * sizeof(glm::mat4));
 
 	
-	std::cout << "----- Finished initializing buffers! -----" << std::endl;
+	std::cout << "----- Finished initializing buffers! -----\n" << std::endl;
 	return true;
 }
 
 
 // @Hardcode: similar to init_textures()
-bool init_shaders(Assets* assets) {
+static bool init_shaders(Assets* assets) {
 	std::string base = "res/shaders/";
 
 	struct ShaderPaths {
@@ -382,12 +382,12 @@ bool init_shaders(Assets* assets) {
 		}
 	}
 
-	std::cout << "----- Finished initializing shaders! -----" << std::endl;
+	std::cout << "----- Finished initializing shaders! -----\n" << std::endl;
 	return true;
 }
 
 // @Hardcode: check note in render_data.h
-bool init_models(Assets* assets) {
+static bool init_models(Assets* assets) {
 	std::string base = "res/models/";
 
 	struct ModelPath {
@@ -415,12 +415,12 @@ bool init_models(Assets* assets) {
 		}
 	}
 
-	std::cout << "----- Finished initializing models! -----" << std::endl;
+	std::cout << "----- Finished initializing models! -----\n" << std::endl;
 	return true;
 }
 
 // @Hardcode: check note in render_data.h to see note regarding this function.
-bool init_textures(Assets* assets) {
+static bool init_textures(Assets* assets) {
 	std::string base = "res/textures/";
 
 	// Array of texture paths (must match order of TextureType):
@@ -463,7 +463,7 @@ bool init_textures(Assets* assets) {
 	// Loading texture color buffers - texture binding happens in init_buffers();
 	glGenTextures(1, &assets->textures[TEXTURE_COLOR_BUFFER]);
 
-	std::cout << "----- Finished initializing textures! -----" << std::endl;
+	std::cout << "----- Finished initializing textures! -----\n" << std::endl;
 	return true;
 }
 
@@ -471,7 +471,7 @@ bool init_textures(Assets* assets) {
 // @TODO: This could probably be improved, but we just want to get this working
 // for the time being. We can do the same thing with using loops to match the
 // FontType structure.
-bool init_fonts(Assets* assets) {
+static bool init_fonts(Assets* assets) {
 //	std::string base = "res/fonts/";
 	for (u32 i = 0; i < FONT_COUNT; i++) {
 		assets->fonts[i] = create_font();
@@ -505,7 +505,7 @@ bool init_fonts(Assets* assets) {
 		return false;
 	}
 
-	std::cout << "----- Finished initializing fonts! -----" << std::endl;
+	std::cout << "----- Finished initializing fonts! -----\n" << std::endl;
 	return true;
 }
 
@@ -547,19 +547,97 @@ bool init_rendering_system (RenderingContext* context) {
 	}
 
 
-	std::cout << "----- Finished initializing rendering context! -----" << std::endl;
+	std::cout << "----- Finished initializing rendering context! -----\n" << std::endl;
 	return true;
 }
 
 
-// @Incomplete: do - Cleanup functions
-void cleanup_buffers(BufferData* buffers) {}
-void cleanup_shaders(Assets* assets) {}
-void cleanup_models(Assets* assets) {}
-void cleanup_textures(Assets* assets) {}
-void cleanup_fonts(Assets* assets) {}
+// @TODO: We have the functionality coded here since I don't know where else to dump
+// a 'buffer manager' in. We could maybe move it to the render_data.h directly?
+static void cleanup_buffers(BufferData* buffers) {
+	if (buffers == nullptr) return;
 
-bool cleanup_rendering_system (RenderingContext* context) {
+	// Helper lambdas.
+	auto delete_VAO = [](u32 &VAO){
+		if (VAO != 0) {
+			glDeleteVertexArrays(1, &VAO);
+			VAO = 0;
+		}
+	};
+
+	auto delete_VBO = [](u32 &VBO){
+		if (VBO != 0) {
+			glDeleteBuffers(1, &VBO);
+			VBO = 0;
+		}
+	};
+
+	auto delete_FBO = [](u32 &FBO){
+		if (FBO != 0) {
+			glDeleteFramebuffers(1, &FBO);
+			FBO = 0;
+		}
+	};
+
+	auto delete_RBO = [](u32 &RBO){
+		if (RBO != 0) {
+			glDeleteRenderbuffers(1, &RBO);
+			RBO = 0;
+		}
+	};
+
+	// Doing cleanup here.
+	delete_VAO(buffers->cube_VAO);
+	delete_VBO(buffers->cube_VBO);
+	delete_VAO(buffers->wall_VAO);
+	delete_VBO(buffers->wall_VBO);
+	delete_VAO(buffers->line_VAO);
+	delete_VBO(buffers->line_VBO);
+
+	delete_VAO(buffers->skybox_VAO);
+	delete_VBO(buffers->skybox_VBO);
+	delete_VAO(buffers->special_cube_VAO);
+	delete_VBO(buffers->special_cube_VBO);
+
+	delete_VAO(buffers->quad_VAO);
+	delete_VBO(buffers->quad_VBO);
+	delete_VBO(buffers->FBO); 		   // Frame buffer
+	delete_VBO(buffers->RBO); 		   // Render buffer
+	delete_VBO(buffers->UBO_matrices); // Uniform buffer
+}
+
+static void cleanup_shaders(Assets* assets) {
+	for (int i = 0; i < SHADER_COUNT; i++) {
+		destroy_shader(&assets->shaders[i]);
+	}
+}
+
+static void cleanup_models(Assets* assets) {
+	for (int i = 0; i < MODEL_COUNT; i++) {
+		destroy_model(&assets->models[i]);
+	}
+}
+
+static void cleanup_textures(Assets* assets) {
+	for (int i = 0; i < TEXTURE_COUNT; i++) {
+		destroy_texture(&assets->textures[i]);
+	}
+}
+
+static void cleanup_fonts(Assets* assets) {
+	for (int i = 0; i < FONT_COUNT; i++) {
+		destroy_font(&assets->fonts[i]);
+	}
+}
+
+bool cleanup_rendering_system (RenderingContext* ctx) {
+	cleanup_buffers(&ctx->buffers);
+	cleanup_shaders(&ctx->assets);
+	cleanup_models(&ctx->assets);
+	cleanup_textures(&ctx->assets);
+	cleanup_fonts(&ctx->assets);
+	
+	std::cout << "===== Finished cleaning up rendering system! =====\n" << std::endl;
 	return true;
 }
 

@@ -110,3 +110,12 @@ u32 load_cubemap_texture(const std::vector<std::string>& faces) {
 	stbi_set_flip_vertically_on_load(true);
 	return texture_id;
 }
+
+
+void destroy_texture(u32* texture) {
+	if (texture && *texture != 0) {
+		glDeleteTextures(1, reinterpret_cast<const GLuint*>(texture));
+		*texture = 0;
+	}
+	return;
+}

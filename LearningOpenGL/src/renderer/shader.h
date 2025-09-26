@@ -25,7 +25,6 @@ struct UniformCache {
 
 // Shader creation and management
 Shader create_shader(const char* vertex_path, const char* fragment_path, const char* geometry_path = nullptr);
-// @Incomplete: probably need to do this
 void destroy_shader(Shader* shader);
 
 // Usage of shader

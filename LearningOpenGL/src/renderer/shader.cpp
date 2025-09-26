@@ -115,7 +115,6 @@ Shader create_shader(const char* vertex_path, const char* fragment_path, const c
 		shader.is_valid = true;
 	}
 
-
 	// Cleanup
 	glDeleteShader(vertex);
 	glDeleteShader(fragment);
@@ -123,6 +122,22 @@ Shader create_shader(const char* vertex_path, const char* fragment_path, const c
 		glDeleteShader(geometry);
 
 	return shader;
+}
+
+void destroy_shader(Shader* shader) {
+	if (shader == nullptr) return;
+
+	if (shader->id && shader->is_valid) {
+		glDeleteProgram(shader->id);
+		shader->id = 0;
+	}
+
+	// Resetting the fields just incase.
+	shader->is_valid = false;
+	shader->vertex_path = nullptr;
+	shader->fragment_path = nullptr;
+	shader->geometry_path = nullptr;
+	return;
 }
 
 void use_shader(const Shader* shader) {

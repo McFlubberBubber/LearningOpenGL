@@ -15,3 +15,5 @@ bool add_cubemap_texture(Assets* assets, TextureType slot, const std::vector<std
 // Loading textures - private?
 u32 load_2D_texture(const char* path);
 u32 load_cubemap_texture(const std::vector<std::string>& faces);
+
+void destroy_texture(u32* texture);

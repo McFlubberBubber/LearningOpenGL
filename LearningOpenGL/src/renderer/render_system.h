@@ -14,32 +14,11 @@ struct RenderingContext;
 struct CameraData;
 struct ViewportState;
 
-
-// BIG REFACTOR THING
-// Initialization functions
-/*
-bool init_camera(CameraData* camera_data);
-bool init_textures(Assets* assets);
-bool init_buffers(BufferData* buffers, GeometryData* geometry, u32 texture_color_buffer);
-bool init_shaders(Assets* assets);
-bool init_models(Assets* assets);
-bool init_fonts(Assets* assets);
-*/
-
+// Management of the rendering system.
 bool init_rendering_system(RenderingContext* context);
-
-// Cleanup functions
-/*
-void cleanup_buffers(BufferData* buffers);
-void cleanup_shaders(Assets* assets);
-void cleanup_models(Assets* assets);
-void cleanup_textures(Assets* assets);
-void cleanup_fonts(Assets* assets);
-*/
-
 bool cleanup_rendering_system(RenderingContext* context);
 
-// Utility functions
+// Utility functions.
 void apply_matrices(const Shader* shader);
 void process_lighting(const Shader* shader, const RenderingContext* ctx);
 void bind_textures(const Shader* shader, u32 diffuse, u32 specular, u32 emission);
