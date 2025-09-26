@@ -95,6 +95,7 @@ static void draw_world_models(const RenderingContext* ctx) {
 	const Model* blahaj_model 	= &ctx->assets.models[MODEL_BLAHAJ];
 	
 	const Shader* explode_shader = &ctx->assets.shaders[SHADER_EXPLODE_MODEL];
+	const Shader* normal_shader = &ctx->assets.shaders[SHADER_NORMALS];
 	glm::mat4 model;
 
 	// Drawing backpack model.
@@ -116,10 +117,14 @@ static void draw_world_models(const RenderingContext* ctx) {
 	apply_matrices(blahaj_shader);
 	set_float(blahaj_shader, "material.shininess", DEFAULT_SHININESS);
 	process_lighting(blahaj_shader, ctx);
-
+	
 	for (int i = 0; i < ctx->world.blahaj_positions.size(); i++) {
+		use_shader(blahaj_shader);
+		apply_matrices(blahaj_shader);
+		set_float(blahaj_shader, "material.shininess", DEFAULT_SHININESS);
+		process_lighting(blahaj_shader, ctx);
+		
 		float angle = 20.0f * i;
-
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, ctx->world.blahaj_positions[i]);
 		model = glm::scale(model, glm::vec3(1.5f));
@@ -143,6 +148,26 @@ static void draw_world_models(const RenderingContext* ctx) {
 	set_mat4(explode_shader, "model_matrix", model);
 	draw_model(bp_model, explode_shader);
 	
+/*
+	// Drawing the backpack again but this time using the normals shader to
+	// visualize the normals of the backpack.
+	use_shader(bp_shader);
+	apply_matrices(bp_shader);
+	set_float(bp_shader, "material.shininess", DEFAULT_SHININESS);
+	process_lighting(bp_shader, ctx);
+	
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-5.0f, 0.0f, 5.0f));
+	model = glm::scale(model, glm::vec3(0.5f));
+	model = glm::rotate(model, Time::get_time() * glm::radians(45.0f), glm::vec3(1.0f));
+	set_mat4(bp_shader, "model_matrix", model);
+	draw_model(bp_model, bp_shader);
+
+	use_shader(normal_shader);
+	apply_matrices(normal_shader);
+	set_mat4(normal_shader, "model_matrix", model);
+	draw_model(bp_model, normal_shader);
+*/
 }
 
 

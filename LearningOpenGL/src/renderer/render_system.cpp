@@ -362,6 +362,8 @@ static bool init_shaders(Assets* assets) {
 		{"skybox.vert", "skybox.frag", nullptr},
 		{"special_cube.vert", "reflection.frag", nullptr},
 		{"special_cube.vert", "refraction.frag", nullptr},
+
+		{"normals.vert", "normals.frag", "normals.geom"}
 	};
 
 	// Creating each shader

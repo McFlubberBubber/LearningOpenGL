@@ -155,5 +155,8 @@
     <None Include="res\shaders\explode_model.frag" />
     <None Include="res\shaders\explode_model.geom" />
     <None Include="res\shaders\explode_model.vert" />
+    <None Include="res\shaders\normals.vert" />
+    <None Include="res\shaders\normals.frag" />
+    <None Include="res\shaders\normals.geom" />
   </ItemGroup>
 </Project>
