@@ -40,7 +40,10 @@ struct Camera {
 
 	// Cached matrices (update when needed)
 	glm::mat4 view_matrix;
+	
+	// Flags
 	bool view_matrix_dirty;
+	bool is_sprinting; // For debug overlay
 };
 
 enum CameraMovement {
@@ -53,6 +56,7 @@ enum CameraMovement {
 struct CameraData {
 	Camera camera;
 	CameraMode mode{ CameraMode::FREEFLY };		// Default
+
 	glm::mat4 projection_matrix;
 	float aspect_ratio;
 	float near_plane;

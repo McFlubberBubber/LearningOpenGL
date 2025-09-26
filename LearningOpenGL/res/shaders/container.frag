@@ -85,7 +85,7 @@ vec3 calculate_spot_lighting(SpotLight spot_light, vec3 norm, vec3 frag_pos, vec
 float linearize_depth(float depth);
 
 
-void main ()
+void main()
 {
 	//Calulating lighting properties (PHONG SHADING)
 	vec3 norm = normalize(fs_in.normal);

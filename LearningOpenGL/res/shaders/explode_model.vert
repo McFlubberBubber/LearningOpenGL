@@ -8,7 +8,7 @@ layout (location = 2) in vec2 tex_coord;
 out VS_OUT {
 	vec2 texture_coords;
 	vec3 normal;
-	vec3 frag_pos;
+	vec3 frag_pos; // This is the world pos.
 } vs_out;
 
 

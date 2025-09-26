@@ -20,8 +20,10 @@ Camera create_camera(glm::vec3 position, glm::vec3 world_up, float yaw, float pi
 	camera.mouse_sensitivity = DEFAULT_SENSITIVITY;
 	camera.zoom				 = DEFAULT_ZOOM;
 
-	// Initializing view matrix
+	// Initializing view matrix + flags
 	camera.view_matrix_dirty = true;
+	camera.is_sprinting 	 = false;
+
 	update_camera_vectors(&camera);
 
 	return camera;
@@ -79,11 +81,14 @@ bool update_camera_from_input(GLFWwindow* window, CameraData* camera_data, Input
 	}
 
 	// Handling sprint
-	if (is_key_down(input, GLFW_KEY_LEFT_SHIFT))
+	if (is_key_down(input, GLFW_KEY_LEFT_SHIFT)) {
 		camera->movement_speed = camera->sprint_speed;
-	else
+		camera->is_sprinting = true;
+	} else {
 		camera->movement_speed = DEFAULT_SPEED;
-
+		camera->is_sprinting = false;
+	}
+	
 //	update_camera_vectors(camera);
 	return mode_changed;
 }

@@ -991,6 +991,9 @@ void apply_matrices(const Shader* shader) {
 }
 
 void process_lighting(const Shader* shader, const RenderingContext* ctx) {
+	// Setting the camera's view position uniform
+	set_vec3(shader, "view_position", ctx->camera_data.camera.position);
+	
 	// Directional lighting
 	set_vec3(shader, "dir_light.direction", ctx->lighting.directional_light_dir);
 	set_vec3(shader, "dir_light.ambient", ctx->lighting.directional_ambient);
@@ -1019,8 +1022,8 @@ void process_lighting(const Shader* shader, const RenderingContext* ctx) {
 	set_vec3(shader, "spot_light.specular", 1.0f, 1.0f, 1.0f);
 
 	set_float(shader, "spot_light.constant", 1.0f);
-	set_float(shader, "spot_light.linear", 0.22f);
-	set_float(shader, "spot_light.quadratic", 0.20f);
+	set_float(shader, "spot_light.linear", 0.09f);
+	set_float(shader, "spot_light.quadratic", 0.032f);
 
 	set_float(shader, "spot_light.cut_off", glm::cos(glm::radians(10.0f)));
 	set_float(shader, "spot_light.outer_cut_off", glm::cos(glm::radians(15.0f)));
@@ -1035,18 +1038,22 @@ void bind_textures(const Shader* shader, u32 diffuse, u32 specular, u32 emission
 	use_shader(shader);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, diffuse);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, specular);
+	set_int(shader, "material.diffuse1", 0);
 
 	// Reuse the diffuse texture if the user has no specular texture being used
-	if (specular == 0) {
-		glActiveTexture(GL_TEXTURE1);
+	glActiveTexture(GL_TEXTURE1);
+	if (specular != 0)
+		glBindTexture(GL_TEXTURE_2D, specular);
+	else
 		glBindTexture(GL_TEXTURE_2D, diffuse);
-	}
+	set_int(shader, "material.specular1", 1);	
 
+
+	// Handling emission (if needed).
 	if (emission != 0) {
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, emission);
+		set_int(shader, "material.emission1", 2);
 	}
 }
 

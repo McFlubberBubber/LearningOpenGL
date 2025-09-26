@@ -27,6 +27,7 @@ void display_zoom(Assets* assets, const ViewportState* viewport, const CameraDat
 void display_fps(const RenderingContext* context, float dt);
 void display_coords(const RenderingContext* context);
 void display_euler_angles(const RenderingContext* ctx);
+void display_sprint_status(const RenderingContext* ctx);
 
 
 // Helper functions

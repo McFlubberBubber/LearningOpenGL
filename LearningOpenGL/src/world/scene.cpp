@@ -35,10 +35,6 @@ static void draw_skybox(RenderingContext* ctx) {
 	glDepthMask(GL_TRUE);
 }
 
-
-
-
-// @TODO: Specular lighting seems kinda messed up? 
 static void draw_wooden_containers(const RenderingContext* ctx) {
 	const Shader* shader = &ctx->assets.shaders[SHADER_CONTAINER];
 	// use_shader(shader);
@@ -91,9 +87,6 @@ static void draw_light_sources(const RenderingContext* ctx) {
 }
 
 
-// @TODO: The specular lighting doesn't seem to be breaking for the models (could be because they use their
-// own texture loading functions rather than using the texture_handler functions), so if we are loading textures
-// manually, we may need to check out why the textures could be causing incorrect specular lighting.
 static void draw_world_models(const RenderingContext* ctx) {
 	const Shader* bp_shader = &ctx->assets.shaders[SHADER_BACKPACK];
 	const Model* bp_model 	= &ctx->assets.models[MODEL_BACKPACK];
@@ -137,18 +130,14 @@ static void draw_world_models(const RenderingContext* ctx) {
 
 	
 	// Drawing the weird exploding backpack thingy with the geometry shader.
-	// @TODO: This model kinda acts up when the 'explosion' is at its furthest point.
-	// Not sure if that's intentional? In addition, I found out that the FOV of the
-	// camera actually affects the maginitude of the model. The less the zoom, the
-	// smaller the magnitude is. 
 	use_shader(explode_shader);
 	apply_matrices(explode_shader);
+	process_lighting(explode_shader, ctx);
 	set_float(explode_shader, "material.shininess", DEFAULT_SHININESS);
 	set_float(explode_shader, "time", Time::get_time());
-	process_lighting(explode_shader, ctx);
 
 	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+	model = glm::translate(model, glm::vec3(0.0f, 0.0f, -15.0f));
 	model = glm::scale(model, glm::vec3(0.25f));
 	model = glm::rotate(model, Time::get_time() * glm::radians(20.0f), glm::vec3(1.0f));
 	set_mat4(explode_shader, "model_matrix", model);
@@ -168,7 +157,7 @@ static void draw_world(RenderingContext* ctx) {
 	//
 	// Draw actual world objects (the spinning, floating ones + models + lights)
 	//
-//	draw_wooden_containers(ctx);
+	draw_wooden_containers(ctx);
 	draw_light_sources(ctx);
 	draw_world_models(ctx);
 

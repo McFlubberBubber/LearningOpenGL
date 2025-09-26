@@ -44,9 +44,9 @@ u32 load_2D_texture(const char* path) {
 		GLenum textureFormat{};
 		if (nrComponents == 1)
 			textureFormat = GL_RED;
-		if (nrComponents == 3)
+		else if (nrComponents == 3)
 			textureFormat = GL_RGB;
-		if (nrComponents == 4)
+		else if (nrComponents == 4)
 			textureFormat = GL_RGBA;
 
 		//binding the texture
@@ -54,7 +54,7 @@ u32 load_2D_texture(const char* path) {
 		glTexImage2D(GL_TEXTURE_2D, 0, textureFormat, width, height, 0, textureFormat, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
-		//texture wrapping + mipmapping
+
 		if (textureFormat != GL_RGBA) {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);

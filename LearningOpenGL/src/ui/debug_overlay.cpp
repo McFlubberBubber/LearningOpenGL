@@ -29,6 +29,8 @@ void render_debug_overlay(RenderingContext* ctx, float dt) {
 	display_fps(ctx, dt);
 	display_coords(ctx);
 	display_euler_angles(ctx);
+	display_sprint_status(ctx);
+
 
 	// @NOTE: This could be moved into the render_scene directly? But this
 	// function is the only function currently that is rendering any 'interface'
@@ -130,8 +132,8 @@ void display_coords(const RenderingContext* ctx) {
 	z_str = format_coord("Z", (float)camera->position.z);
 
 	draw_text(bold_font, ctx, x_str, x, y, scale, GREEN_COLOR, ALPHA, align, DO_DROP_SHADOW);
-	draw_text(bold_font, ctx, x_str, (x + COORD_SPACING), y, scale, GREEN_COLOR, ALPHA, align, DO_DROP_SHADOW);
-	draw_text(bold_font, ctx, x_str, (x + COORD_SPACING * 2), y, scale, GREEN_COLOR, ALPHA, align, DO_DROP_SHADOW);
+	draw_text(bold_font, ctx, y_str, (x + COORD_SPACING), y, scale, GREEN_COLOR, ALPHA, align, DO_DROP_SHADOW);
+	draw_text(bold_font, ctx, z_str, (x + COORD_SPACING * 2), y, scale, GREEN_COLOR, ALPHA, align, DO_DROP_SHADOW);
 }
 
 void display_euler_angles(const RenderingContext* ctx) {
@@ -148,11 +150,32 @@ void display_euler_angles(const RenderingContext* ctx) {
 	static std::string yaw_text;
 	static std::string pitch_text;
 	
-	yaw_text = format_coord("Yaw: ", (float)camera->yaw);
-	pitch_text = format_coord("Pitch: ", (float)camera->pitch);
+	yaw_text = format_coord("Yaw", (float)camera->yaw);
+	pitch_text = format_coord("Pitch", (float)camera->pitch);
 	
 	draw_text(bold_font, ctx, yaw_text, x, y, scale, GREEN_COLOR, ALPHA, align, DO_DROP_SHADOW);
 	draw_text(bold_font, ctx, pitch_text, x, y - LINE_HEIGHT, scale, GREEN_COLOR, ALPHA, align, DO_DROP_SHADOW);
+}
+
+
+void display_sprint_status(const RenderingContext* ctx) {
+	using namespace DebugOverlay;
+	const Font* bold_font    = &ctx->assets.fonts[FONT_BOLD];
+	const auto sprint_status = ctx->camera_data.camera.is_sprinting;
+
+	const float scale = 0.5f;
+	const TextAlign align = TextAlign::LEFT;
+
+	const float x = 0;
+	const float y = (float)ctx->viewport.height - 125;
+
+	std::string sprint_text = "Sprinting: ";
+	if (!sprint_status)
+		sprint_text += "FALSE";
+	else
+		sprint_text += "TRUE";
+
+	draw_text(bold_font, ctx, sprint_text, x, y, scale, GREEN_COLOR, ALPHA, align, DO_DROP_SHADOW);
 }
 
 
