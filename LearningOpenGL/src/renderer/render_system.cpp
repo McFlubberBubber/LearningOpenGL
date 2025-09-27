@@ -7,7 +7,6 @@
 #include "renderer/render_context.h"
 #include "renderer/texture_handler.h"
 
-
 /*
 
 
@@ -221,6 +220,10 @@ static bool init_buffers(BufferData* buffers, GeometryData* geometry, ViewportSt
 
 	glGenBuffers(1, &buffers->UBO_matrices);
 
+	glGenVertexArrays(1, &buffers->mini_quad_VAO);
+	glGenBuffers(1, &buffers->mini_quad_VBO);
+	glGenBuffers(1, &buffers->instance_VBO);
+
 
 	// 3D Cubes
 	glBindVertexArray(buffers->cube_VAO);
@@ -266,7 +269,7 @@ static bool init_buffers(BufferData* buffers, GeometryData* geometry, ViewportSt
 
 	// Special cube (reflection + refractive cubes)
 	glBindVertexArray(buffers->special_cube_VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, buffers->special_cube_VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, buffers->special_cube_VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(geometry->cube_vertices_2), geometry->cube_vertices_2, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
@@ -324,6 +327,27 @@ static bool init_buffers(BufferData* buffers, GeometryData* geometry, ViewportSt
 	glBindBufferRange(GL_UNIFORM_BUFFER, 0, buffers->UBO_matrices, 0, 2 * sizeof(glm::mat4));
 
 	
+	// Instance rendering example
+	glBindVertexArray(buffers->mini_quad_VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, buffers->mini_quad_VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(geometry->mini_quad_vertices), geometry->mini_quad_vertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2 * sizeof(float)));
+
+	// Instanced data stuff here
+	glBindBuffer(GL_ARRAY_BUFFER, buffers->instance_VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * 100, &buffers->translations[0], GL_STATIC_DRAW);
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+	glVertexAttribDivisor(2, 1); // specifies index of the vertex attribute + number of instance passes
+
+	// Cleanup
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	
 	std::cout << "----- Finished initializing buffers! -----\n" << std::endl;
 	return true;
 }
@@ -363,7 +387,8 @@ static bool init_shaders(Assets* assets) {
 		{"special_cube.vert", "reflection.frag", nullptr},
 		{"special_cube.vert", "refraction.frag", nullptr},
 
-		{"normals.vert", "normals.frag", "normals.geom"}
+		{"normals.vert", "normals.frag", "normals.geom"},
+		{"instance_render.vert", "instance_render.frag", nullptr}
 	};
 
 	// Creating each shader

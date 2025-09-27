@@ -158,5 +158,7 @@
     <None Include="res\shaders\normals.vert" />
     <None Include="res\shaders\normals.frag" />
     <None Include="res\shaders\normals.geom" />
+    <None Include="res\shaders\instance_render.frag" />
+    <None Include="res\shaders\instance_render.vert" />
   </ItemGroup>
 </Project>

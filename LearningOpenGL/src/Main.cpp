@@ -19,20 +19,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-ApplicationState app_state = ApplicationState::GAME;
-RenderingContext render_context = {};
-InputState input_state;
-Menu menu;
-
-CallbackContext callback_context = {
-	&render_context,
-	&input_state,
-	&menu,
-	&app_state
-};
 
 void framebuffer_size_callback(GLFWwindow* window, s32 width, s32 height);
-
 
 int main()
 {
@@ -40,7 +28,21 @@ int main()
 	u32 GL_MAJOR_VER = 4;
 	u32 GL_MINOR_VER = 6;
 	u32 GL_BABY_VER  = 0;
+
+	// Initializing structs...
+	ApplicationState app_state = ApplicationState::GAME;
+	RenderingContext render_context = {};
+	InputState input_state;
+	Menu menu;
+
 	ApplicationState prev_app_state = app_state;
+
+	CallbackContext callback_context = {
+	&render_context,
+	&input_state,
+	&menu,
+	&app_state
+	};
 
 	// Setting up GLFWwindow
 	glfwInit();
@@ -92,6 +94,9 @@ int main()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_PROGRAM_POINT_SIZE);
 
+	// INSTANCE RENDERING EXAMPLE
+	render_context.buffers.update_instance_offsets();
+
 	// Initializing here...
 	if (!init_rendering_system(&render_context)) {
 		return -1;
@@ -100,7 +105,6 @@ int main()
 	init_menu(&menu);
 	init_world_objects(&render_context.world);
 	init_lighting(&render_context.lighting);
-
 
 	// ----- RENDER LOOP -----
 	while (!glfwWindowShouldClose(window)) {	
@@ -149,7 +153,7 @@ void framebuffer_size_callback(GLFWwindow* window, s32 width, s32 height) {
 	glViewport(0, 0, width, height);
 	if (ctx && ctx->render_context) {
 		set_screen_size(&ctx->render_context->viewport, width, height);
-		resize_framebuffer(&render_context, width, height);
+		resize_framebuffer(ctx->render_context, width, height);
 	}
 }
 

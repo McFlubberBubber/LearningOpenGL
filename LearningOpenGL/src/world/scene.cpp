@@ -5,10 +5,8 @@
 #include "ui/debug_overlay.h"
 #include "core/time.h"
 
-// NOTE: We are declaring most of these draw functions as static for the time being. Not
-// sure if that is a worthy optimization to be making or not, but we will stick with it
-// for the time being.
-#define DEFAULT_SHININESS 32.0f
+constexpr float DEFAULT_SHININESS = 32.0f;
+
 
 
 static void draw_skybox(RenderingContext* ctx) {
@@ -86,6 +84,15 @@ static void draw_light_sources(const RenderingContext* ctx) {
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
+// Utility function for displaying the normals of a model using a geometry shader.
+static void show_model_normals(const RenderingContext* ctx, const Model* model, const glm::mat4 &model_matrix) {
+	const Shader* shader = &ctx->assets.shaders[SHADER_NORMALS];
+
+	use_shader(shader);
+	apply_matrices(shader);
+	set_mat4(shader, "model_matrix", model_matrix);
+	draw_model(model, shader);
+}
 
 static void draw_world_models(const RenderingContext* ctx) {
 	const Shader* bp_shader = &ctx->assets.shaders[SHADER_BACKPACK];
@@ -95,7 +102,6 @@ static void draw_world_models(const RenderingContext* ctx) {
 	const Model* blahaj_model 	= &ctx->assets.models[MODEL_BLAHAJ];
 	
 	const Shader* explode_shader = &ctx->assets.shaders[SHADER_EXPLODE_MODEL];
-	const Shader* normal_shader = &ctx->assets.shaders[SHADER_NORMALS];
 	glm::mat4 model;
 
 	// Drawing backpack model.
@@ -112,12 +118,7 @@ static void draw_world_models(const RenderingContext* ctx) {
 	draw_model(bp_model, bp_shader);
 
 
-	// Drawing blahaj models.
-	use_shader(blahaj_shader);
-	apply_matrices(blahaj_shader);
-	set_float(blahaj_shader, "material.shininess", DEFAULT_SHININESS);
-	process_lighting(blahaj_shader, ctx);
-	
+	// Drawing blahaj models.	
 	for (int i = 0; i < ctx->world.blahaj_positions.size(); i++) {
 		use_shader(blahaj_shader);
 		apply_matrices(blahaj_shader);
@@ -131,6 +132,7 @@ static void draw_world_models(const RenderingContext* ctx) {
 		model = glm::rotate(model, Time::get_time() * glm::radians(angle), glm::vec3(1.0f, 2.5f, 0.5f));
 		set_mat4(blahaj_shader, "model_matrix", model);
 		draw_model(blahaj_model, blahaj_shader);
+//		show_model_normals(ctx, blahaj_model, model);
 	}
 
 	
@@ -147,50 +149,34 @@ static void draw_world_models(const RenderingContext* ctx) {
 	model = glm::rotate(model, Time::get_time() * glm::radians(20.0f), glm::vec3(1.0f));
 	set_mat4(explode_shader, "model_matrix", model);
 	draw_model(bp_model, explode_shader);
-	
-/*
-	// Drawing the backpack again but this time using the normals shader to
-	// visualize the normals of the backpack.
-	use_shader(bp_shader);
-	apply_matrices(bp_shader);
-	set_float(bp_shader, "material.shininess", DEFAULT_SHININESS);
-	process_lighting(bp_shader, ctx);
-	
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-5.0f, 0.0f, 5.0f));
-	model = glm::scale(model, glm::vec3(0.5f));
-	model = glm::rotate(model, Time::get_time() * glm::radians(45.0f), glm::vec3(1.0f));
-	set_mat4(bp_shader, "model_matrix", model);
-	draw_model(bp_model, bp_shader);
-
-	use_shader(normal_shader);
-	apply_matrices(normal_shader);
-	set_mat4(normal_shader, "model_matrix", model);
-	draw_model(bp_model, normal_shader);
-*/
 }
 
 
-// @Incomplete: Do this.
 static void draw_world(RenderingContext* ctx) {
-	//
 	// Draw skybox-related things first.
-	//
 	draw_skybox(ctx);
 
-
-	//
 	// Draw actual world objects (the spinning, floating ones + models + lights)
-	//
 	draw_wooden_containers(ctx);
 	draw_light_sources(ctx);
 	draw_world_models(ctx);
 
-	// 
 	// Draw room + grass (includes grassland and grass) + windows last
-	//
 }
 
+
+static void render_instanced_quads(const RenderingContext* ctx) {
+	const Shader* shader = &ctx->assets.shaders[SHADER_INSTANCE_EXAMPLE];
+
+	use_shader(shader);
+	// apply_matrices(shader);
+	for (unsigned int i = 0; i < 100; i++) {
+		set_vec2(shader, ("offsets[" + std::to_string(i) + "]").c_str(), ctx->buffers.translations[i]);
+	}
+
+	glBindVertexArray(ctx->buffers.mini_quad_VAO);
+	glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 100);
+}
 
 void render_scene(RenderingContext* ctx, float dt) {
 	// ----- Binding framebuffer + enabling depth testing
@@ -214,6 +200,8 @@ void render_scene(RenderingContext* ctx, float dt) {
 	// ----- Draw world objects -----
 	draw_world(ctx);
 
+	// ----- Instance rendering example -----
+//	render_instanced_quads(ctx);
 
 	// ----- Unbinding the framebuffer + disabling depth testing -----
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -226,12 +214,10 @@ void render_scene(RenderingContext* ctx, float dt) {
 	glBindTexture(GL_TEXTURE_2D, ctx->assets.textures[TEXTURE_COLOR_BUFFER]);
 	glBindVertexArray(ctx->buffers.quad_VAO);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
-
 	
 	// ----- Resetting -----
 	glBindVertexArray(0);
 	glBindTexture(GL_TEXTURE_2D, 0);
-
 
 	// ----- Drawing UI elements -----
 	render_debug_overlay(ctx, dt);

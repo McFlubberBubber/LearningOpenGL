@@ -44,6 +44,7 @@ enum ShaderType {
 	SHADER_REFRACTIVE_CUBE,
 
 	SHADER_NORMALS,
+	SHADER_INSTANCE_EXAMPLE,
 
 	SHADER_COUNT
 };
@@ -115,6 +116,26 @@ struct BufferData {
 	u32 quad_VAO, quad_VBO;
 	u32 FBO, RBO;								// Frame + render buffers
 	u32 UBO_matrices;							// Uniform buffer (view matrices)
+
+
+	// Instance rendering example - might get deleted soon.
+	u32 mini_quad_VAO, mini_quad_VBO;
+	u32 instance_VBO;
+	glm::vec2 translations[100];
+
+	void update_instance_offsets() {
+		int index = 0;
+		float offset = 0.1f;
+
+		for (int y = -10; y < 10; y += 2) {
+			for (int x = -10; x < 10; x += 2) {
+				glm::vec2 translation;
+				translation.x = (float)x / 10.0f + offset;
+				translation.y = (float)y / 10.0f + offset;
+				translations[index++] = translation;
+			}
+		}
+	}
 };
 
 
@@ -223,6 +244,17 @@ struct GeometryData {
 		1.0f,  1.0f,  1.0f, 1.0f
 	};
 
+	// Positions, colors
+	static constexpr float mini_quad_vertices[] = {
+		-0.05f,  0.05f,  1.0f, 0.0f, 0.0f,
+		 0.05f, -0.05f,  0.0f, 1.0f, 0.0f,
+		-0.05f, -0.05f,  0.0f, 0.0f, 1.0f,
+
+		-0.05f,  0.05f,  1.0f, 0.0f, 0.0f,
+		 0.05f, -0.05f,  0.0f, 1.0f, 0.0f,
+		 0.05f,  0.05f,  0.0f, 1.0f, 1.0f
+	};
+
 	// Normalised coords on the screen
 	static constexpr float points[] = {
 		-0.5f,  0.5f, 1.0f, 0.0f, 0.0f, // top-left
@@ -323,11 +355,12 @@ struct GeometryData {
 
 
 	// Vertex counts just incase
-	static constexpr u32 cube_vertex_count		= sizeof(cube_vertices) / sizeof(float);
-	static constexpr u32 cube_vertex_2_count	= sizeof(cube_vertices_2) / sizeof(float);
-	static constexpr u32 wall_vertex_count		= sizeof(wall_vertices) / sizeof(float);
-	static constexpr u32 quad_vertex_count		= sizeof(quad_vertices) / sizeof(float);
-	static constexpr u32 skybox_vertex_count	= sizeof(skybox_vertices) / sizeof(float);
+	static constexpr u32 cube_vertex_count		= sizeof(cube_vertices)		 / sizeof(float);
+	static constexpr u32 cube_vertex_2_count	= sizeof(cube_vertices_2)	 / sizeof(float);
+	static constexpr u32 wall_vertex_count		= sizeof(wall_vertices)		 / sizeof(float);
+	static constexpr u32 quad_vertex_count		= sizeof(quad_vertices)		 / sizeof(float);
+	static constexpr u32 mini_quad_vertex_count = sizeof(mini_quad_vertices) / sizeof(float);
+	static constexpr u32 skybox_vertex_count	= sizeof(skybox_vertices)    / sizeof(float);
 
 };
 

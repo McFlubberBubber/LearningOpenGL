@@ -206,6 +206,8 @@
     <None Include="res\shaders\geometry.geom" />
     <None Include="res\shaders\geometry.vert" />
     <None Include="res\shaders\grass.frag" />
+    <None Include="res\shaders\instance_render.frag" />
+    <None Include="res\shaders\instance_render.vert" />
     <None Include="res\shaders\lightCube.frag" />
     <None Include="res\shaders\emission.frag" />
     <None Include="res\shaders\blahaj.frag" />
