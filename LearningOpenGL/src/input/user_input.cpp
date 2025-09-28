@@ -97,12 +97,12 @@ void handle_game_input(GLFWwindow* window, InputState* input, RenderingContext* 
 	// Handling render mode changes
 	if (is_key_pressed(input, GLFW_KEY_UP)) {
 		cycle_render_mode(&ctx->post_processing, true);
-		display_render_mode_status(&ctx->assets, &ctx->viewport, ctx->post_processing.mode);
+		display_render_mode_status(ctx);
 	}
 
 	if (is_key_pressed(input, GLFW_KEY_DOWN)) {
 		cycle_render_mode(&ctx->post_processing, false);
-		display_render_mode_status(&ctx->assets, &ctx->viewport, ctx->post_processing.mode);
+		display_render_mode_status(ctx);
 	}
 
 

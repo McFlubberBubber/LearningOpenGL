@@ -77,10 +77,37 @@ struct TextBox {
 };
 
 
+// Implementing a message queue system for message logging and stuff within the application.
+struct Message {
+	std::string text;
+	glm::vec3 text_color;
+	glm::vec3 bg_color;
+
+	float scale;
+	float padding;
+
+	float lifetime;
+	float fade_duration;
+	float time_elapsed;
+	float alpha;
+	
+	float y_position;
+};
+
+struct MessageQueue {
+	std::vector<Message> messages;
+
+	float base_x;
+	float base_y;
+
+	float message_spacing;
+	int max_messages;
+};
+
 struct Font {
 	FT_Library freetype;
 	FT_Face face;
-	u32 VAO, VBO;
+	u32 VAO, VBO; // @TODO: Should this get moved into the BufferData struct?
 	
 	std::map<char, Character> characters;
 	std::vector<FadingText> fading_texts;
@@ -116,7 +143,12 @@ void update_and_draw_text_boxes(Font* font, const RenderingContext* ctx, float d
 void draw_text_with_background(const Font* font, const RenderingContext* ctx, const std::string& text, float x, float y, float scale,
 	const glm::vec3 text_color, const glm::vec3& bg_color, float alpha, TextAlign align, float padding);
 
+// Message queue stuff
+bool init_message_queue(RenderingContext* ctx);
+void push_message(MessageQueue* queue, const std::string& text, float lifetime = 1.5f, float fade_duration = 0.75f);
+void update_and_draw_message_queue(Font* font, RenderingContext* ctx, float dt);
 
+ 
 // Internal helpers
 void load_char_glyphs(Font* font);
 void init_font_buffers(Font* font);

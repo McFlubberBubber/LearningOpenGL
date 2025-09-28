@@ -42,6 +42,7 @@ void render_debug_overlay(RenderingContext* ctx, float dt) {
 	// function.
 	update_and_draw_fading_texts(&ctx->assets.fonts[FONT_BOLD], ctx, dt);
 	update_and_draw_text_boxes(&ctx->assets.fonts[FONT_BOLD], ctx, dt);
+	update_and_draw_message_queue(&ctx->assets.fonts[FONT_BOLD], ctx, dt);
 }
 
 
@@ -60,15 +61,25 @@ void display_camera_mode_status(Assets* assets, CameraMode mode) {
 		trigger_fading_text(&assets->fonts[FONT_BOLD], tag, "Freefly Mode", x, y, SCALE, WHITE_COLOR, LIFETIME, FADE_DURATION, align);
 }
 
-void display_render_mode_status(Assets* assets, const ViewportState* viewport, RenderMode mode) {
+void display_render_mode_status(RenderingContext* ctx) {
 	using namespace DebugOverlay;
+	auto viewport = &ctx->viewport;
+	auto assets   = &ctx->assets;
+	auto mode	  = ctx->post_processing.mode;
+
 	const FontTag tag		  = FontTag::TAG_RENDER;
 	const float x			  = viewport->width / 2.0f;
 	const float y			  = viewport->height / 1.5f;
 	const TextAlign align	  = TextAlign::CENTER;
 
-	trigger_fading_text(&assets->fonts[FONT_BOLD], tag, render_mode_to_string(mode), x, y, SCALE, RED_COLOR, LIFETIME, FADE_DURATION, align);
+//	trigger_fading_text(&assets->fonts[FONT_BOLD], tag, render_mode_to_string(mode), x, y, SCALE, RED_COLOR, LIFETIME, FADE_DURATION, align);
 //	trigger_text_box(&assets->fonts[FONT_BOLD], tag, render_mode_to_string(mode), x, y, SCALE, RED_COLOR, BLACK_COLOR, LIFETIME, FADE_DURATION, align);
+	const std::string base = "RenderMode: ";
+	std::string text = base + render_mode_to_string(mode);
+	
+	push_message(&ctx->message_queue, text);
+
+
 
 }
 
@@ -87,7 +98,10 @@ void display_debug_mode_status(RenderingContext* ctx) {
 		text = base + "enabled";
 	}
 
-	trigger_text_box(&ctx->assets.fonts[FONT_BOLD], tag, text, x, y, SCALE, GOLDISH_COLOR, BLACK_COLOR, LIFETIME, FADE_DURATION,align);
+//	trigger_text_box(&ctx->assets.fonts[FONT_BOLD], tag, text, x, y, SCALE, GOLDISH_COLOR, BLACK_COLOR, LIFETIME, FADE_DURATION,align);
+	
+	push_message(&ctx->message_queue, text);
+	
 }
 
 void display_zoom(Assets* assets, const ViewportState* viewport, const CameraData* cd) {

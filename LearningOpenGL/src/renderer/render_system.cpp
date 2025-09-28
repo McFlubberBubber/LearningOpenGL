@@ -622,6 +622,11 @@ bool init_rendering_system (RenderingContext* context) {
 		return false;
 	}
 
+	if (!init_message_queue(context)) {
+		std::cout << "ERROR: Failed to init_message_queue()" << std::endl;
+		return false;
+	}
+
 
 	std::cout << "----- Finished initializing rendering context! -----\n" << std::endl;
 	return true;

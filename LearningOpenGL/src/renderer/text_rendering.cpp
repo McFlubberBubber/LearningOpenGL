@@ -134,7 +134,7 @@ void draw_text(const Font* font, const RenderingContext* context, const std::str
 		// Drawing the drop shadow (if needed)
 		if (drop_shadow) {
 			float shadow_offset = 2.0f;
-			float shadow_verts[6][4];
+			float shadow_verts[6][4] = {};
 
 			for (u32 i = 0; i < 6; i++) {
 				shadow_verts[i][0] = vertices[i][0] + shadow_offset;
@@ -415,7 +415,89 @@ void update_and_draw_text_boxes(Font* font, const RenderingContext* ctx, float d
 	}
 }
 
+// Message queue stuff
+bool init_message_queue(RenderingContext* ctx) {
+	auto queue = &ctx->message_queue;
+	auto vp    = &ctx->viewport;
 
+	queue->messages.clear();
+	queue->base_x = vp->width  / 2.0f;
+	queue->base_y = vp->height / 1.4;
+
+	queue->message_spacing = 64.0f;
+	queue->max_messages	   = 7;
+
+	return true;
+}
+
+void push_message(MessageQueue* queue, const std::string& text, float lifetime, float fade_duration) {
+	const glm::vec3 text_color { 0.95f, 0.95f, 0.8f };
+	const glm::vec3 bg_color { 0.1f, 0.1f, 0.1f };
+	const float scale = 1.0f;
+	const float padding = 8.0f;
+
+	// If we are at max capacity, remove the oldest messages from the queue.
+	while (queue->messages.size() >= queue->max_messages) {
+		queue->messages.pop_back();
+	}
+
+	// Push a new message into the queue.
+	Message msg = {};
+	msg.text       = text;
+	msg.text_color = text_color;
+	msg.bg_color   = bg_color;
+
+	msg.scale   = scale;
+	msg.padding = padding;
+
+	msg.lifetime      = lifetime;
+	msg.fade_duration = fade_duration;
+	msg.time_elapsed  = 0.0f;
+	msg.alpha		  = 1.0f;
+
+	// Positioning
+	msg.y_position = queue->base_y;
+
+	// Shifting messages down
+	for (auto& it : queue->messages) {
+		it.y_position += queue->message_spacing;
+	}
+
+	// Add new messages to the top
+	queue->messages.insert(queue->messages.begin(), msg);
+}
+
+void update_and_draw_message_queue(Font* font, RenderingContext* ctx, float dt) {
+	auto queue = &ctx->message_queue;
+
+	for (auto it = queue->messages.begin(); it != queue->messages.end();) {
+		it->time_elapsed += dt;
+
+		// Remove any fully faded texts
+		if (it->time_elapsed >= it->lifetime + it->fade_duration) {
+			it = queue->messages.erase(it);
+			continue;
+		}
+
+		// Calculate the current alpha
+		float current_alpha = 1.0f;
+		if (it->time_elapsed > it->lifetime) {
+			float fade_progress = (it->time_elapsed - it->lifetime) / it->fade_duration;
+			current_alpha = glm::clamp(1.0f - fade_progress, 0.0f, 1.0f);
+		}
+		it->alpha = current_alpha;
+		++it;
+	}
+
+	// Recalculate all positions dynamically based on the new indexes, then draw them.
+	for (s32 i = 0; i < queue->messages.size(); i++) {
+		queue->messages[i].y_position = queue->base_y + (i * queue->message_spacing);
+
+		draw_text_with_background(font, ctx, queue->messages[i].text, queue->base_x, queue->messages[i].y_position,
+			queue->messages[i].scale, queue->messages[i].text_color, queue->messages[i].bg_color, queue->messages[i].alpha,
+			TextAlign::CENTER, queue->messages[i].padding);
+	}
+}
 
 // Internal helper functions
 void load_char_glyphs(Font* font) {

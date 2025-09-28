@@ -10,12 +10,15 @@
  
 struct RenderingContext {
 	Assets assets;
+
 	CameraData camera_data;
 	BufferData buffers;
 	GeometryData geometry;
 	WorldObjectData world;
 	LightingData lighting;
+
 	ViewportState viewport;
+	MessageQueue message_queue;
 	PostProcessingData post_processing;
 
 	// Temporary flag for rendering debug overlay
