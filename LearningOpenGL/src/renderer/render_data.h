@@ -46,6 +46,8 @@ enum ShaderType {
 	SHADER_NORMALS,
 	SHADER_INSTANCE_EXAMPLE,
 
+	SHADER_TEXTBOX,
+
 	SHADER_COUNT
 };
 
@@ -83,7 +85,6 @@ enum FontType {
 	FONT_REGULAR = 0,
 	FONT_BOLD,
 	FONT_ITALIC,
-//	FONT_FPS,
 
 	FONT_TITLE,
 	FONT_BODY,
@@ -117,6 +118,7 @@ struct BufferData {
 	u32 FBO, RBO;								// Frame + render buffers
 	u32 UBO_matrices;							// Uniform buffer (view matrices)
 
+	u32 textbox_VAO, textbox_VBO, textbox_EBO;  // Textbox rendering
 
 	// Instance rendering example - might get deleted soon.
 	u32 mini_quad_VAO, mini_quad_VBO;
@@ -351,6 +353,12 @@ struct GeometryData {
 		 1.0f, -1.0f, -1.0f,
 		-1.0f, -1.0f,  1.0f,
 		 1.0f, -1.0f,  1.0f
+	};
+
+	// Indices for rendering quads as EBOs
+	static constexpr u32 indices[] = {
+		0, 1, 2,	// First triangle
+		0, 2, 3		// Second triangle
 	};
 
 

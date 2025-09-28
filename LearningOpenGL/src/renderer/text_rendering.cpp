@@ -60,12 +60,13 @@ void destroy_font(Font* font) {
 
 // Functions to draw text on the screen
 void draw_text(const Font* font, const RenderingContext* context, const std::string& text, float x, float y, float scale, const glm::vec3& color, float alpha, TextAlign align, bool drop_shadow) {
-	if (!font->is_valid) return;
-	// We constantly use the one SHADER_FONT so we just keep using it.
-	// const auto shader	 = &context->assets.shaders[SHADER_FONT];
+	if (!font->is_valid) {
+		std::cout << "ERROR: Tried to draw with font: " << font << "but it is invalid!" << std::endl;
+		return;
+	}
 	const Shader* shader 	 = &context->assets.shaders[SHADER_FONT];
 
-	const glm::mat4 ortho 	 = context->viewport.ortho_projection;
+	const glm::mat4& ortho 	 = context->viewport.ortho_projection;
 	const float screen_width = (float)context->viewport.width;
 
 	use_shader(shader);
@@ -242,6 +243,180 @@ void update_and_draw_fading_texts(Font* font, const RenderingContext* context, f
 }
 
 
+// Text box drawing
+static void draw_bg_quad(const RenderingContext* ctx, float x, float y, float width, float height, const glm::vec3& color, float alpha) {
+	auto shader  = &ctx->assets.shaders[SHADER_TEXTBOX];
+
+	use_shader(shader);
+	const glm::mat4& ortho = ctx->viewport.ortho_projection;
+
+	use_shader(shader);
+	set_mat4(shader, "projection", ortho);
+	set_vec3(shader, "color", color);
+	set_float(shader, "alpha", alpha);
+
+	float vertices[] = {
+		// Positions
+		x,			y,			// Bottom left
+		x + width,	y,			// Bottom right
+		x + width,	y + height,	// Top right
+		x,			y + height, // Top left
+	};
+
+	// Binding + drawing the elements
+	glBindVertexArray(ctx->buffers.textbox_VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, ctx->buffers.textbox_VBO);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+}
+
+void draw_text_with_background(const Font* font, const RenderingContext* ctx, const std::string& text, float x, float y, float scale,
+	const glm::vec3 text_color, const glm::vec3& bg_color, float alpha, TextAlign align, float padding) {
+	// Checking flags
+	if (!font->is_valid) {
+		std::cout << "ERROR: Tried to draw with font: " << font << "but it is invalid!" << std::endl;
+		return;
+	}
+
+	bool center_inside = true;
+	float text_width  = get_string_width_in_pixels(font, text, scale);
+	float text_height = scale * 48;
+
+	float bg_width  = text_width + (padding * 2);
+	float bg_height = text_height + (padding * 2);
+	float bg_x	    = x;
+
+	const float screen_width = ctx->viewport.width;
+
+	switch (align) {
+    case TextAlign::CENTER:
+		bg_x = x - bg_width / 2.0f;
+		break;
+	case TextAlign::RIGHT:
+		bg_x = x - bg_width;
+		break;
+	case TextAlign::SCREEN_CENTER:
+		bg_x = (screen_width - bg_width) / 2.0f;
+		break;
+	case TextAlign::LEFT:
+		bg_x = x;              // Background starts at original x
+		break;
+	}
+
+	float bg_y = y - padding;
+	float bg_alpha = alpha * 0.5f;
+
+	// Draw the BG first.
+	draw_bg_quad(ctx, bg_x, bg_y, bg_width, bg_height, bg_color, bg_alpha);
+
+	// Drawing the text.
+	float text_x, text_y;
+	if (center_inside) {
+		// Center the text within the background box
+		text_x = bg_x + (bg_width - text_width) / 2.0f;
+		text_y = bg_y + padding + (text_height * 0.15f);
+	}
+	else {
+		// Position text based on original alignment logic
+		switch (align) {
+		case TextAlign::CENTER:
+			text_x = x - text_width / 2.0f;
+			break;
+		case TextAlign::RIGHT:
+			text_x = x - text_width;
+			break;
+		case TextAlign::SCREEN_CENTER:
+			text_x = (screen_width - text_width) / 2.0f;
+			break;
+		case TextAlign::LEFT:
+			text_x = x + padding;
+			break;
+		}
+		text_y = y;
+	}
+	
+	float text_alpha = alpha * 0.9f;
+	draw_text(font, ctx, text, text_x, text_y, scale, text_color, text_alpha, TextAlign::LEFT, true);
+}
+
+void trigger_text_box(Font* font, const FontTag tag, const std::string& text, float x, float y, float scale,
+	const glm::vec3& text_color, const glm::vec3& bg_color, float lifetime, float fade_duration, TextAlign align, float padding) {
+	// Check if there is a text box that is being drawn with the same tag.
+	for (auto& tb : font->text_boxes) {
+
+		// Update the existing textbox with the new data
+		if (tb.tag == tag) {
+			tb.text  = text;
+			tb.x	 = x;
+			tb.y     = y;
+			tb.scale = scale;
+
+			tb.text_color = text_color;
+			tb.bg_color   = bg_color;
+			tb.alpha	  = 1.0f;
+
+			tb.lifetime		 = lifetime;
+			tb.fade_duration = fade_duration;
+			tb.time_elapsed  = 0.0f;
+
+			tb.align   = align;
+			tb.padding = padding;
+			return;
+		}
+	}
+
+	// If there are no existing tags, draw a new textbox.
+	TextBox textbox = {};
+	textbox.tag = tag;
+
+	textbox.text = text;
+	textbox.x = x;
+	textbox.y = y;
+	textbox.scale = scale;
+
+	textbox.text_color = text_color;
+	textbox.bg_color = bg_color;
+	textbox.alpha = 1.0f;
+
+	textbox.lifetime = lifetime;
+	textbox.fade_duration = fade_duration;
+	textbox.time_elapsed = 0.0f;
+
+	textbox.align = align;
+	textbox.padding = padding;
+
+	font->text_boxes.push_back(textbox);
+}
+
+void update_and_draw_text_boxes(Font* font, const RenderingContext* ctx, float dt) {
+	for (auto it = font->text_boxes.begin(); it != font->text_boxes.end();) {
+		it->time_elapsed += dt;
+
+		// Remove any fully faded texts
+		if (it->time_elapsed >= it->lifetime + it->fade_duration) {
+			it = font->text_boxes.erase(it);
+			continue;
+		}
+
+		// Calculate the current alpha
+		float current_alpha = 1.0f;
+		if (it->time_elapsed > it->lifetime) {
+			float fade_progress = (it->time_elapsed - it->lifetime) / it->fade_duration;
+			current_alpha = glm::clamp(1.0f - fade_progress, 0.0f, 1.0f);
+		}
+
+		// FIXED: Use current_alpha for background only, text stays full opacity
+		draw_text_with_background(font, ctx, it->text, it->x, it->y, it->scale,
+			it->text_color, it->bg_color, current_alpha, // Background will be at 30% of this value
+			it->align, it->padding);
+
+		++it;
+	}
+}
+
+
+
 // Internal helper functions
 void load_char_glyphs(Font* font) {
 	// Loading ASCII chars
@@ -333,8 +508,9 @@ void cleanup_font_resources(Font* font) {
 		font->freetype = nullptr;
 	}
 
-	// Cleanup on the fading texts
+	// Cleanup
 	font->fading_texts.clear();
+	font->text_boxes.clear();
 	font->is_valid = false;
 
 }

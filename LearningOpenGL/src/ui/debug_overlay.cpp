@@ -15,9 +15,11 @@ namespace DebugOverlay {
 	constexpr bool DO_DROP_SHADOW = true;
 
 	// GLM stuff doesn't have much constexpr support in this version.
-	const glm::vec3 GREEN_COLOR {0.0f, 1.0f, 0.0f};
-	const glm::vec3 WHITE_COLOR {1.0f, 1.0f, 1.0f};
-	const glm::vec3 RED_COLOR   {1.0f, 0.0f, 0.0f};
+	const glm::vec3 GREEN_COLOR   {0.0f, 1.0f, 0.0f};
+	const glm::vec3 WHITE_COLOR   {1.0f, 1.0f, 1.0f};
+	const glm::vec3 RED_COLOR     {1.0f, 0.0f, 0.0f};
+	const glm::vec3 GOLDISH_COLOR {0.95f, 0.95f, 0.8f};
+	const glm::vec3 BLACK_COLOR   {0.1f, 0.1f, 0.1f};
 
 	constexpr float LINE_HEIGHT = 25.0f;
 	constexpr float COORD_SPACING = 110.0f;
@@ -39,6 +41,7 @@ void render_debug_overlay(RenderingContext* ctx, float dt) {
 	// to the screen so currently we will be updating the fading texts under this
 	// function.
 	update_and_draw_fading_texts(&ctx->assets.fonts[FONT_BOLD], ctx, dt);
+	update_and_draw_text_boxes(&ctx->assets.fonts[FONT_BOLD], ctx, dt);
 }
 
 
@@ -65,6 +68,8 @@ void display_render_mode_status(Assets* assets, const ViewportState* viewport, R
 	const TextAlign align	  = TextAlign::CENTER;
 
 	trigger_fading_text(&assets->fonts[FONT_BOLD], tag, render_mode_to_string(mode), x, y, SCALE, RED_COLOR, LIFETIME, FADE_DURATION, align);
+//	trigger_text_box(&assets->fonts[FONT_BOLD], tag, render_mode_to_string(mode), x, y, SCALE, RED_COLOR, BLACK_COLOR, LIFETIME, FADE_DURATION, align);
+
 }
 
 void display_debug_mode_status(RenderingContext* ctx) {
@@ -82,8 +87,7 @@ void display_debug_mode_status(RenderingContext* ctx) {
 		text = base + "enabled";
 	}
 
-	trigger_fading_text(&ctx->assets.fonts[FONT_BOLD], tag, text, x, y, SCALE, WHITE_COLOR, LIFETIME, FADE_DURATION, align);
-
+	trigger_text_box(&ctx->assets.fonts[FONT_BOLD], tag, text, x, y, SCALE, GOLDISH_COLOR, BLACK_COLOR, LIFETIME, FADE_DURATION,align);
 }
 
 void display_zoom(Assets* assets, const ViewportState* viewport, const CameraData* cd) {

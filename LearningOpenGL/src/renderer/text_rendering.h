@@ -39,6 +39,7 @@ enum class FontTag {
 	TAG_DEBUG,
 };
 
+// Just raw, floating text that eventually fades away.
 struct FadingText {
 	FontTag tag;
 	std::string text;
@@ -54,6 +55,27 @@ struct FadingText {
 	TextAlign align = TextAlign::LEFT;		// Default alignment
 };
 
+// Text boxes that can be drawn, but also fade away.
+struct TextBox {
+	FontTag tag;
+	std::string text;
+	float x, y;
+	float scale;
+
+	glm::vec3 text_color;
+	glm::vec3 bg_color;
+	float alpha;
+
+	// @TODO: We could make it where these are irrelevant if we want to draw a text box that's 'consistent' and doesn't fade away?
+	float lifetime = 1.0f;
+	float fade_duration = 1.0f;
+	float time_elapsed = 0.0f;
+
+	TextAlign align = TextAlign::CENTER;
+	float padding;
+
+};
+
 
 struct Font {
 	FT_Library freetype;
@@ -62,6 +84,7 @@ struct Font {
 	
 	std::map<char, Character> characters;
 	std::vector<FadingText> fading_texts;
+	std::vector<TextBox> text_boxes;
 	
 	bool is_valid;
 };
@@ -73,13 +96,25 @@ void destroy_font(Font* font);
 
 
 // Text rendering utils
-void draw_text(const Font* font, const RenderingContext* context, const std::string& text, float x, float y, float scale, const glm::vec3& color, float alpha, TextAlign align, bool drop_shadow);
+void draw_text(const Font* font, const RenderingContext* context, const std::string& text, float x, float y, float scale,
+	const glm::vec3& color, float alpha, TextAlign align, bool drop_shadow);
 
+// Drawing fading texts
 float get_string_width_in_pixels(const Font* font, const std::string& text, float scale);
 
-void trigger_fading_text(Font* font, const FontTag tag, const std::string& text, float x, float y, float scale, const glm::vec3& color, float lifetime, float fade_duration, TextAlign align); 
+void trigger_fading_text(Font* font, const FontTag tag, const std::string& text, float x, float y, float scale, 
+	const glm::vec3& color, float lifetime, float fade_duration, TextAlign align); 
 
 void update_and_draw_fading_texts(Font* font, const RenderingContext* context, float dt);
+
+// Drawing text box stuff
+void trigger_text_box(Font* font, const FontTag tag, const std::string& text, float x, float y, float scale,
+	const glm::vec3& text_color, const glm::vec3& bg_color, float lifetime, float fade_duration, TextAlign align, float padding = 8.0f);
+
+void update_and_draw_text_boxes(Font* font, const RenderingContext* ctx, float dt);
+
+void draw_text_with_background(const Font* font, const RenderingContext* ctx, const std::string& text, float x, float y, float scale,
+	const glm::vec3 text_color, const glm::vec3& bg_color, float alpha, TextAlign align, float padding);
 
 
 // Internal helpers

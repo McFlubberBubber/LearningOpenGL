@@ -195,37 +195,10 @@ static bool init_camera(CameraData* camera_data, ViewportState* viewport) {
 	return true;
 }
 
-
-static bool init_buffers(BufferData* buffers, GeometryData* geometry, ViewportState* viewport, u32 texture_color_buffer) {
-	const u32 width  = viewport->width;
-	const u32 height = viewport->height;
-
-	// Generating vertex arrays + buffers
+// 3D Cubes
+static void setup_cube_buffers(BufferData* buffers, GeometryData* geometry) {
 	glGenVertexArrays(1, &buffers->cube_VAO);
-	glGenBuffers(1,		 &buffers->cube_VBO);
-	glGenVertexArrays(1, &buffers->wall_VAO);
-	glGenBuffers(1,	     &buffers->wall_VBO);
-	glGenVertexArrays(1, &buffers->line_VAO);
-	glGenBuffers(1, 	 &buffers->line_VBO);
-	glGenVertexArrays(1, &buffers->skybox_VAO);
-	glGenBuffers(1,		 &buffers->skybox_VBO);
-	glGenVertexArrays(1, &buffers->special_cube_VAO);
-	glGenBuffers(1,		 &buffers->special_cube_VBO);
-
-//	glGenBuffers(1,		  &buffers->EBO);					// Not needed right now.
-	glGenVertexArrays(1,  &buffers->quad_VAO);
-	glGenBuffers(1,		  &buffers->quad_VBO);
-	glGenFramebuffers(1,  &buffers->FBO);
-	glGenRenderbuffers(1, &buffers->RBO);
-
-	glGenBuffers(1, &buffers->UBO_matrices);
-
-	glGenVertexArrays(1, &buffers->mini_quad_VAO);
-	glGenBuffers(1, &buffers->mini_quad_VBO);
-	glGenBuffers(1, &buffers->instance_VBO);
-
-
-	// 3D Cubes
+	glGenBuffers(1, &buffers->cube_VBO);
 	glBindVertexArray(buffers->cube_VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, buffers->cube_VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(geometry->cube_vertices), geometry->cube_vertices, GL_STATIC_DRAW);
@@ -236,8 +209,13 @@ static bool init_buffers(BufferData* buffers, GeometryData* geometry, ViewportSt
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 
+	glBindVertexArray(0);
+}
 
-	// 2D Rendering walls / rectangles
+// 2D walls
+static void setup_wall_buffers(BufferData* buffers, GeometryData* geometry) {
+	glGenVertexArrays(1, &buffers->wall_VAO);
+	glGenBuffers(1, &buffers->wall_VBO);
 	glBindVertexArray(buffers->wall_VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, buffers->wall_VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(geometry->wall_vertices), geometry->wall_vertices, GL_STATIC_DRAW);
@@ -248,8 +226,13 @@ static bool init_buffers(BufferData* buffers, GeometryData* geometry, ViewportSt
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 
+	glBindVertexArray(0);
+}
 
-	// 2D line rendering
+// 2D lines
+static void setup_line_buffers(BufferData* buffers, GeometryData* geometry) {
+	glGenVertexArrays(1, &buffers->line_VAO);
+	glGenBuffers(1, &buffers->line_VBO);
 	glBindVertexArray(buffers->line_VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, buffers->line_VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(geometry->points), geometry->points, GL_STATIC_DRAW);
@@ -258,16 +241,25 @@ static bool init_buffers(BufferData* buffers, GeometryData* geometry, ViewportSt
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
+	glBindVertexArray(0);
+}
 
-	// Skybox stuff
+static void setup_skybox_buffers(BufferData* buffers, GeometryData* geometry) {
+	glGenVertexArrays(1, &buffers->skybox_VAO);
+	glGenBuffers(1, &buffers->skybox_VBO);
 	glBindVertexArray(buffers->skybox_VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, buffers->skybox_VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(geometry->skybox_vertices), geometry->skybox_vertices, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
+	glBindVertexArray(0);
+}
 
-	// Special cube (reflection + refractive cubes)
+
+static void setup_special_cube_buffers(BufferData* buffers, GeometryData* geometry) {
+	glGenVertexArrays(1, &buffers->special_cube_VAO);
+	glGenBuffers(1, &buffers->special_cube_VBO);
 	glBindVertexArray(buffers->special_cube_VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, buffers->special_cube_VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(geometry->cube_vertices_2), geometry->cube_vertices_2, GL_STATIC_DRAW);
@@ -276,14 +268,18 @@ static bool init_buffers(BufferData* buffers, GeometryData* geometry, ViewportSt
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
+	glBindVertexArray(0);
+}
 
-	// Currently not being used, but it's a good reminder as to how to
-	// render a rectangle with the indices being utilised.
-	/*
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(wallIndices), wallIndices, GL_STATIC_DRAW);
-	*/
+// Includes screen quad, framebuffer + renderbuffer
+static bool setup_screen_buffers(BufferData* buffers, GeometryData* geometry, ViewportState* viewport, u32 texture_color_buffer) {
+	const u32 width = viewport->width;
+	const u32 height = viewport->height;
 
+	glGenVertexArrays(1, &buffers->quad_VAO);
+	glGenBuffers(1, &buffers->quad_VBO);
+	glGenFramebuffers(1, &buffers->FBO);
+	glGenRenderbuffers(1, &buffers->RBO);
 
 	// Frame buffer VAO + VBO
 	glBindFramebuffer(GL_FRAMEBUFFER, buffers->FBO);
@@ -295,7 +291,7 @@ static bool init_buffers(BufferData* buffers, GeometryData* geometry, ViewportSt
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 
-	
+
 	// Texture color attachment
 	glBindTexture(GL_TEXTURE_2D, texture_color_buffer);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
@@ -317,16 +313,27 @@ static bool init_buffers(BufferData* buffers, GeometryData* geometry, ViewportSt
 		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
 		return false;
 	}
+
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	return true;
+}
 
 
-	// Binding a uniform buffer
+// Currently sets up ONE uniform binding which are the matrices.
+static void setup_uniform_buffers(BufferData* buffers, GeometryData* geometry) {
+	glGenBuffers(1, &buffers->UBO_matrices);
 	glBindBuffer(GL_UNIFORM_BUFFER, buffers->UBO_matrices);
 	glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 	glBindBufferRange(GL_UNIFORM_BUFFER, 0, buffers->UBO_matrices, 0, 2 * sizeof(glm::mat4));
+}
 
-	
+// Might get removed later.
+static void setup_instance_buffers(BufferData* buffers, GeometryData* geometry) {
+	glGenVertexArrays(1, &buffers->mini_quad_VAO);
+	glGenBuffers(1, &buffers->mini_quad_VBO);
+	glGenBuffers(1, &buffers->instance_VBO);
+
 	// Instance rendering example
 	glBindVertexArray(buffers->mini_quad_VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, buffers->mini_quad_VBO);
@@ -342,6 +349,48 @@ static bool init_buffers(BufferData* buffers, GeometryData* geometry, ViewportSt
 	glEnableVertexAttribArray(2);
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
 	glVertexAttribDivisor(2, 1); // specifies index of the vertex attribute + number of instance passes
+}
+
+
+static void setup_textbox_buffers(BufferData* buffers, GeometryData* geometry) {
+	glGenVertexArrays(1, &buffers->textbox_VAO);
+	glGenBuffers(1, &buffers->textbox_VBO);
+	glGenBuffers(1, &buffers->textbox_EBO);
+
+	// VBO for dynamic vertex data.
+	glBindVertexArray(buffers->textbox_VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, buffers->textbox_VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, NULL, GL_DYNAMIC_DRAW); // 4 Vertices * 2 components.
+
+	// EBO for the static indices.
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers->textbox_EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(geometry->indices), geometry->indices, GL_STATIC_DRAW);
+
+	// Position attributes.
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glBindVertexArray(0);
+}
+
+static bool init_buffers(RenderingContext* ctx) {
+	auto buffers  = &ctx->buffers;
+	auto geometry = &ctx->geometry;
+	auto viewport = &ctx->viewport;
+	auto texture = ctx->assets.textures[TEXTURE_COLOR_BUFFER];
+
+	setup_cube_buffers(buffers, geometry);
+	setup_wall_buffers(buffers, geometry);
+	setup_line_buffers(buffers, geometry);
+
+	setup_skybox_buffers(buffers, geometry);
+	setup_special_cube_buffers(buffers, geometry);
+
+	setup_screen_buffers(buffers, geometry, viewport, texture);
+	setup_uniform_buffers(buffers, geometry);
+
+	setup_instance_buffers(buffers, geometry); // May get removed?
+
+	setup_textbox_buffers(buffers, geometry);
 
 	// Cleanup
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -388,7 +437,9 @@ static bool init_shaders(Assets* assets) {
 		{"special_cube.vert", "refraction.frag", nullptr},
 
 		{"normals.vert", "normals.frag", "normals.geom"},
-		{"instance_render.vert", "instance_render.frag", nullptr}
+		{"instance_render.vert", "instance_render.frag", nullptr},
+
+		{"textbox.vert", "textbox.frag", nullptr}
 	};
 
 	// Creating each shader
@@ -551,7 +602,7 @@ bool init_rendering_system (RenderingContext* context) {
 		return false;
 	}
 	
-	if (!init_buffers(&context->buffers, &context->geometry, &context->viewport, context->assets.textures[TEXTURE_COLOR_BUFFER])) {
+	if (!init_buffers(context)) {
 		std::cout << "ERROR: Failed to init_buffers()" << std::endl;
 		return false;
 	}
@@ -597,6 +648,14 @@ static void cleanup_buffers(BufferData* buffers) {
 		}
 	};
 
+	auto delete_EBO = [](u32 &EBO) {
+		if (EBO != 0) {
+			glDeleteBuffers(1, &EBO);
+			EBO = 0;
+		}
+	};
+
+
 	auto delete_FBO = [](u32 &FBO){
 		if (FBO != 0) {
 			glDeleteFramebuffers(1, &FBO);
@@ -610,6 +669,7 @@ static void cleanup_buffers(BufferData* buffers) {
 			RBO = 0;
 		}
 	};
+
 
 	// Doing cleanup here.
 	delete_VAO(buffers->cube_VAO);
@@ -635,6 +695,9 @@ static void cleanup_buffers(BufferData* buffers) {
 	delete_VBO(buffers->mini_quad_VBO);
 	delete_VBO(buffers->instance_VBO);
 
+	delete_VAO(buffers->textbox_VAO);
+	delete_VBO(buffers->textbox_VBO);
+	delete_EBO(buffers->textbox_EBO);
 }
 
 static void cleanup_shaders(Assets* assets) {
