@@ -17,4 +17,7 @@ struct RenderingContext {
 	LightingData lighting;
 	ViewportState viewport;
 	PostProcessingData post_processing;
+
+	// Temporary flag for rendering debug overlay
+	bool debug_mode = false;
 };

@@ -59,7 +59,7 @@ void handle_menu_input(GLFWwindow* window, InputState* input, Menu* menu, Applic
 }
 
 
-void handle_game_input(GLFWwindow* window, InputState* input, RenderingContext* context, float dt, ApplicationState& app) {
+void handle_game_input(GLFWwindow* window, InputState* input, RenderingContext* ctx, float dt, ApplicationState& app) {
 	// Allowing the user to switch to menu
 	if(is_key_pressed(input, GLFW_KEY_ESCAPE) && app == ApplicationState::GAME)
 		app = ApplicationState::MENU;
@@ -81,28 +81,35 @@ void handle_game_input(GLFWwindow* window, InputState* input, RenderingContext* 
 
         // Only process if there's actual movement
         if (x_offset != 0.0f || y_offset != 0.0f)
-            process_mouse_movement(&context->camera_data.camera, x_offset, y_offset);
+            process_mouse_movement(&ctx->camera_data.camera, x_offset, y_offset);
     }
 
 	if (input->scroll_delta != 0.0f) {
-		process_mouse_scroll(&context->camera_data.camera, input->scroll_delta);
-		display_zoom(&context->assets, &context->viewport, &context->camera_data);
+		process_mouse_scroll(&ctx->camera_data.camera, input->scroll_delta);
+		display_zoom(&ctx->assets, &ctx->viewport, &ctx->camera_data);
 	}
 
 	// Processing camera mode switches between FPS and freefly
-	if (update_camera_from_input(window, &context->camera_data, input, dt))
-		display_camera_mode_status(&context->assets, context->camera_data.mode);
+	if (update_camera_from_input(window, &ctx->camera_data, input, dt))
+		display_camera_mode_status(&ctx->assets, ctx->camera_data.mode);
 
 
 	// Handling render mode changes
 	if (is_key_pressed(input, GLFW_KEY_UP)) {
-		cycle_render_mode(&context->post_processing, true);
-		display_render_mode_status(&context->assets, &context->viewport, context->post_processing.mode);
+		cycle_render_mode(&ctx->post_processing, true);
+		display_render_mode_status(&ctx->assets, &ctx->viewport, ctx->post_processing.mode);
 	}
 
 	if (is_key_pressed(input, GLFW_KEY_DOWN)) {
-		cycle_render_mode(&context->post_processing, false);
-		display_render_mode_status(&context->assets, &context->viewport, context->post_processing.mode);
+		cycle_render_mode(&ctx->post_processing, false);
+		display_render_mode_status(&ctx->assets, &ctx->viewport, ctx->post_processing.mode);
+	}
+
+
+	// Toggling debug mode (displaying information).
+	if (is_key_pressed(input, GLFW_KEY_Q)) {
+		ctx->debug_mode = !ctx->debug_mode;
+		display_debug_mode_status(ctx);
 	}
 }
 

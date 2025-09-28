@@ -173,7 +173,7 @@ float get_string_width_in_pixels(const Font* font, const std::string& text, floa
 }
 
 
-void trigger_fading_text(Font* font, const std::string& tag, const std::string& text, float x, float y, float scale, const glm::vec3& color, float lifetime, float fade_duration, TextAlign align) {
+void trigger_fading_text(Font* font, const FontTag tag, const std::string& text, float x, float y, float scale, const glm::vec3& color, float lifetime, float fade_duration, TextAlign align) {
 	// Checking if there is an existing fading text with the same tag
 	for (auto& ft : font->fading_texts) {
 		if(ft.tag == tag) {

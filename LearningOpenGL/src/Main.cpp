@@ -22,6 +22,8 @@
 
 void framebuffer_size_callback(GLFWwindow* window, s32 width, s32 height);
 
+
+// @TODO: Clean up the main function and move the GLFW / GLAD init stuff to a seperate file.
 int main()
 {
 	std::cout << "OpenGL Version 4.6.0 - LearningOpenGL by McFlubberBubber.\n";
@@ -99,6 +101,7 @@ int main()
 
 	// Initializing here...
 	if (!init_rendering_system(&render_context)) {
+		std::cout << "ERROR: Rendering system did not initialize!" << std::endl;
 		return -1;
 	}
 	

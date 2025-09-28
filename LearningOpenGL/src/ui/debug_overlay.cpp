@@ -25,12 +25,14 @@ namespace DebugOverlay {
 
 
 void render_debug_overlay(RenderingContext* ctx, float dt) {
-	// Drawing consistent UI
-	display_fps(ctx, dt);
-	display_coords(ctx);
-	display_euler_angles(ctx);
-	display_sprint_status(ctx);
+	// Drawing consistent UI based on the debug_mode flag
 
+	if (ctx->debug_mode) {
+		display_fps(ctx, dt);
+		display_coords(ctx);
+		display_euler_angles(ctx);
+		display_sprint_status(ctx);
+	}
 
 	// @NOTE: This could be moved into the render_scene directly? But this
 	// function is the only function currently that is rendering any 'interface'
@@ -41,9 +43,10 @@ void render_debug_overlay(RenderingContext* ctx, float dt) {
 
 
 // Pop up texts
+// @TODO: These hard coded std::string tags are pretty bad, I'd like to move these into a specific enum that we can just specify here.
 void display_camera_mode_status(Assets* assets, CameraMode mode) {
 	using namespace DebugOverlay;
-	const std::string tag 	  = "camera_mode";
+	const FontTag tag		  = FontTag::TAG_CAMERA;
 	const float x 			  = 100.0f;
 	const float y 			  = 100.0f;
 	const TextAlign align	  = TextAlign::LEFT;
@@ -56,7 +59,7 @@ void display_camera_mode_status(Assets* assets, CameraMode mode) {
 
 void display_render_mode_status(Assets* assets, const ViewportState* viewport, RenderMode mode) {
 	using namespace DebugOverlay;
-	const std::string tag 	  = "render_mode";
+	const FontTag tag		  = FontTag::TAG_RENDER;
 	const float x			  = viewport->width / 2.0f;
 	const float y			  = viewport->height / 1.5f;
 	const TextAlign align	  = TextAlign::CENTER;
@@ -64,9 +67,28 @@ void display_render_mode_status(Assets* assets, const ViewportState* viewport, R
 	trigger_fading_text(&assets->fonts[FONT_BOLD], tag, render_mode_to_string(mode), x, y, SCALE, RED_COLOR, LIFETIME, FADE_DURATION, align);
 }
 
+void display_debug_mode_status(RenderingContext* ctx) {
+	using namespace DebugOverlay;
+	const FontTag tag	  = FontTag::TAG_DEBUG;
+	const float x		  = ctx->viewport.width  / 2.0f;
+	const float y		  = ctx->viewport.height / 1.25f;
+	const TextAlign align = TextAlign::CENTER;
+
+	const std::string base = "Debug mode ";
+	std::string text = "";
+	if (ctx->debug_mode == false) {
+		text = base + "disabled";
+	} else {
+		text = base + "enabled";
+	}
+
+	trigger_fading_text(&ctx->assets.fonts[FONT_BOLD], tag, text, x, y, SCALE, WHITE_COLOR, LIFETIME, FADE_DURATION, align);
+
+}
+
 void display_zoom(Assets* assets, const ViewportState* viewport, const CameraData* cd) {
 	using namespace DebugOverlay;
-	const std::string tag 	  = "zoom_status";
+	const FontTag tag		  = FontTag::TAG_ZOOM;
 	const float x 			  = viewport->width / 2.0f;
 	const float y 			  = 100.0f;
 	const TextAlign align	  = TextAlign::CENTER;

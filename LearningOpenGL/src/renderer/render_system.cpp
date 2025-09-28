@@ -541,12 +541,10 @@ static bool init_fonts(Assets* assets) {
 bool init_rendering_system (RenderingContext* context) {
 	std::cout << "Initializing rendering context..." << std::endl;
 
-	// Error logging
 	if (!init_camera(&context->camera_data, &context->viewport)) {
 		std::cout << "ERROR: Failed to init_camera()" << std::endl;
 		return false;
 	}
-
 
 	if (!init_textures(&context->assets)) {
 		std::cout << "ERROR: Failed to init_textures()" << std::endl;
@@ -631,6 +629,12 @@ static void cleanup_buffers(BufferData* buffers) {
 	delete_VBO(buffers->FBO); 		   // Frame buffer
 	delete_VBO(buffers->RBO); 		   // Render buffer
 	delete_VBO(buffers->UBO_matrices); // Uniform buffer
+
+	// Instance rendering example
+	delete_VAO(buffers->mini_quad_VAO);
+	delete_VBO(buffers->mini_quad_VBO);
+	delete_VBO(buffers->instance_VBO);
+
 }
 
 static void cleanup_shaders(Assets* assets) {

@@ -33,6 +33,7 @@ There should not be any linker errors (hopefully!), all include / libraries dire
 - Change FOV = Mouse scroll
 - Toggle camera movement = E
 - Cycle post-processing effects = Up / Down arrow keys
+- Toggle debug mode = Q
 - Open / close menu = Escape
 - Navigate menu options = Up / Down arrow keys
 

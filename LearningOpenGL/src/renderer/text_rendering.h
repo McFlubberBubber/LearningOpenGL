@@ -30,8 +30,17 @@ enum class TextAlign {
 	SCREEN_CENTER,		// Relative to the screen
 };
 
+enum class FontTag {
+	TAG_DEFAULT,
+
+	TAG_CAMERA,
+	TAG_RENDER,
+	TAG_ZOOM,
+	TAG_DEBUG,
+};
+
 struct FadingText {
-	std::string tag;			// For reusing fading texts
+	FontTag tag;
 	std::string text;
 	float x, y;
 	float scale;
@@ -68,7 +77,7 @@ void draw_text(const Font* font, const RenderingContext* context, const std::str
 
 float get_string_width_in_pixels(const Font* font, const std::string& text, float scale);
 
-void trigger_fading_text(Font* font, const std::string& tag, const std::string& text, float x, float y, float scale, const glm::vec3& color, float lifetime, float fade_duration, TextAlign align); 
+void trigger_fading_text(Font* font, const FontTag tag, const std::string& text, float x, float y, float scale, const glm::vec3& color, float lifetime, float fade_duration, TextAlign align); 
 
 void update_and_draw_fading_texts(Font* font, const RenderingContext* context, float dt);
 
