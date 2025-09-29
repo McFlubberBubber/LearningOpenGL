@@ -145,6 +145,7 @@ void draw_text_with_background(const Font* font, const RenderingContext* ctx, co
 
 // Message queue stuff
 bool init_message_queue(RenderingContext* ctx);
+void update_message_queue(RenderingContext* ctx);
 void push_message(MessageQueue* queue, const std::string& text, float lifetime = 1.5f, float fade_duration = 0.75f);
 void update_and_draw_message_queue(Font* font, RenderingContext* ctx, float dt);
 

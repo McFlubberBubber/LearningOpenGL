@@ -439,7 +439,9 @@ static bool init_shaders(Assets* assets) {
 		{"normals.vert", "normals.frag", "normals.geom"},
 		{"instance_render.vert", "instance_render.frag", nullptr},
 
-		{"textbox.vert", "textbox.frag", nullptr}
+		{"textbox.vert", "textbox.frag", nullptr},
+
+		{"space.vert", "space.frag", nullptr}
 	};
 
 	// Creating each shader
@@ -473,10 +475,13 @@ static bool init_models(Assets* assets) {
 		bool flip_UVs;
 	};
 
+	// The true / false statement is there to specify whether the UVs should be flipped or not.
 	const ModelPath model_paths[] = {
 		{"backpack/backpack.obj", true},
 		{"blahaj/blahaj.obj", false},
 		{"house/house.fbx", true},
+		{"planet/planet.obj", true},
+		{"rock/rock.obj", true}
 	};
 
 
@@ -844,7 +849,9 @@ void update_camera_projection(RenderingContext* ctx) {
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
-void resize_framebuffer(const RenderingContext* context, u32 width, u32 height) {
+void resize_framebuffer(RenderingContext* context, u32 width, u32 height) {
+	update_message_queue(context);
+
 	glBindTexture(GL_TEXTURE_2D, context->assets.textures[TEXTURE_COLOR_BUFFER]);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 

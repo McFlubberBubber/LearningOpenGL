@@ -48,6 +48,8 @@ enum ShaderType {
 
 	SHADER_TEXTBOX,
 
+	SHADER_SPACE,
+
 	SHADER_COUNT
 };
 
@@ -55,6 +57,9 @@ enum ModelType {
 	MODEL_BACKPACK = 0,
 	MODEL_BLAHAJ,
 	MODEL_HOUSE,
+
+	MODEL_PLANET,
+	MODEL_ROCK,
 
 	MODEL_COUNT
 };

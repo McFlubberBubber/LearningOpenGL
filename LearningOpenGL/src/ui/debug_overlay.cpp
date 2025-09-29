@@ -5,6 +5,7 @@
 #include <sstream>
 
 #include "renderer/render_context.h"
+#include "core/program_state.h"
 
 namespace DebugOverlay {
 	constexpr float SCALE = 1.0f;
@@ -101,8 +102,21 @@ void display_debug_mode_status(RenderingContext* ctx) {
 //	trigger_text_box(&ctx->assets.fonts[FONT_BOLD], tag, text, x, y, SCALE, GOLDISH_COLOR, BLACK_COLOR, LIFETIME, FADE_DURATION,align);
 	
 	push_message(&ctx->message_queue, text);
-	
 }
+
+void display_current_scene_status(RenderingContext* ctx) {
+	using namespace DebugOverlay;
+	std::string text = {};
+	if (*ctx->app_state == ApplicationState::SCENE) {
+		text = "Rendering normal scene";
+		push_message(&ctx->message_queue, text);
+	}
+	if (*ctx->app_state == ApplicationState::SPACE) {
+		text = "Rendering space scene";
+		push_message(&ctx->message_queue, text);
+	}
+}
+
 
 void display_zoom(Assets* assets, const ViewportState* viewport, const CameraData* cd) {
 	using namespace DebugOverlay;

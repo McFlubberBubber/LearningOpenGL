@@ -22,6 +22,8 @@ void render_debug_overlay(RenderingContext* context, float dt);
 void display_camera_mode_status(Assets* assets, CameraMode mode);
 void display_render_mode_status(RenderingContext* ctx);
 void display_debug_mode_status(RenderingContext* ctx); // This function could eventually be repurposed to a more usable "debug message" in the scene.
+void display_current_scene_status(RenderingContext* ctx);
+
 void display_zoom(Assets* assets, const ViewportState* viewport, const CameraData* cd);
 
 // Consistent UI

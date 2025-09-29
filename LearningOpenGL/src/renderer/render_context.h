@@ -21,6 +21,8 @@ struct RenderingContext {
 	MessageQueue message_queue;
 	PostProcessingData post_processing;
 
+	ApplicationState* app_state;
+
 	// Temporary flag for rendering debug overlay
 	bool debug_mode = false;
 };

@@ -19,7 +19,8 @@ bool load_model(Model* model, const char* path, bool flip_UVs, Assets* assets) {
 	// If we need to flip the UVs
 	if (flip_UVs) {
 		scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
-	} else {
+	}
+	else {
 		scene = importer.ReadFile(path, aiProcess_Triangulate);
 	}
 
@@ -33,7 +34,7 @@ bool load_model(Model* model, const char* path, bool flip_UVs, Assets* assets) {
 
 	if (!process_node(model, scene->mRootNode, scene, assets))
 		return false;
-	
+
 
 	// Setup all meshes after loading
 	for (u32 i = 0; i < model->meshes.size(); i++) {
@@ -56,7 +57,7 @@ void destroy_model(Model* model) {
 	for (u32 i = 0; i < model->texture_ids.size(); ++i) {
 		glDeleteTextures(1, &model->texture_ids[i]);
 	}
-	
+
 	model->meshes.clear();
 	model->texture_ids.clear();
 	model->texture_paths.clear();
@@ -76,7 +77,7 @@ void draw_model(const Model* model, const Shader* shader) {
 // Internal helper functions
 bool process_node(Model* model, aiNode* node, const aiScene* scene, Assets* assets) {
 	// Process all the node's meshes
-   	for (u32 i = 0; i < node->mNumMeshes; i++) {
+	for (u32 i = 0; i < node->mNumMeshes; i++) {
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 		Mesh processed_mesh = process_mesh(model, mesh, scene, assets);
 		model->meshes.push_back(processed_mesh);
@@ -84,7 +85,7 @@ bool process_node(Model* model, aiNode* node, const aiScene* scene, Assets* asse
 
 	// Do the same for the node's children
 	for (u32 i = 0; i < node->mNumChildren; i++) {
-		if(!process_node(model, node->mChildren[i], scene, assets)) {
+		if (!process_node(model, node->mChildren[i], scene, assets)) {
 			return false;
 		}
 	}
@@ -120,7 +121,8 @@ Mesh process_mesh(Model* model, aiMesh* mesh, const aiScene* scene, Assets* asse
 			vec.x = mesh->mTextureCoords[0][i].x;
 			vec.y = mesh->mTextureCoords[0][i].y;
 			vertex.texture = vec;
-		} else {
+		}
+		else {
 			vertex.texture = glm::vec2(0.0f);
 		}
 		vertices.push_back(vertex);
@@ -137,6 +139,11 @@ Mesh process_mesh(Model* model, aiMesh* mesh, const aiScene* scene, Assets* asse
 	// Processing the materials
 	if (mesh->mMaterialIndex >= 0) {
 		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+
+		// Logging
+		std::cout << "Mesh '" << mesh->mName.C_Str() << "' material info:" << std::endl;
+		std::cout << "  Diffuse textures: " << material->GetTextureCount(aiTextureType_DIFFUSE) << std::endl;
+		std::cout << "  Specular textures: " << material->GetTextureCount(aiTextureType_SPECULAR) << std::endl;
 
 		// Diffuse
 		std::vector<MeshTexture> diffuse_maps = load_material_textures(model, material, aiTextureType_DIFFUSE, "diffuse");
@@ -155,14 +162,22 @@ Mesh process_mesh(Model* model, aiMesh* mesh, const aiScene* scene, Assets* asse
 }
 
 
-std::vector<MeshTexture> load_material_textures(Model* model, aiMaterial* material, aiTextureType type, const std::string &type_name) {
+std::vector<MeshTexture> load_material_textures(Model* model, aiMaterial* material, aiTextureType type, const std::string& type_name) {
 	std::vector<MeshTexture> textures;
+	u32 texture_count = material->GetTextureCount(type);
+	std::cout << "Loading " << texture_count << " " << type_name << " textures" << std::endl;
 
 	for (u32 i = 0; i < material->GetTextureCount(type); i++) {
 		aiString str;
 		material->GetTexture(type, i, &str);
+
+		// Logging
+		std::cout << "  Texture path from material: " << str.C_Str() << std::endl;
+		std::cout << "  Model directory: " << model->directory << std::endl;
+
 		bool skip = false;
 		std::string full_path = model->directory + '/' + str.C_Str();
+		std::cout << "  Full path attempted: " << full_path << std::endl;
 
 
 		// Checking if a texture has been loaded previously
@@ -182,6 +197,8 @@ std::vector<MeshTexture> load_material_textures(Model* model, aiMaterial* materi
 		if (!skip) {
 			MeshTexture texture;
 			texture.id = texture_from_file(str.C_Str(), model->directory);
+			std::cout << "  Loaded texture: " << str.C_Str() << " with ID: " << texture.id << std::endl;
+
 			texture.type = type_name;
 			texture.path = str.C_Str();
 			textures.push_back(texture);
@@ -195,7 +212,7 @@ std::vector<MeshTexture> load_material_textures(Model* model, aiMaterial* materi
 }
 
 
-u32 texture_from_file(const char* path, const std::string &directory) {
+u32 texture_from_file(const char* path, const std::string& directory) {
 	std::string file_name = std::string(path);
 	file_name = directory + '/' + file_name;
 
@@ -206,6 +223,8 @@ u32 texture_from_file(const char* path, const std::string &directory) {
 	unsigned char* data = stbi_load(file_name.c_str(), &width, &height, &nr_components, 0);
 
 	if (data) {
+		std::cout << "    Successfully loaded: " << file_name << " (" << width << "x" << height << ", " << nr_components << " components)" << std::endl;
+
 		GLenum texture_format{};
 		if (nr_components == 1)
 			texture_format = GL_RED;
@@ -226,11 +245,12 @@ u32 texture_from_file(const char* path, const std::string &directory) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 		stbi_image_free(data);
-	
-	} else {
+
+	}
+	else {
 		std::cout << "ERROR: Failed to load texture at path: " << path << std::endl;
 		stbi_image_free(data);
 	}
-	
+
 	return texture_id;
 }

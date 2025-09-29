@@ -8,8 +8,9 @@
 
 // Game state
 enum class ApplicationState {
-	GAME,
-	MENU
+	SCENE,
+	MENU,
+	SPACE
 };
 
 struct ViewportState {

@@ -10,7 +10,7 @@
 #include "ui/menu.h"
 
 
-void update_input_state(InputState* input, GLFWwindow* window) {
+static void update_input_state(InputState* input, GLFWwindow* window) {
 	// Copy current state into the last
 	input->last_key_states = input->key_states;
 
@@ -24,10 +24,12 @@ void update_input_state(InputState* input, GLFWwindow* window) {
 }
 
 
-void handle_menu_input(GLFWwindow* window, InputState* input, Menu* menu, ApplicationState& app) {
+static void handle_menu_input(GLFWwindow* window, InputState* input, Menu* menu, RenderingContext* ctx) {
+	auto& app = *ctx->app_state;
+
 	// Allowing user to go back to game state
 	if (is_key_pressed(input, GLFW_KEY_ESCAPE) && app == ApplicationState::MENU)
-		app = ApplicationState::GAME;
+		app = ApplicationState::SCENE;
 
 	// Handling the increment + decrement of menu choices
 	if (is_key_pressed(input, GLFW_KEY_UP))
@@ -41,13 +43,27 @@ void handle_menu_input(GLFWwindow* window, InputState* input, Menu* menu, Applic
 	if (is_key_pressed(input, GLFW_KEY_ENTER)) {
 		switch (menu->current_item) {
 				case MenuItem::RESUME:
-				app = ApplicationState::GAME;
+				app = ApplicationState::SCENE;
 				break;
 		
 			case MenuItem::MUSIC:
 				menu->do_music = !menu->do_music;
 				break;
-		
+
+			case MenuItem::SCENE_SWITCH:
+				menu->render_normal_scene = !menu->render_normal_scene;
+
+				if (menu->render_normal_scene) {
+					app = ApplicationState::SCENE;
+					display_current_scene_status(ctx);
+				}
+				else {
+					app = ApplicationState::SPACE;
+					display_current_scene_status(ctx);
+				}
+
+				break;
+
 			case MenuItem::QUIT:
 				glfwSetWindowShouldClose(window, true);
 				break;
@@ -59,9 +75,11 @@ void handle_menu_input(GLFWwindow* window, InputState* input, Menu* menu, Applic
 }
 
 
-void handle_game_input(GLFWwindow* window, InputState* input, RenderingContext* ctx, float dt, ApplicationState& app) {
+static void handle_game_input(GLFWwindow* window, InputState* input, RenderingContext* ctx, float dt) {
+	auto& app = *ctx->app_state; // Make sure to get the reference of it so that we are referring to the app_state
+
 	// Allowing the user to switch to menu
-	if(is_key_pressed(input, GLFW_KEY_ESCAPE) && app == ApplicationState::GAME)
+	if (is_key_pressed(input, GLFW_KEY_ESCAPE) && app != ApplicationState::MENU)
 		app = ApplicationState::MENU;
 	
     // Handle first mouse movement to prevent camera jump
@@ -121,10 +139,13 @@ void process_input(GLFWwindow* window, InputState* input, ApplicationState& app,
 
 	switch(app) {
 	case ApplicationState::MENU:
-		handle_menu_input(window, input, menu, app);
+		handle_menu_input(window, input, menu, context);
 		break;
-	case ApplicationState::GAME:
-		handle_game_input(window, input, context, dt, app);
+	case ApplicationState::SCENE:
+		handle_game_input(window, input, context, dt);
+		break;
+	case ApplicationState::SPACE:
+		handle_game_input(window, input, context, dt);
 		break;
 	}
 
@@ -154,11 +175,10 @@ void mouse_callback(GLFWwindow* window, double x_pos, double y_pos) {
 
 void scroll_callback(GLFWwindow* window, double x_offset, double y_offset) {
 	CallbackContext* ctx = static_cast<CallbackContext*>(glfwGetWindowUserPointer(window));
-    
-    if (!ctx || !ctx->input_state || !ctx->app_state || *ctx->app_state != ApplicationState::GAME) {
-        return;
-    }
-    
-    ctx->input_state->scroll_delta = y_offset;
-}
 
+	if (!ctx || !ctx->input_state) {
+		return;
+	}
+
+	ctx->input_state->scroll_delta = y_offset;
+}

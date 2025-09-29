@@ -66,6 +66,9 @@
     <ClCompile Include="src\ui\debug_overlay.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\world\space_scene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\stb_image.h">
@@ -125,6 +128,9 @@
     <ClInclude Include="src\ui\debug_overlay.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\world\space_scene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\container.vert" />
@@ -162,5 +168,7 @@
     <None Include="res\shaders\instance_render.vert" />
     <None Include="res\shaders\textbox.vert" />
     <None Include="res\shaders\textbox.frag" />
+    <None Include="res\shaders\space.vert" />
+    <None Include="res\shaders\space.frag" />
   </ItemGroup>
 </Project>

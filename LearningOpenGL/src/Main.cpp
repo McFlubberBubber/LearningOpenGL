@@ -9,12 +9,16 @@
 #include "core/time.h"
 #include "core/program_state.h"
 #include "core/types.h"
+
 #include "renderer/render_context.h"
 #include "renderer/render_system.h"
+
 #include "input/user_input.h"
 #include "ui/menu.h"
+
 #include "world/obj_init.h"
 #include "world/scene.h"
+#include "world/space_scene.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -32,12 +36,13 @@ int main()
 	u32 GL_BABY_VER  = 0;
 
 	// Initializing structs...
-	ApplicationState app_state = ApplicationState::GAME;
+	ApplicationState app_state = ApplicationState::SCENE;
 	RenderingContext render_context = {};
 	InputState input_state;
 	Menu menu;
 
 	ApplicationState prev_app_state = app_state;
+	render_context.app_state = &app_state;
 
 	CallbackContext callback_context = {
 	&render_context,
@@ -76,7 +81,7 @@ int main()
 	input_state.last_mouse_y = mouse_y;
 	input_state.first_mouse = true;
 	
-	if (app_state == ApplicationState::GAME) {
+	if (app_state == ApplicationState::SCENE || app_state == ApplicationState::SPACE) {
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	}
 
@@ -98,6 +103,7 @@ int main()
 
 	// INSTANCE RENDERING EXAMPLE
 	render_context.buffers.update_instance_offsets();
+	generate_rock_matrices();
 
 	// Initializing here...
 	if (!init_rendering_system(&render_context)) {
@@ -116,7 +122,7 @@ int main()
 
 		// Handling input states
 		if (app_state != prev_app_state) {
-			if (app_state == ApplicationState::GAME) {
+			if (app_state != ApplicationState::MENU) {
 				glfwGetCursorPos(window, &mouse_x, &mouse_y);
 				input_state.mouse_x = mouse_x;
 				input_state.mouse_y = mouse_y;
@@ -133,11 +139,18 @@ int main()
 
 		process_input(window, &input_state, app_state, &menu, &render_context, dt);
 
-		// Switching between menu and game state
-		if (app_state == ApplicationState::MENU) {
-			draw_menu(&render_context, &menu);
-		} else {
+		// @TODO: Since we are now rendering MULTIPLE scenes, it would make sense to structure them together to switch between the two,
+		// but this is what we are doing for now to get it up and running.
+		switch (app_state) {
+		case (ApplicationState::SCENE):
 			render_scene(&render_context, dt);
+			break;
+		case (ApplicationState::MENU):
+			draw_menu(&render_context, &menu);
+			break;
+		case(ApplicationState::SPACE):
+			render_space_scene(&render_context, dt);
+			break;
 		}
 
 		//checking call events and swapping buffers

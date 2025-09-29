@@ -170,6 +170,7 @@
     <ClCompile Include="src\renderer\text_rendering.cpp" />
     <ClCompile Include="src\core\time.cpp" />
     <ClCompile Include="src\input\user_input.cpp" />
+    <ClCompile Include="src\world\space_scene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\renderer\camera.h" />
@@ -191,6 +192,7 @@
     <ClInclude Include="src\core\time.h" />
     <ClInclude Include="src\core\types.h" />
     <ClInclude Include="src\input\user_input.h" />
+    <ClInclude Include="src\world\space_scene.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\backpack.frag" />
@@ -217,6 +219,8 @@
     <None Include="res\shaders\normals.geom" />
     <None Include="res\shaders\normals.vert" />
     <None Include="res\shaders\reflection.frag" />
+    <None Include="res\shaders\space.frag" />
+    <None Include="res\shaders\space.vert" />
     <None Include="res\shaders\special_cube.vert" />
     <None Include="res\shaders\refraction.frag" />
     <None Include="res\shaders\screenbuffer.frag" />

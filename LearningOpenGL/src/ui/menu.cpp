@@ -12,6 +12,7 @@ void init_menu(Menu* menu) {
 	menu->items = {
 		MenuItem::RESUME,
 		MenuItem::MUSIC,
+		MenuItem::SCENE_SWITCH,
 		MenuItem::QUIT
 	};
 
@@ -20,7 +21,7 @@ void init_menu(Menu* menu) {
 }
 
 
-void draw_menu_title(const RenderingContext* context) {
+static void draw_menu_title(const RenderingContext* context) {
 	const ViewportState* viewport = &context->viewport;
 	const Font* font = context->assets.fonts;
 
@@ -38,7 +39,7 @@ void draw_menu_title(const RenderingContext* context) {
 }
 
 
-void draw_small_text(const RenderingContext* context) {
+static void draw_small_text(const RenderingContext* context) {
 	const ViewportState* viewport = &context->viewport;
 	const Font* font = context->assets.fonts;
 
@@ -78,6 +79,9 @@ std::string menu_item_to_string(const Menu* menu, MenuItem item) {
 			
 		case MenuItem::MUSIC:
 			return std::string("Music: " ) + (menu->do_music ? "ON" : "OFF");
+
+		case MenuItem::SCENE_SWITCH:
+			return std::string("Current Scene: ") + (menu->render_normal_scene ? "Normal" : "Space");
 			
 		case MenuItem::QUIT:
 			return "Quit";
@@ -88,7 +92,7 @@ std::string menu_item_to_string(const Menu* menu, MenuItem item) {
 }
 
 
-void draw_menu_choices(const RenderingContext* context, const Menu* menu) {
+static void draw_menu_choices(const RenderingContext* context, const Menu* menu) {
 	const ViewportState* viewport = &context->viewport;
 	const Font* font = context->assets.fonts;
 

@@ -10,6 +10,7 @@ struct RenderingContext;
 enum class MenuItem {
 	RESUME,
 	MUSIC,
+	SCENE_SWITCH,
 	QUIT,
 	COUNT		// Extra enum type for cycling
 };
@@ -18,7 +19,8 @@ struct Menu {
 	MenuItem current_item;
 	std::vector<MenuItem> items;
 	
-	bool do_music { true };		// By default, music will always be on
+	bool do_music { true };				// By default, music will always be on.
+	bool render_normal_scene{ true };	// Start with regular scene.
 };
 
 

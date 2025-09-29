@@ -7,10 +7,10 @@
 #include <vector>
 
 #include "core/types.h"
-//#include "shader.h"
+
+constexpr s32 MAX_BONE_INFLUENCE = 4;
 
 struct Shader;
-
 
 struct Vertex {
 	glm::vec3 position;
