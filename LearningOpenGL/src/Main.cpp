@@ -81,9 +81,11 @@ int main() {
 			if (render_context.app.scene != SceneState::MENU) {
 				glfwGetCursorPos(render_context.app.window, &mouse_x, &mouse_y);
 				update_mouse_flags(&input_state, mouse_x, mouse_y);
-				glfwSetInputMode(render_context.app.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-			} else {
+				glfwSetInputMode(render_context.app.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+			} 
+			
+			else {
 				glfwSetInputMode(render_context.app.window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 			}
 
@@ -112,6 +114,7 @@ int main() {
 	}
 	
 	cleanup_rendering_system(&render_context);
+	cleanup_space_scene();	// This is here since we 'new' the model_matrices, so we delete it in this call.
 	glfwTerminate();
 	return 0;
 }

@@ -8,17 +8,18 @@
 // @TODO: Temporary stuff.
 namespace SpaceScene {
 	constexpr u32 AMOUNT = 1000;
-	glm::mat4* model_matrices;
+	glm::mat4 *model_matrices;
 }
 
 // @TODO: Currently, the world models, specifically the TEXTURES of the models are kinda messed up,
 // so we gotta dig into the mesh/model.cpp files to see why the textures are not being handled properly.
 // Hopefully I get a fix into this next time? Because the planets looks absolutely HORRIBLE.
-static void draw_space(RenderingContext* ctx) {
+static 
+void draw_space(RenderingContext* ctx) {
 	using namespace SpaceScene;
 	auto shader = &ctx->assets.shaders[SHADER_SPACE];
 	auto planet = &ctx->assets.models[MODEL_PLANET];
-	auto rock = &ctx->assets.models[MODEL_ROCK];
+	auto rock   = &ctx->assets.models[MODEL_ROCK];
 
 	use_shader(shader);
 	apply_matrices(shader);
@@ -117,5 +118,10 @@ void render_space_scene(RenderingContext* ctx, float dt) {
 
 	// ----- Drawing UI elements -----
 	render_debug_overlay(ctx, dt);
+}
 
+void cleanup_space_scene() {
+	using namespace SpaceScene;
+	delete[] model_matrices;
+	model_matrices = nullptr;
 }
