@@ -107,11 +107,11 @@ void display_debug_mode_status(RenderingContext* ctx) {
 void display_current_scene_status(RenderingContext* ctx) {
 	using namespace DebugOverlay;
 	std::string text = {};
-	if (*ctx->app_state == ApplicationState::SCENE) {
+	if (ctx->app.scene == SceneState::MAIN) {
 		text = "Rendering normal scene";
 		push_message(&ctx->message_queue, text);
 	}
-	if (*ctx->app_state == ApplicationState::SPACE) {
+	if (ctx->app.scene == SceneState::SPACE) {
 		text = "Rendering space scene";
 		push_message(&ctx->message_queue, text);
 	}

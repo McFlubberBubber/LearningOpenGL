@@ -7,6 +7,8 @@
 #include "renderer/render_context.h"
 #include "renderer/texture_handler.h"
 
+#include "world/obj_init.h"
+
 /*
 
 
@@ -632,6 +634,8 @@ bool init_rendering_system (RenderingContext* context) {
 		return false;
 	}
 
+	init_world_objects(&context->world);
+	init_lighting(&context->lighting);
 
 	std::cout << "----- Finished initializing rendering context! -----\n" << std::endl;
 	return true;

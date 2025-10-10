@@ -10,6 +10,15 @@
 #include "ui/menu.h"
 
 
+void update_mouse_flags(InputState* input, double mouse_x, double mouse_y) {
+	input->mouse_x = mouse_x;
+	input->mouse_y = mouse_y;
+	input->last_mouse_x = mouse_x;
+	input->last_mouse_y = mouse_y;
+
+	input->first_mouse = true;
+}
+
 static void update_input_state(InputState* input, GLFWwindow* window) {
 	// Copy current state into the last
 	input->last_key_states = input->key_states;
@@ -24,12 +33,14 @@ static void update_input_state(InputState* input, GLFWwindow* window) {
 }
 
 
-static void handle_menu_input(GLFWwindow* window, InputState* input, Menu* menu, RenderingContext* ctx) {
-	auto& app = *ctx->app_state;
+static void handle_menu_input(GLFWwindow* window, InputState* input, Menu* menu, RenderingContext* ctx,
+	SceneState& prev_scene) {
+	auto& scene = ctx->app.scene;
 
 	// Allowing user to go back to game state
-	if (is_key_pressed(input, GLFW_KEY_ESCAPE) && app == ApplicationState::MENU)
-		app = ApplicationState::SCENE;
+	if (is_key_pressed(input, GLFW_KEY_ESCAPE) && scene == SceneState::MENU) {
+		scene = prev_scene;
+	}
 
 	// Handling the increment + decrement of menu choices
 	if (is_key_pressed(input, GLFW_KEY_UP))
@@ -43,7 +54,7 @@ static void handle_menu_input(GLFWwindow* window, InputState* input, Menu* menu,
 	if (is_key_pressed(input, GLFW_KEY_ENTER)) {
 		switch (menu->current_item) {
 				case MenuItem::RESUME:
-				app = ApplicationState::SCENE;
+				scene = prev_scene;
 				break;
 		
 			case MenuItem::MUSIC:
@@ -54,11 +65,11 @@ static void handle_menu_input(GLFWwindow* window, InputState* input, Menu* menu,
 				menu->render_normal_scene = !menu->render_normal_scene;
 
 				if (menu->render_normal_scene) {
-					app = ApplicationState::SCENE;
+					scene = SceneState::MAIN;
 					display_current_scene_status(ctx);
 				}
 				else {
-					app = ApplicationState::SPACE;
+					scene = SceneState::SPACE;
 					display_current_scene_status(ctx);
 				}
 
@@ -76,11 +87,11 @@ static void handle_menu_input(GLFWwindow* window, InputState* input, Menu* menu,
 
 
 static void handle_game_input(GLFWwindow* window, InputState* input, RenderingContext* ctx, float dt) {
-	auto& app = *ctx->app_state; // Make sure to get the reference of it so that we are referring to the app_state
+	auto& scene = ctx->app.scene; // Make sure to get the reference of it so that we are referring to the app_state
 
 	// Allowing the user to switch to menu
-	if (is_key_pressed(input, GLFW_KEY_ESCAPE) && app != ApplicationState::MENU)
-		app = ApplicationState::MENU;
+	if (is_key_pressed(input, GLFW_KEY_ESCAPE) && scene != SceneState::MENU)
+		scene = SceneState::MENU;
 	
     // Handle first mouse movement to prevent camera jump
     if (input->first_mouse) {
@@ -90,8 +101,8 @@ static void handle_game_input(GLFWwindow* window, InputState* input, RenderingCo
         // Skip mouse processing this frame
     } else {
         // Calculate mouse deltas
-        float x_offset = input->mouse_x - input->last_mouse_x;
-        float y_offset = input->last_mouse_y - input->mouse_y;
+        float x_offset = (float)input->mouse_x - (float)input->last_mouse_x;
+        float y_offset = (float)input->last_mouse_y - (float)input->mouse_y;
         
         // Update last mouse position for next frame
         input->last_mouse_x = input->mouse_x;
@@ -103,7 +114,7 @@ static void handle_game_input(GLFWwindow* window, InputState* input, RenderingCo
     }
 
 	if (input->scroll_delta != 0.0f) {
-		process_mouse_scroll(&ctx->camera_data.camera, input->scroll_delta);
+		process_mouse_scroll(&ctx->camera_data.camera, (float)input->scroll_delta);
 		display_zoom(&ctx->assets, &ctx->viewport, &ctx->camera_data);
 	}
 
@@ -134,18 +145,25 @@ static void handle_game_input(GLFWwindow* window, InputState* input, RenderingCo
 
 // The main function that will update the input state and handle inputs between
 // the application states
-void process_input(GLFWwindow* window, InputState* input, ApplicationState& app, Menu* menu, RenderingContext* context, float dt) {
+void process_input(GLFWwindow* window, InputState* input, Menu* menu, RenderingContext* ctx, float dt) {
 	update_input_state(input, window);
 
-	switch(app) {
-	case ApplicationState::MENU:
-		handle_menu_input(window, input, menu, context);
+	// Storing the previous app state before the menu state.
+	static SceneState prev_scene = ctx->app.scene;
+	if (ctx->app.scene != SceneState::MENU) {
+		prev_scene = ctx->app.scene;
+	}
+
+	// Processing different input systems based on the app state.
+	switch(ctx->app.scene) {
+	case SceneState::MENU:
+		handle_menu_input(window, input, menu, ctx, prev_scene);
 		break;
-	case ApplicationState::SCENE:
-		handle_game_input(window, input, context, dt);
+	case SceneState::MAIN:
+		handle_game_input(window, input, ctx, dt);
 		break;
-	case ApplicationState::SPACE:
-		handle_game_input(window, input, context, dt);
+	case SceneState::SPACE:
+		handle_game_input(window, input, ctx, dt);
 		break;
 	}
 

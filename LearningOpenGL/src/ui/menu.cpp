@@ -7,6 +7,8 @@
 #include "renderer/render_context.h"
 #include "core/time.h"
 
+#include "debug_overlay.h"
+
 
 void init_menu(Menu* menu) {
 	menu->items = {
@@ -124,13 +126,15 @@ static void draw_menu_choices(const RenderingContext* context, const Menu* menu)
 }
 
 
-void draw_menu(const RenderingContext* context, const Menu* menu) {
+void draw_menu(RenderingContext* ctx, const Menu* menu) {
 	glClearColor(0.05f, 0.2f, 0.25f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	draw_menu_title(context);
-	draw_small_text(context);
-	draw_menu_choices(context, menu);
+	draw_menu_title(ctx);
+	draw_small_text(ctx);
+	draw_menu_choices(ctx, menu);
+
+	render_debug_overlay(ctx, Time::get_delta_time());
 }
 
 

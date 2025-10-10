@@ -11,6 +11,9 @@ namespace SpaceScene {
 	glm::mat4* model_matrices;
 }
 
+// @TODO: Currently, the world models, specifically the TEXTURES of the models are kinda messed up,
+// so we gotta dig into the mesh/model.cpp files to see why the textures are not being handled properly.
+// Hopefully I get a fix into this next time? Because the planets looks absolutely HORRIBLE.
 static void draw_space(RenderingContext* ctx) {
 	using namespace SpaceScene;
 	auto shader = &ctx->assets.shaders[SHADER_SPACE];
