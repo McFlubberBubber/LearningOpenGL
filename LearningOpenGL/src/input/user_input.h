@@ -20,9 +20,12 @@ struct InputState {
 	std::unordered_map<s32, bool> key_states;		// Current frame state
 	std::unordered_map<s32, bool> last_key_states;	// Last frame state
 
-	double mouse_x, mouse_y;
-	double last_mouse_x, last_mouse_y;
-	double scroll_delta = 0.0f;
+	double mouse_x = 0.0;
+	double mouse_y = 0.0;
+	double last_mouse_x = 0.0;
+	double last_mouse_y = 0.0;
+
+	double scroll_delta = 0.0;
 
 	bool first_mouse = true;
 };

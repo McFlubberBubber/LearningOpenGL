@@ -39,13 +39,13 @@ int main() {
 	&menu
 	};
 
-	// Initializing the viewport for width and height parameters
+	// Initializing the viewport for width and height parameters, then the application specs.
 	init_viewport(&render_context.viewport);
 	if (!init_application(&render_context.app, &render_context.viewport)) {
 		std::cout << "Failed to initialize application!" << std::endl;
 		return -1;
 	} else {
-		std::cout << "Finished intializing applciation!" << std::endl;
+		std::cout << "Finished initializing application!" << std::endl;
 	}
 
 	// Calling this function whenever the user resizes window
@@ -116,6 +116,7 @@ int main() {
 	cleanup_rendering_system(&render_context);
 	cleanup_space_scene();	// This is here since we 'new' the model_matrices, so we delete it in this call.
 	glfwTerminate();
+
 	return 0;
 }
 

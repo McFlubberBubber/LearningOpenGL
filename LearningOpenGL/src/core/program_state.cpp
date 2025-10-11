@@ -22,11 +22,6 @@ bool init_application(ApplicationState *app, ViewportState *viewport) {
 	glfwSetWindowPos(app->window, 0, 40);
 	glfwMakeContextCurrent(app->window);
 
-	// @TODO: These functions need to be moved to the header file.
-	// Calling this function whenever the user resizes window
-//	glfwSetFramebufferSizeCallback(app->window, framebuffer_size_callback);
-//	setup_input_callbacks(app->window, &callback_context);
-
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
 		std::cout << "Failed to initialize GLAD!" << std::endl;

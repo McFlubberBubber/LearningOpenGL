@@ -10,7 +10,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-//#include "render_context.h"
 #include "core/types.h"
 
 // Forward declarations
@@ -97,6 +96,8 @@ struct Message {
 struct MessageQueue {
 	std::vector<Message> messages;
 
+	// @TODO: Should these base coordinates be floats? These get positioned base on the pixel so it might be good
+	// to keep these as unsigned integers.
 	float base_x;
 	float base_y;
 
@@ -151,6 +152,8 @@ void update_and_draw_message_queue(Font* font, RenderingContext* ctx, float dt);
 
  
 // Internal helpers
+/*
 void load_char_glyphs(Font* font);
 void init_font_buffers(Font* font);
 void cleanup_font_resources(Font* font);
+*/

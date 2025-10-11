@@ -20,7 +20,7 @@ struct Font;
 
 // These enums will list out all the render-able things such as shaders, models,
 // textures, fonts, etc.
-enum ShaderType {
+enum ShaderType : u8{
 	SHADER_CONTAINER = 0,
 	SHADER_EMISSION,
 	SHADER_LIGHT_CUBE,
@@ -53,7 +53,7 @@ enum ShaderType {
 	SHADER_COUNT
 };
 
-enum ModelType {
+enum ModelType : u8{
 	MODEL_BACKPACK = 0,
 	MODEL_BLAHAJ,
 	MODEL_HOUSE,

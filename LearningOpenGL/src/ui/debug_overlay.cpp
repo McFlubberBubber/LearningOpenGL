@@ -48,7 +48,6 @@ void render_debug_overlay(RenderingContext* ctx, float dt) {
 
 
 // Pop up texts
-// @TODO: These hard coded std::string tags are pretty bad, I'd like to move these into a specific enum that we can just specify here.
 void display_camera_mode_status(Assets* assets, CameraMode mode) {
 	using namespace DebugOverlay;
 	const FontTag tag		  = FontTag::TAG_CAMERA;

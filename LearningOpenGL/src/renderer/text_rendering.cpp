@@ -4,8 +4,10 @@
 
 #include "renderer/render_context.h"
 #include "renderer/shader.h"
-//#include "core/program_state.h"
 
+static void load_char_glyphs(Font* font);
+static void init_font_buffers(Font* font);
+static void cleanup_font_resources(Font* font);
 
 // Font management functions
 Font create_font() {
@@ -287,7 +289,7 @@ void draw_text_with_background(const Font* font, const RenderingContext* ctx, co
 	float bg_height = text_height + (padding * 2);
 	float bg_x	    = x;
 
-	const float screen_width = ctx->viewport.width;
+	const u32 screen_width = ctx->viewport.width;
 
 	switch (align) {
     case TextAlign::CENTER:
@@ -421,7 +423,7 @@ bool init_message_queue(RenderingContext* ctx) {
 	auto vp    = &ctx->viewport;
 
 	queue->messages.clear();
-	queue->base_x = vp->width;
+	queue->base_x = (float)vp->width;
 	queue->base_y = 6.0f;
 
 	queue->message_spacing = 48.0f;
@@ -431,7 +433,7 @@ bool init_message_queue(RenderingContext* ctx) {
 }
 
 void update_message_queue(RenderingContext* ctx) {
-	ctx->message_queue.base_x = ctx->viewport.width;
+	ctx->message_queue.base_x = (float)ctx->viewport.width;
 	ctx->message_queue.base_y = 0.0f;
 }
 
@@ -505,6 +507,7 @@ void update_and_draw_message_queue(Font* font, RenderingContext* ctx, float dt) 
 }
 
 // Internal helper functions
+static
 void load_char_glyphs(Font* font) {
 	// Loading ASCII chars
 	for (unsigned char c = 0; c < 128; c++) {
@@ -549,6 +552,7 @@ void load_char_glyphs(Font* font) {
 
 // Initializing font buffers
 // Probably does not need to be stored into the buffers of the assets structure
+static
 void init_font_buffers(Font* font) {
 	glGenVertexArrays(1, &font->VAO);
 	glGenBuffers(1, 	 &font->VBO);
@@ -564,6 +568,7 @@ void init_font_buffers(Font* font) {
 	glBindVertexArray(0);
 }
 
+static
 void cleanup_font_resources(Font* font) {
 	if (!font->is_valid) return;
 

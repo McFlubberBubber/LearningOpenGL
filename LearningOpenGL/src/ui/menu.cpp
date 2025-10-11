@@ -45,9 +45,10 @@ static void draw_small_text(const RenderingContext* context) {
 	const ViewportState* viewport = &context->viewport;
 	const Font* font = context->assets.fonts;
 
-	// @HARDCODE: We are always using OpenGL 4.6.0, so it would constantly be the
-	// same version, but there are integers in the main file that we can pass here
-	std::string text = "OpenGL Version: 4.6.0";
+	std::string text = "OpenGL Version: "
+		+ std::to_string(context->app.GL_MAJOR_VER) + "."
+		+ std::to_string(context->app.GL_MINOR_VER) + "."
+		+ std::to_string(context->app.GL_BABY_VER);
 
 	float x = viewport->width  - 140.0f;
 	float y = viewport->height - 25.0f;

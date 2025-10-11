@@ -19,7 +19,7 @@ struct RenderingContext {
 
 	ViewportState viewport;
 	MessageQueue message_queue;
-	ApplicationState app;
+	ApplicationState app;	// @TODO: Does this structure really belong here?
 
 	PostProcessingData post_processing;
 

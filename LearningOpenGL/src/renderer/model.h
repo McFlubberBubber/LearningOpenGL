@@ -28,7 +28,7 @@ struct Model {
 	std::vector<std::string> texture_paths;
 	std::string directory;
 
-	bool is_loaded;
+	bool is_loaded = false;
 };
 
 

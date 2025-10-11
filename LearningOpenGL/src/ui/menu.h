@@ -16,7 +16,7 @@ enum class MenuItem {
 };
 
 struct Menu {
-	MenuItem current_item;
+	MenuItem current_item = { MenuItem::RESUME };
 	std::vector<MenuItem> items;
 	
 	bool do_music { true };				// By default, music will always be on.

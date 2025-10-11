@@ -19,7 +19,8 @@ struct Vertex {
 };
 
 struct MeshTexture {
-	u32 id;
+	u32 id = NULL;
+
 	std::string type;	// "texture_diffuse", "texture_specular", etc.
 	std::string path;	
 };
