@@ -1,9 +1,10 @@
 #include "model.h"
 
 #include "stb_image.h"
+
 #include "renderer/shader.h"		// For shader definition
 #include "renderer/render_data.h"	// For assets definition
-
+#include "renderer/mesh.h"			// For mesh definition
 
 // Model management
 Model create_model() {
@@ -18,10 +19,12 @@ bool load_model(Model* model, const char* path, bool flip_UVs, Assets* assets) {
 
 	// If we need to flip the UVs
 	if (flip_UVs) {
-		scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+		// scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+		scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 	}
 	else {
-		scene = importer.ReadFile(path, aiProcess_Triangulate);
+		// scene = importer.ReadFile(path, aiProcess_Triangulate);
+		scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace);
 	}
 
 	// Error handling
@@ -42,7 +45,7 @@ bool load_model(Model* model, const char* path, bool flip_UVs, Assets* assets) {
 	}
 
 	model->is_loaded = true;
-	std::cout << "Model loaded at path: " << path << std::endl;
+	// std::cout << "Model loaded at path: " << path << std::endl;
 	return true;
 }
 
@@ -79,8 +82,7 @@ bool process_node(Model* model, aiNode* node, const aiScene* scene, Assets* asse
 	// Process all the node's meshes
 	for (u32 i = 0; i < node->mNumMeshes; i++) {
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-		Mesh processed_mesh = process_mesh(model, mesh, scene, assets);
-		model->meshes.push_back(processed_mesh);
+		model->meshes.push_back(process_mesh(model, mesh, scene, assets));
 	}
 
 	// Do the same for the node's children
@@ -110,10 +112,12 @@ Mesh process_mesh(Model* model, aiMesh* mesh, const aiScene* scene, Assets* asse
 		vertex.position = vector;
 
 		// Normals
-		vector.x = mesh->mNormals[i].x;
-		vector.y = mesh->mNormals[i].y;
-		vector.z = mesh->mNormals[i].z;
-		vertex.normal = vector;
+		if (mesh->HasNormals()) {
+			vector.x = mesh->mNormals[i].x;
+			vector.y = mesh->mNormals[i].y;
+			vector.z = mesh->mNormals[i].z;
+			vertex.normal = vector;
+		}
 
 		// Textures
 		if (mesh->mTextureCoords[0]) {
@@ -136,27 +140,19 @@ Mesh process_mesh(Model* model, aiMesh* mesh, const aiScene* scene, Assets* asse
 		}
 	}
 
-	// Processing the materials
-	if (mesh->mMaterialIndex >= 0) {
-		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+	aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-		// Logging
-		std::cout << "Mesh '" << mesh->mName.C_Str() << "' material info:" << std::endl;
-		std::cout << "  Diffuse textures: " << material->GetTextureCount(aiTextureType_DIFFUSE) << std::endl;
-		std::cout << "  Specular textures: " << material->GetTextureCount(aiTextureType_SPECULAR) << std::endl;
+	std::vector<MeshTexture> diffuse_maps = load_material_textures(model, material, aiTextureType_DIFFUSE, "diffuse");
+	textures.insert(textures.end(), diffuse_maps.begin(), diffuse_maps.end());
 
-		// Diffuse
-		std::vector<MeshTexture> diffuse_maps = load_material_textures(model, material, aiTextureType_DIFFUSE, "diffuse");
-		textures.insert(textures.end(), diffuse_maps.begin(), diffuse_maps.end());
+	std::vector<MeshTexture> specular_maps = load_material_textures(model, material, aiTextureType_SPECULAR, "specular");
+	textures.insert(textures.end(), specular_maps.begin(), specular_maps.end());
 
-		// Specular
-		std::vector<MeshTexture> specular_maps = load_material_textures(model, material, aiTextureType_SPECULAR, "specular");
-		textures.insert(textures.end(), specular_maps.begin(), specular_maps.end());
+	std::vector<MeshTexture> normalMaps = load_material_textures(model, material, aiTextureType_HEIGHT, "normal");
+	textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
 
-		// Emission
-		std::vector<MeshTexture> emission_maps = load_material_textures(model, material, aiTextureType_EMISSIVE, "emission");
-		textures.insert(textures.end(), emission_maps.begin(), emission_maps.end());
-	}
+	std::vector<MeshTexture> height_maps = load_material_textures(model, material, aiTextureType_AMBIENT, "height");
+	textures.insert(textures.end(), height_maps.begin(), height_maps.end());
 
 	return create_mesh(vertices, indices, textures);
 }
@@ -165,19 +161,19 @@ Mesh process_mesh(Model* model, aiMesh* mesh, const aiScene* scene, Assets* asse
 std::vector<MeshTexture> load_material_textures(Model* model, aiMaterial* material, aiTextureType type, const std::string& type_name) {
 	std::vector<MeshTexture> textures;
 	u32 texture_count = material->GetTextureCount(type);
-	std::cout << "Loading " << texture_count << " " << type_name << " textures" << std::endl;
+	// std::cout << "Loading " << texture_count << " " << type_name << " textures" << std::endl;
 
 	for (u32 i = 0; i < material->GetTextureCount(type); i++) {
 		aiString str;
 		material->GetTexture(type, i, &str);
 
 		// Logging
-		std::cout << "  Texture path from material: " << str.C_Str() << std::endl;
-		std::cout << "  Model directory: " << model->directory << std::endl;
+		// std::cout << "  Texture path from material: " << str.C_Str() << std::endl;
+		// std::cout << "  Model directory: " << model->directory << std::endl;
 
 		bool skip = false;
 		std::string full_path = model->directory + '/' + str.C_Str();
-		std::cout << "  Full path attempted: " << full_path << std::endl;
+		// std::cout << "  Full path attempted: " << full_path << std::endl;
 
 
 		// Checking if a texture has been loaded previously
@@ -197,7 +193,7 @@ std::vector<MeshTexture> load_material_textures(Model* model, aiMaterial* materi
 		if (!skip) {
 			MeshTexture texture;
 			texture.id = texture_from_file(str.C_Str(), model->directory);
-			std::cout << "  Loaded texture: " << str.C_Str() << " with ID: " << texture.id << std::endl;
+			// std::cout << "  Loaded texture: " << str.C_Str() << " with ID: " << texture.id << std::endl;
 
 			texture.type = type_name;
 			texture.path = str.C_Str();
@@ -223,7 +219,7 @@ u32 texture_from_file(const char* path, const std::string& directory) {
 	unsigned char* data = stbi_load(file_name.c_str(), &width, &height, &nr_components, 0);
 
 	if (data) {
-		std::cout << "    Successfully loaded: " << file_name << " (" << width << "x" << height << ", " << nr_components << " components)" << std::endl;
+		std::cout << "Successfully loaded: " << file_name << " (" << width << "x" << height << ", " << nr_components << " components)" << std::endl;
 
 		GLenum texture_format{};
 		if (nr_components == 1)

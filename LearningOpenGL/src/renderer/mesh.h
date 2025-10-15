@@ -1,5 +1,7 @@
 #pragma once
 
+// #define DO_OG_MESH
+
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -8,39 +10,50 @@
 
 #include "core/types.h"
 
-constexpr s32 MAX_BONE_INFLUENCE = 4;
+struct Shader; // Forward declaration.
 
-struct Shader;
+#define MAX_BONE_INFLUENCE 4
 
 struct Vertex {
-	glm::vec3 position;
-	glm::vec3 normal;
-	glm::vec2 texture;
+    // position
+    glm::vec3 position;
+    // normal
+    glm::vec3 normal;
+    // texCoords
+    glm::vec2 texture;
+    // tangent
+    glm::vec3 tangent;
+    // bitangent
+    glm::vec3 bi_tangent;
+    //bone indexes which will influence this vertex
+    int bone_ids[MAX_BONE_INFLUENCE];
+    //weights from each bone
+    float weights[MAX_BONE_INFLUENCE];
 };
 
 struct MeshTexture {
-	u32 id = NULL;
-
-	std::string type;	// "texture_diffuse", "texture_specular", etc.
-	std::string path;	
+    unsigned int id;
+    std::string type;
+    std::string path;
 };
 
-
 struct Mesh {
-	std::vector<Vertex> vertices;
-	std::vector<u32> indices;
-	std::vector<MeshTexture> textures;
+    // public:
+    std::vector<Vertex>      vertices;
+    std::vector<u32>         indices;
+    std::vector<MeshTexture> textures;
 
-	u32 VAO;
-	u32 VBO, EBO;
+    u32 VAO;
 
-	bool is_setup;	
+    // private:
+    u32 VBO, EBO;
+    bool is_setup;
 };
 
 // Mesh management
 Mesh create_mesh(std::vector<Vertex> vertices, std::vector<u32> indices, std::vector<MeshTexture> textures);
-void setup_mesh(Mesh* mesh);
-void destroy_mesh(Mesh* mesh);
+void setup_mesh(Mesh *mesh);
+void destroy_mesh(Mesh *mesh);
 
-// Mesh rendering
-void draw_mesh(const Mesh* mesh, const Shader* shader);
+// Rendering
+void draw_mesh(const Mesh *mesh, const Shader *shader);

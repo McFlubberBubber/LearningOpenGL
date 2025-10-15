@@ -481,7 +481,6 @@ static bool init_models(Assets* assets) {
 	const ModelPath model_paths[] = {
 		{"backpack/backpack.obj", true},
 		{"blahaj/blahaj.obj", false},
-		{"house/house.fbx", true},
 		{"planet/planet.obj", true},
 		{"rock/rock.obj", true}
 	};

@@ -9,6 +9,8 @@
 namespace SpaceScene {
 	constexpr u32 AMOUNT = 1000;
 	glm::mat4 *model_matrices;
+
+	const glm::vec3 SKY_COLOR = {0.1f, 0.1f, 0.1f};
 }
 
 // @TODO: Currently, the world models, specifically the TEXTURES of the models are kinda messed up,
@@ -17,9 +19,46 @@ namespace SpaceScene {
 static 
 void draw_space(RenderingContext* ctx) {
 	using namespace SpaceScene;
+
+#if 0
+	// Testing things since the texturing on the models seems kinda wrong, so
+	// are using different models for now...
+	auto bp_shader = &ctx->assets.shaders[SHADER_BACKPACK];
+	auto backpack  = &ctx->assets.models[MODEL_BACKPACK];
+
+	auto blahaj_shader = &ctx->assets.shaders[SHADER_BLAHAJ];
+	auto blahaj	       = &ctx->assets.models[MODEL_BLAHAJ];
+
+	// Drawing the backpack first first.
+	use_shader(bp_shader);
+	apply_matrices(bp_shader);
+	process_lighting(bp_shader, ctx);
+
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
+	model = glm::scale(model, glm::vec3(4.0f));
+	model = glm::rotate(model, (Time::get_time() * glm::radians(1.0f)), glm::vec3(0.0f, 1.0f, 0.0f));
+	set_mat4(bp_shader, "model_matrix", model);
+	draw_model(backpack, bp_shader);
+
+	// Then draw all the blahajs.
+	use_shader(blahaj_shader);
+	apply_matrices(blahaj_shader);
+	process_lighting(blahaj_shader, ctx);
+
+	for (u32 i = 0; i < AMOUNT; i++) {
+		float angle = 0.001f + (i / 100000.0f);
+		model_matrices[i] = glm::rotate(model_matrices[i], Time::get_time() * glm::radians(angle), 
+			glm::vec3((1.0f - angle), (angle + 0.2f), (angle + 1.0f)));
+		set_mat4(blahaj_shader, "model_matrix", model_matrices[i]);
+		draw_model(blahaj, blahaj_shader);
+	}
+
+#else
+
 	auto shader = &ctx->assets.shaders[SHADER_SPACE];
 	auto planet = &ctx->assets.models[MODEL_PLANET];
-	auto rock   = &ctx->assets.models[MODEL_ROCK];
+	auto rock		 = &ctx->assets.models[MODEL_ROCK];
 
 	use_shader(shader);
 	apply_matrices(shader);
@@ -28,14 +67,20 @@ void draw_space(RenderingContext* ctx) {
 	glm::mat4 model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
 	model = glm::scale(model, glm::vec3(4.0f));
+	model = glm::rotate(model, (Time::get_time() * glm::radians(1.0f)), glm::vec3(0.0f, 1.0f, 0.0f));
 	set_mat4(shader, "model_matrix", model);
 	draw_model(planet, shader);
 
 	// Then draw all the asteroids.
 	for (u32 i = 0; i < AMOUNT; i++) {
+		float angle = 0.001f + (i / 100000.0f);
+		model_matrices[i] = glm::rotate(model_matrices[i], Time::get_time() * glm::radians(angle),
+			glm::vec3((1.0f - angle), (angle + 0.2f), (angle + 1.0f)));
 		set_mat4(shader, "model_matrix", model_matrices[i]);
 		draw_model(rock, shader);
 	}
+
+#endif
 }
 
 
@@ -80,13 +125,16 @@ void generate_rock_matrices() {
 }
 
 void render_space_scene(RenderingContext* ctx, float dt) {
+	using namespace SpaceScene;
+
 	// ----- Binding framebuffer + enabling depth testing
 	glBindFramebuffer(GL_FRAMEBUFFER, ctx->buffers.FBO);
 	glEnable(GL_DEPTH_TEST);
 
 
 	// ----- Clearing screen and calculating sky color -----
-	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+	ctx->lighting.current_sky_color = SKY_COLOR;
+	glClearColor(SKY_COLOR.r, SKY_COLOR.g, SKY_COLOR.b, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 

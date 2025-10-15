@@ -25,7 +25,7 @@ struct Menu {
 
 
 void init_menu(Menu* menu);
-void draw_menu(RenderingContext* ctx, const Menu* menu);
+void draw_menu(RenderingContext* ctx, Menu* menu);
 
 
 // To allow cycling through MenuItem enum

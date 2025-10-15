@@ -127,7 +127,7 @@ static void draw_menu_choices(const RenderingContext* context, const Menu* menu)
 }
 
 
-void draw_menu(RenderingContext* ctx, const Menu* menu) {
+void draw_menu(RenderingContext* ctx, Menu* menu) {
 	glClearColor(0.05f, 0.2f, 0.25f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

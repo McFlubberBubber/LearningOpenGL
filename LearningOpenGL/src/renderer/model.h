@@ -11,21 +11,19 @@
 #include <vector>
 #include <string>
 
-#include "core/types.h"
 #include "renderer/mesh.h"
+#include "core/types.h"
 
-//#include "shader.h"
-//#include "render_data.h"
-//#include "stb_image.h"
-
-// Forward declaration
+// Forward declarations
 struct Assets;
 struct Shader;
 
 struct Model {
 	std::vector<Mesh> meshes;
+
 	std::vector<u32> texture_ids;
-	std::vector<std::string> texture_paths;
+	std::vector<std::string> texture_paths; // @TODO: is this needed
+
 	std::string directory;
 
 	bool is_loaded = false;

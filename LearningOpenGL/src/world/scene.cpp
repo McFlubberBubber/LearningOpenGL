@@ -7,9 +7,8 @@
 
 constexpr float DEFAULT_SHININESS = 32.0f;
 
-
-
-static void draw_skybox(RenderingContext* ctx) {
+static 
+void draw_skybox(RenderingContext* ctx) {
 	const Shader* shader = &ctx->assets.shaders[SHADER_SKYBOX];
 	glm::mat4 view_matrix = glm::mat4(glm::mat3(get_view_matrix(&ctx->camera_data.camera)));
 
@@ -33,7 +32,8 @@ static void draw_skybox(RenderingContext* ctx) {
 	glDepthMask(GL_TRUE);
 }
 
-static void draw_wooden_containers(const RenderingContext* ctx) {
+static 
+void draw_wooden_containers(const RenderingContext* ctx) {
 	const Shader* shader = &ctx->assets.shaders[SHADER_CONTAINER];
 	// use_shader(shader);
 	const u32 diffuse    = ctx->assets.textures[TEXTURE_DIFFUSE];
@@ -58,7 +58,8 @@ static void draw_wooden_containers(const RenderingContext* ctx) {
 }
 
 
-static void draw_light_sources(const RenderingContext* ctx) {
+static 
+void draw_light_sources(const RenderingContext* ctx) {
 	const Shader* shader = &ctx->assets.shaders[SHADER_LIGHT_CUBE];
 	use_shader(shader);
 
@@ -85,7 +86,8 @@ static void draw_light_sources(const RenderingContext* ctx) {
 }
 
 // Utility function for displaying the normals of a model using a geometry shader.
-static void show_model_normals(const RenderingContext* ctx, const Model* model, const glm::mat4 &model_matrix) {
+static 
+void show_model_normals(const RenderingContext* ctx, const Model* model, const glm::mat4 &model_matrix) {
 	const Shader* shader = &ctx->assets.shaders[SHADER_NORMALS];
 
 	use_shader(shader);
@@ -94,7 +96,8 @@ static void show_model_normals(const RenderingContext* ctx, const Model* model, 
 	draw_model(model, shader);
 }
 
-static void draw_world_models(const RenderingContext* ctx) {
+static 
+void draw_world_models(const RenderingContext* ctx) {
 	const Shader* bp_shader = &ctx->assets.shaders[SHADER_BACKPACK];
 	const Model* bp_model 	= &ctx->assets.models[MODEL_BACKPACK];
 
@@ -152,7 +155,8 @@ static void draw_world_models(const RenderingContext* ctx) {
 }
 
 
-static void draw_world(RenderingContext* ctx) {
+static 
+void draw_world(RenderingContext* ctx) {
 	// Draw skybox-related things first.
 	draw_skybox(ctx);
 
@@ -165,7 +169,8 @@ static void draw_world(RenderingContext* ctx) {
 }
 
 
-static void render_instanced_quads(const RenderingContext* ctx) {
+static 
+void render_instanced_quads(const RenderingContext* ctx) {
 	const Shader* shader = &ctx->assets.shaders[SHADER_INSTANCE_EXAMPLE];
 
 	use_shader(shader);
@@ -177,6 +182,7 @@ static void render_instanced_quads(const RenderingContext* ctx) {
 	glBindVertexArray(ctx->buffers.mini_quad_VAO);
 	glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 100);
 }
+
 
 void render_scene(RenderingContext* ctx, float dt) {
 	// ----- Binding framebuffer + enabling depth testing

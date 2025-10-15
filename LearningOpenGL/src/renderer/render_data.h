@@ -56,7 +56,6 @@ enum ShaderType : u8{
 enum ModelType : u8{
 	MODEL_BACKPACK = 0,
 	MODEL_BLAHAJ,
-	MODEL_HOUSE,
 
 	MODEL_PLANET,
 	MODEL_ROCK,
