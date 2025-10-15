@@ -25,7 +25,7 @@ void draw_skybox(RenderingContext* ctx) {
 	// than the one cubemap, so we don't need to set the texture uniform.
 	glBindVertexArray(ctx->buffers.skybox_VAO);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, ctx->assets.textures[TEXTURE_SKYBOX]);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, ctx->assets.textures[TEXTURE_MAIN_SKYBOX]);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	// Resetting depth function
@@ -226,5 +226,6 @@ void render_scene(RenderingContext* ctx, float dt) {
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	// ----- Drawing UI elements -----
-	render_debug_overlay(ctx, dt);
+	if (ctx->debug_mode)
+		render_debug_overlay(ctx, dt);
 }

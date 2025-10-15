@@ -29,13 +29,10 @@ namespace DebugOverlay {
 
 void render_debug_overlay(RenderingContext* ctx, float dt) {
 	// Drawing consistent UI based on the debug_mode flag
-
-	if (ctx->debug_mode) {
-		display_fps(ctx, dt);
-		display_coords(ctx);
-		display_euler_angles(ctx);
-		display_sprint_status(ctx);
-	}
+	display_fps(ctx, dt);
+	display_coords(ctx);
+	display_euler_angles(ctx);
+	display_sprint_status(ctx);
 
 	// @NOTE: This could be moved into the render_scene directly? But this
 	// function is the only function currently that is rendering any 'interface'

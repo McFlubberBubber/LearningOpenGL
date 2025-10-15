@@ -26,6 +26,11 @@ bool add_cubemap_texture(Assets* assets, TextureType texture, const std::vector<
 	texture_id = load_cubemap_texture(faces);
 	if (texture_id != 0) {
 		assets->textures[texture] = texture_id;
+
+		for (u32 i = 0; i < faces.size(); i++) {
+			std::cout << "Cubemap loaded at path: " << faces[i] << std::endl;
+		}
+
 		return true;
 	}
 
@@ -92,7 +97,15 @@ u32 load_cubemap_texture(const std::vector<std::string>& faces) {
 		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nr_channels, 0);
 
 		if (data) {
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+			GLenum texture_format{};
+			if (nr_channels == 1)
+				texture_format = GL_RED;
+			else if (nr_channels == 3)
+				texture_format = GL_RGB;
+			else if (nr_channels == 4)
+				texture_format = GL_RGBA;
+
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, texture_format, width, height, 0, texture_format, GL_UNSIGNED_BYTE, data);
 			stbi_image_free(data);
 		}
 		else {

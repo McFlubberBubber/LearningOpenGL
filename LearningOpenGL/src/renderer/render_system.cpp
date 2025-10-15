@@ -520,6 +520,8 @@ static bool init_textures(Assets* assets) {
 		"grassland.jpg",
 		
 		nullptr,
+		nullptr,
+
 		nullptr
 	};
 
@@ -530,19 +532,28 @@ static bool init_textures(Assets* assets) {
 		}
 	}
 
-
 	// Loading cubemap textures
-	std::vector<std::string> skybox_faces = {
-		base + "skybox/right.jpg",
-		base + "skybox/left.jpg",
-		base + "skybox/top.jpg",
-		base + "skybox/bottom.jpg",
-		base + "skybox/front.jpg",
-		base + "skybox/back.jpg",
+	std::vector<std::string> main_skybox = {
+		base + "main_skybox/right.jpg",
+		base + "main_skybox/left.jpg",
+		base + "main_skybox/top.jpg",
+		base + "main_skybox/bottom.jpg",
+		base + "main_skybox/front.jpg",
+		base + "main_skybox/back.jpg",
 	};
-	if (!add_cubemap_texture(assets, TEXTURE_SKYBOX, skybox_faces))
+	if (!add_cubemap_texture(assets, TEXTURE_MAIN_SKYBOX, main_skybox))
 		return false;
 
+	std::vector<std::string> space_skybox = {
+		base + "space_skybox/right.png",
+		base + "space_skybox/left.png",
+		base + "space_skybox/top.png",
+		base + "space_skybox/bottom.png",
+		base + "space_skybox/front.png",
+		base + "space_skybox/back.png",
+	};
+	if (!add_cubemap_texture(assets, TEXTURE_SPACE_SKYBOX, space_skybox))
+		return false;
 
 	// Loading texture color buffers - texture binding happens in init_buffers();
 	glGenTextures(1, &assets->textures[TEXTURE_COLOR_BUFFER]);

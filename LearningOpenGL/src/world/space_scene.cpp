@@ -5,7 +5,7 @@
 #include "ui/debug_overlay.h"
 #include "core/time.h"
 
-// @TODO: Temporary stuff.
+// @TODO: Temporary?
 namespace SpaceScene {
 	constexpr u32 AMOUNT = 1000;
 	glm::mat4 *model_matrices;
@@ -13,52 +13,40 @@ namespace SpaceScene {
 	const glm::vec3 SKY_COLOR = {0.1f, 0.1f, 0.1f};
 }
 
-// @TODO: Currently, the world models, specifically the TEXTURES of the models are kinda messed up,
-// so we gotta dig into the mesh/model.cpp files to see why the textures are not being handled properly.
-// Hopefully I get a fix into this next time? Because the planets looks absolutely HORRIBLE.
+static
+void draw_skybox(RenderingContext* ctx) {
+	const Shader* shader = &ctx->assets.shaders[SHADER_SKYBOX];
+	glm::mat4 view_matrix = glm::mat4(glm::mat3(get_view_matrix(&ctx->camera_data.camera)));
+
+	// Depth test passes when values are equal to the depth buffer's content
+	glDepthMask(GL_FALSE);
+	glDepthFunc(GL_LEQUAL);
+
+	// Adjusting the shader uniforms
+	use_shader(shader);
+	set_mat4(shader, "projection", ctx->camera_data.projection_matrix);
+	set_mat4(shader, "view", view_matrix);
+
+	// Drawing the skybox - we aren't using several active textures other
+	// than the one cubemap, so we don't need to set the texture uniform.
+	glBindVertexArray(ctx->buffers.skybox_VAO);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, ctx->assets.textures[TEXTURE_SPACE_SKYBOX]);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+
+	// Resetting depth function
+	glDepthMask(GL_TRUE);
+}
+
 static 
 void draw_space(RenderingContext* ctx) {
 	using namespace SpaceScene;
 
-#if 0
-	// Testing things since the texturing on the models seems kinda wrong, so
-	// are using different models for now...
-	auto bp_shader = &ctx->assets.shaders[SHADER_BACKPACK];
-	auto backpack  = &ctx->assets.models[MODEL_BACKPACK];
-
-	auto blahaj_shader = &ctx->assets.shaders[SHADER_BLAHAJ];
-	auto blahaj	       = &ctx->assets.models[MODEL_BLAHAJ];
-
-	// Drawing the backpack first first.
-	use_shader(bp_shader);
-	apply_matrices(bp_shader);
-	process_lighting(bp_shader, ctx);
-
-	glm::mat4 model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
-	model = glm::scale(model, glm::vec3(4.0f));
-	model = glm::rotate(model, (Time::get_time() * glm::radians(1.0f)), glm::vec3(0.0f, 1.0f, 0.0f));
-	set_mat4(bp_shader, "model_matrix", model);
-	draw_model(backpack, bp_shader);
-
-	// Then draw all the blahajs.
-	use_shader(blahaj_shader);
-	apply_matrices(blahaj_shader);
-	process_lighting(blahaj_shader, ctx);
-
-	for (u32 i = 0; i < AMOUNT; i++) {
-		float angle = 0.001f + (i / 100000.0f);
-		model_matrices[i] = glm::rotate(model_matrices[i], Time::get_time() * glm::radians(angle), 
-			glm::vec3((1.0f - angle), (angle + 0.2f), (angle + 1.0f)));
-		set_mat4(blahaj_shader, "model_matrix", model_matrices[i]);
-		draw_model(blahaj, blahaj_shader);
-	}
-
-#else
+	draw_skybox(ctx);
 
 	auto shader = &ctx->assets.shaders[SHADER_SPACE];
 	auto planet = &ctx->assets.models[MODEL_PLANET];
-	auto rock		 = &ctx->assets.models[MODEL_ROCK];
+	auto rock   = &ctx->assets.models[MODEL_ROCK];
 
 	use_shader(shader);
 	apply_matrices(shader);
@@ -79,8 +67,6 @@ void draw_space(RenderingContext* ctx) {
 		set_mat4(shader, "model_matrix", model_matrices[i]);
 		draw_model(rock, shader);
 	}
-
-#endif
 }
 
 
@@ -165,7 +151,8 @@ void render_space_scene(RenderingContext* ctx, float dt) {
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	// ----- Drawing UI elements -----
-	render_debug_overlay(ctx, dt);
+	if (ctx->debug_mode)
+		render_debug_overlay(ctx, dt);
 }
 
 void cleanup_space_scene() {

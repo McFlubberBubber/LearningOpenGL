@@ -135,7 +135,8 @@ void draw_menu(RenderingContext* ctx, Menu* menu) {
 	draw_small_text(ctx);
 	draw_menu_choices(ctx, menu);
 
-	render_debug_overlay(ctx, Time::get_delta_time());
+	if (ctx->debug_mode)
+		render_debug_overlay(ctx, Time::get_delta_time());
 }
 
 
