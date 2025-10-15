@@ -229,6 +229,8 @@
     <None Include="res\shaders\screenbuffer.vert" />
     <None Include="res\shaders\skybox.frag" />
     <None Include="res\shaders\skybox.vert" />
+    <None Include="res\shaders\sun.frag" />
+    <None Include="res\shaders\sun.vert" />
     <None Include="res\shaders\textbox.frag" />
     <None Include="res\shaders\textbox.vert" />
     <None Include="res\shaders\wall.frag" />

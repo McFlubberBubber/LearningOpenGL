@@ -405,6 +405,8 @@ static bool init_buffers(RenderingContext* ctx) {
 
 
 // @Hardcode: similar to init_textures()
+// @TODO: We should be organizing the shaders folder into subfolders, which would mean these paths would
+// change, but it would make navigating the shader folder like 10x better.
 static bool init_shaders(Assets* assets) {
 	std::string base = "res/shaders/";
 
@@ -443,7 +445,8 @@ static bool init_shaders(Assets* assets) {
 
 		{"textbox.vert", "textbox.frag", nullptr},
 
-		{"space.vert", "space.frag", nullptr}
+		{"space.vert", "space.frag", nullptr},
+		{"sun.vert", "sun.frag", nullptr}
 	};
 
 	// Creating each shader

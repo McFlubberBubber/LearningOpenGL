@@ -90,4 +90,8 @@ void init_lighting(LightingData *lights) {
 	lights->dark_sky_color = glm::vec3(0.001f, 0.001f, 0.001f);
 	lights->grey_sky_color = glm::vec3(0.5f, 0.5f, 0.5f);
 	lights->current_sky_color = lights->grey_sky_color;		// Default setting
+
+	// Sunlight stuff for space scene
+	lights->sunlight_position = glm::vec3(0.0f, 0.0f, -75.0f);
+	lights->sunlight_color	  = glm::vec3(1.0f);
 }

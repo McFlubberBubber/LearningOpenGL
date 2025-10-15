@@ -15,7 +15,7 @@ namespace SpaceScene {
 
 static
 void draw_skybox(RenderingContext* ctx) {
-	const Shader* shader = &ctx->assets.shaders[SHADER_SKYBOX];
+	const Shader* shader  = &ctx->assets.shaders[SHADER_SKYBOX];
 	glm::mat4 view_matrix = glm::mat4(glm::mat3(get_view_matrix(&ctx->camera_data.camera)));
 
 	// Depth test passes when values are equal to the depth buffer's content
@@ -38,20 +38,53 @@ void draw_skybox(RenderingContext* ctx) {
 	glDepthMask(GL_TRUE);
 }
 
+static
+void process_sunlight(const RenderingContext* ctx, const Shader* shader) {
+	// Setting the camera's view position uniform
+	set_vec3(shader, "view_position", ctx->camera_data.camera.position);
+
+	// Setting the sunlight uniforms - adjust these...
+	std::string base = "sunlight";
+	set_vec3(shader, (base + ".position").c_str(), ctx->lighting.sunlight_position);
+	set_vec3(shader, (base + ".ambient").c_str(), ctx->lighting.sunlight_color * 0.15f);
+	set_vec3(shader, (base + ".diffuse").c_str(), ctx->lighting.sunlight_color * 2.0f);
+	set_vec3(shader, (base + ".specular").c_str(), ctx->lighting.sunlight_color * 1.5f);
+
+	set_float(shader, (base + ".constant").c_str(), 1.0f);
+	set_float(shader, (base + ".linear").c_str(), 0.007f);
+	set_float(shader, (base + ".quadratic").c_str(), 0.0002f);
+}
+
 static 
 void draw_space(RenderingContext* ctx) {
 	using namespace SpaceScene;
 
+	// Draw skybox first, then the "sun" object
 	draw_skybox(ctx);
 
+	auto sun_shader = &ctx->assets.shaders[SHADER_SUN];
+	use_shader(sun_shader);
+	apply_matrices(sun_shader);
+
+	glBindVertexArray(ctx->buffers.cube_VAO);
+	set_vec3(sun_shader, "light_color", ctx->lighting.sunlight_color);
+	glm::mat4 sun = glm::mat4(1.0f);
+	sun = glm::translate(sun, ctx->lighting.sunlight_position);
+	sun = glm::scale(sun, glm::vec3(5.0f));
+	set_mat4(sun_shader, "model_matrix", sun);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+
+	// Then, draw the planet + asteroids
 	auto shader = &ctx->assets.shaders[SHADER_SPACE];
 	auto planet = &ctx->assets.models[MODEL_PLANET];
 	auto rock   = &ctx->assets.models[MODEL_ROCK];
 
 	use_shader(shader);
 	apply_matrices(shader);
+	process_sunlight(ctx, shader);
 
 	// Drawing the planet first.
+	set_float(shader, "material.shininess", 8.0f);
 	glm::mat4 model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
 	model = glm::scale(model, glm::vec3(4.0f));
@@ -60,6 +93,7 @@ void draw_space(RenderingContext* ctx) {
 	draw_model(planet, shader);
 
 	// Then draw all the asteroids.
+	set_float(shader, "material.shininess", 4.0f);
 	for (u32 i = 0; i < AMOUNT; i++) {
 		float angle = 0.001f + (i / 100000.0f);
 		model_matrices[i] = glm::rotate(model_matrices[i], Time::get_time() * glm::radians(angle),
@@ -68,6 +102,8 @@ void draw_space(RenderingContext* ctx) {
 		draw_model(rock, shader);
 	}
 }
+
+
 
 
 void generate_rock_matrices() {
@@ -129,9 +165,7 @@ void render_space_scene(RenderingContext* ctx, float dt) {
 
 
 	// ----- Draw world objects -----
-	glDisable(GL_BLEND);
 	draw_space(ctx);
-	glEnable(GL_BLEND);
 
 
 	// ----- Unbinding the framebuffer + disabling depth testing -----

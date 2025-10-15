@@ -1,9 +1,17 @@
 #version 460 core
 layout (location = 0) in vec3 pos;
+layout (location = 1) in vec3 norm;
 layout (location = 2) in vec2 tex_coord;
 
-out vec2 texture_coords;
 
+// Outputs
+out VS_OUT {
+	vec2 texture_coords;
+	vec3 normal;
+	vec3 frag_pos;
+} vs_out;
+
+// Uniform binding
 layout (std140) uniform matrices {
 	mat4 projection;
 	mat4 view;
@@ -12,7 +20,11 @@ layout (std140) uniform matrices {
 uniform mat4 model_matrix;
 
 void main() {
-	texture_coords = tex_coord;
-	gl_Position = projection * view * model_matrix * vec4(pos, 1.0f);
+	// Setting up outputs
+	vs_out.texture_coords = tex_coord;
+	vs_out.frag_pos		  = vec3(model_matrix * vec4(pos, 1.0f));
+	vs_out.normal		  = mat3(transpose(inverse(model_matrix))) * norm;
+
+	gl_Position = projection * view * vec4(vs_out.frag_pos, 1.0f);
 	return;
 }

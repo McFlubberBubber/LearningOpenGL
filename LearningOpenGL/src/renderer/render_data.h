@@ -49,6 +49,7 @@ enum ShaderType : u8{
 	SHADER_TEXTBOX,
 
 	SHADER_SPACE,
+	SHADER_SUN,
 
 	SHADER_COUNT
 };
@@ -380,6 +381,7 @@ struct GeometryData {
 
 
 struct LightingData {
+	// ----- MAIN SCENE -----
 	// Directional Lighting properties
 	glm::vec3 directional_light_dir;
 	glm::vec3 directional_ambient;
@@ -395,6 +397,9 @@ struct LightingData {
 	glm::vec3 grey_sky_color;
 	glm::vec3 current_sky_color;
 
+	// ----- SPACE SCENE -----
+	glm::vec3 sunlight_position;
+	glm::vec3 sunlight_color;
 
 	inline void reserve_point_lights(u32 count) {
 		point_light_positions.reserve(count);
