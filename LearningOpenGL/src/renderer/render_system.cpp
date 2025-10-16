@@ -405,8 +405,6 @@ static bool init_buffers(RenderingContext* ctx) {
 
 
 // @Hardcode: similar to init_textures()
-// @TODO: We should be organizing the shaders folder into subfolders, which would mean these paths would
-// change, but it would make navigating the shader folder like 10x better.
 static bool init_shaders(Assets* assets) {
 	std::string base = "res/shaders/";
 
@@ -417,36 +415,45 @@ static bool init_shaders(Assets* assets) {
 	};
 	
 	// Must match the order seen in the ShaderType struct.
+	// @TODO: We gotta organize ts.
 	const ShaderPaths shader_paths[] = {
-		{"container.vert", "container.frag", nullptr},
-		{"container.vert", "emission.frag", nullptr},
-		{"container.vert", "light_cube.frag", nullptr},
+		// Cube things.
+		{"cubes/container.vert", "cubes/container.frag", nullptr},
+		{"cubes/container.vert", "cubes/emission.frag", nullptr},
+		{"cubes/container.vert", "cubes/light_cube.frag", nullptr},
 
-		{"wall.vert", "wall.frag", nullptr},
-		{"wall.vert", "wall.frag", nullptr},
-		{"container.vert", "window.frag", nullptr},
-		{"container.vert", "grass.frag", nullptr},
+		// Useless stuff for now.
+		{"wall/wall.vert", "wall/wall.frag", nullptr},
+		{"wall/wall.vert", "wall/wall.frag", nullptr},
+		{"cubes/container.vert", "cubes/window.frag", nullptr},
+		{"cubes/container.vert", "cubes/grass.frag", nullptr},
 
-		{"backpack.vert", "backpack.frag", nullptr},
-		{"blahaj.vert", "blahaj.frag", nullptr},
-		{"container.vert", "container.frag", nullptr},
-		{"explode_model.vert", "explode_model.frag", "explode_model.geom"},
+		// Models in the main scene.
+		{"backpack/backpack.vert", "backpack/backpack.frag", nullptr},
+		{"blahaj/blahaj.vert", "blahaj/blahaj.frag", nullptr},
+		{"geometry/explode_model.vert", "geometry/explode_model.frag", "geometry/explode_model.geom"},
 
+		// Core things.
 		{"screenbuffer.vert", "screenbuffer.frag", nullptr},
-		{"font.vert", "font.frag", nullptr},
-		{"geometry.vert", "geometry.frag", "geometry.geom"},
+		{"text/font.vert", "text/font.frag", nullptr},
+		{"geometry/geometry.vert", "geometry/geometry.frag", "geometry/geometry.geom"},
 
-		{"skybox.vert", "skybox.frag", nullptr},
-		{"special_cube.vert", "reflection.frag", nullptr},
-		{"special_cube.vert", "refraction.frag", nullptr},
+		// Skybox-related things.
+		{"skybox/skybox.vert", "skybox/skybox.frag", nullptr},
+		{"cubes/special_cube.vert", "cubes/reflection.frag", nullptr},
+		{"cubes/special_cube.vert", "cubes/refraction.frag", nullptr},
 
-		{"normals.vert", "normals.frag", "normals.geom"},
-		{"instance_render.vert", "instance_render.frag", nullptr},
+		// Misc.
+		{"geometry/normals.vert", "geometry/normals.frag", "geometry/normals.geom"},
+		{"instancing/instance_render.vert", "instancing/instance_render.frag", nullptr},
 
-		{"textbox.vert", "textbox.frag", nullptr},
+		// For the queue system.
+		{"text/textbox.vert", "text/textbox.frag", nullptr},
 
-		{"space.vert", "space.frag", nullptr},
-		{"sun.vert", "sun.frag", nullptr}
+		// For the space scene.
+		{"space/asteroid.vert", "space/asteroid.frag", nullptr},
+		{"space/planet.vert", "space/planet.frag", nullptr},
+		{"space/sun.vert", "space/sun.frag", nullptr}
 	};
 
 	// Creating each shader

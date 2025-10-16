@@ -1,7 +1,5 @@
 #pragma once
 
-// #define DO_OG_MESH
-
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>

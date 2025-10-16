@@ -59,14 +59,16 @@ int main() {
 
 	stbi_set_flip_vertically_on_load(true);
 
-	// INSTANCE RENDERING EXAMPLE
-	render_context.buffers.update_instance_offsets();
-	generate_rock_matrices();
-
 	if (!init_rendering_system(&render_context)) {
 		std::cout << "ERROR: Rendering system did not initialize!" << std::endl;
 		return -1;
 	}
+
+	// INSTANCE RENDERING EXAMPLE
+	render_context.buffers.update_instance_offsets();
+	generate_rock_matrices(&render_context);
+	validate_rock_instancing(&render_context);
+
 	
 	init_menu(&menu);
 

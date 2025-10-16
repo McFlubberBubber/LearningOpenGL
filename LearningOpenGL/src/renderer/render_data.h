@@ -32,7 +32,6 @@ enum ShaderType : u8{
 
 	SHADER_BACKPACK,
 	SHADER_BLAHAJ,
-	SHADER_HOUSE,
 	SHADER_EXPLODE_MODEL,
 
 	SHADER_SCREEN,
@@ -48,7 +47,8 @@ enum ShaderType : u8{
 
 	SHADER_TEXTBOX,
 
-	SHADER_SPACE,
+	SHADER_ASTEROID,
+	SHADER_PLANET,
 	SHADER_SUN,
 
 	SHADER_COUNT
@@ -131,6 +131,8 @@ struct BufferData {
 	u32 mini_quad_VAO, mini_quad_VBO;
 	u32 instance_VBO;
 	glm::vec2 translations[100];
+
+	u32 rock_buffer;  // For storing the instanced matrices.
 
 	void update_instance_offsets() {
 		int index = 0;

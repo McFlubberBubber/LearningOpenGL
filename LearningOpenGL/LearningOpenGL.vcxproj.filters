@@ -133,44 +133,8 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\shaders\container.vert" />
-    <None Include="res\shaders\container.frag" />
-    <None Include="res\shaders\wall.vert" />
-    <None Include="res\shaders\wall.frag" />
-    <None Include="res\shaders\emission.frag" />
     <None Include="res\shaders\lightCube.frag" />
-    <None Include="res\shaders\backpack.vert" />
-    <None Include="res\shaders\backpack.frag" />
-    <None Include="res\shaders\blahaj.vert" />
-    <None Include="res\shaders\blahaj.frag" />
-    <None Include="res\shaders\grass.frag" />
-    <None Include="res\shaders\window.frag" />
     <None Include="res\shaders\screenbuffer.vert" />
     <None Include="res\shaders\screenbuffer.frag" />
-    <None Include="res\shaders\skybox.vert" />
-    <None Include="res\shaders\skybox.frag" />
-    <None Include="res\shaders\reflection.frag" />
-    <None Include="res\shaders\special_cube.vert" />
-    <None Include="res\shaders\refraction.frag" />
-    <None Include="res\shaders\geometry.vert" />
-    <None Include="res\shaders\geometry.geom" />
-    <None Include="res\shaders\geometry.frag" />
-    <None Include="res\shaders\font.frag" />
-    <None Include="res\shaders\font.vert" />
-    <None Include="res\shaders\light_cube.frag" />
-    <None Include="res\shaders\explode_model.frag" />
-    <None Include="res\shaders\explode_model.geom" />
-    <None Include="res\shaders\explode_model.vert" />
-    <None Include="res\shaders\normals.vert" />
-    <None Include="res\shaders\normals.frag" />
-    <None Include="res\shaders\normals.geom" />
-    <None Include="res\shaders\instance_render.frag" />
-    <None Include="res\shaders\instance_render.vert" />
-    <None Include="res\shaders\textbox.vert" />
-    <None Include="res\shaders\textbox.frag" />
-    <None Include="res\shaders\space.vert" />
-    <None Include="res\shaders\space.frag" />
-    <None Include="res\shaders\sun.vert" />
-    <None Include="res\shaders\sun.frag" />
   </ItemGroup>
 </Project>
