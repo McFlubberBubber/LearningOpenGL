@@ -10,6 +10,9 @@ This is NOT a project that aims to create a functional game engine **yet**. Inst
 ![In-application picture of LearningOpenGL scene](https://gcdnb.pbrd.co/images/R68NgGzLrkd9.png?o=1)
 **(Picture taken as of 26th September, 2025)**
 
+![Example of instance rendering a planet with asteroids](https://gcdnb.pbrd.co/images/X1h0AMAvMpfX.png?o=1)
+**(Picture takes as on 16th October, 2025)**
+
 ## Installation
 
 - You can clone the whole project by just downloading the zip file here on **GitHub** (the green button with <>Code).

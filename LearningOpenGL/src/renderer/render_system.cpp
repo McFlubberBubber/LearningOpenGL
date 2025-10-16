@@ -184,7 +184,7 @@ static bool init_camera(CameraData* camera_data, ViewportState* viewport) {
 	camera_data->aspect_ratio = viewport->aspect_ratio;
 
 	camera_data->near_plane = 0.1f;
-	camera_data->far_plane  = 100.0f;
+	camera_data->far_plane  = 1000.0f; // @HARDCODE: We can adjust this value to a render_distance option?
 
 	// Calculating initializing projection matrix
 	camera_data->projection_matrix = glm::perspective(
