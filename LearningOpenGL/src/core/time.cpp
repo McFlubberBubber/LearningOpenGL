@@ -13,11 +13,6 @@ namespace Time {
 	}
 
 	// Getters for time variables
-	float get_delta_time() {
-		return delta_time;
-	}
-
-	float get_time() {
-		return static_cast<float>(glfwGetTime());
-	}
+	float get_delta_time() { return delta_time;	}
+	float get_time()	   { return static_cast<float>(glfwGetTime()); }
 }

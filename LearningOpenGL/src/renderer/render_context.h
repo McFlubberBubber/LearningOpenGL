@@ -25,5 +25,5 @@ struct RenderingContext {
 
 
 	// Temporary flag for rendering debug overlay
-	bool debug_mode = false;
+	bool debug_mode = true;
 };

@@ -1,10 +1,6 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
-
 
 #include "core/time.h"
 #include "core/program_state.h"
@@ -23,8 +19,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-static
-void framebuffer_size_callback(GLFWwindow* window, s32 width, s32 height);
+// Internal function prototypes.
+static void framebuffer_size_callback(GLFWwindow* window, s32 width, s32 height);
 
 int main() {
 	// Initializing structs...
@@ -67,9 +63,9 @@ int main() {
 	// INSTANCE RENDERING EXAMPLE
 	render_context.buffers.update_instance_offsets();
 	generate_rock_matrices(&render_context);
-	validate_rock_instancing(&render_context);
+	generate_blahaj_matrices(&render_context);
+//	validate_rock_instancing(&render_context); // Logging info.
 
-	
 	init_menu(&menu);
 
 	// ----- RENDER LOOP -----
@@ -116,14 +112,16 @@ int main() {
 	}
 	
 	cleanup_rendering_system(&render_context);
-	cleanup_space_scene();	// This is here since we 'new' the model_matrices, so we delete it in this call.
+	cleanup_space_scene();
+	cleanup_main_scene();
 	glfwTerminate();
 
 	return 0;
 }
 
-static
-void framebuffer_size_callback(GLFWwindow* window, s32 width, s32 height) {
+
+// ----- Internal Functions -----
+static void framebuffer_size_callback(GLFWwindow* window, s32 width, s32 height) {
 	CallbackContext* ctx = static_cast<CallbackContext*>(glfwGetWindowUserPointer(window));
 	
 	glViewport(0, 0, width, height);

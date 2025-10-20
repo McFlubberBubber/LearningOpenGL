@@ -132,7 +132,8 @@ struct BufferData {
 	u32 instance_VBO;
 	glm::vec2 translations[100];
 
-	u32 rock_buffer;  // For storing the instanced matrices.
+	u32 rock_buffer;   // For storing the instanced matrices.
+	u32 blahaj_buffer; // Same but for the blahaj instances.
 
 	void update_instance_offsets() {
 		int index = 0;

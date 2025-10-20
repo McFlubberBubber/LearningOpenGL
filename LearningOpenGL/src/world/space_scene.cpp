@@ -5,7 +5,6 @@
 #include "ui/debug_overlay.h"
 #include "core/time.h"
 
-// @TODO: Temporary?
 namespace SpaceScene {
 	constexpr u32 AMOUNT = 10000;
 	glm::mat4 *model_matrices;
@@ -13,135 +12,8 @@ namespace SpaceScene {
 	const glm::vec3 SKY_COLOR = {0.1f, 0.1f, 0.1f};
 }
 
-static
-void draw_skybox(RenderingContext* ctx) {
-	const Shader* shader  = &ctx->assets.shaders[SHADER_SKYBOX];
-	glm::mat4 view_matrix = glm::mat4(glm::mat3(get_view_matrix(&ctx->camera_data.camera)));
-
-	// Depth test passes when values are equal to the depth buffer's content
-	glDepthMask(GL_FALSE);
-	glDepthFunc(GL_LEQUAL);
-
-	// Adjusting the shader uniforms
-	use_shader(shader);
-	set_mat4(shader, "projection", ctx->camera_data.projection_matrix);
-	set_mat4(shader, "view", view_matrix);
-
-	// Drawing the skybox - we aren't using several active textures other
-	// than the one cubemap, so we don't need to set the texture uniform.
-	glBindVertexArray(ctx->buffers.skybox_VAO);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, ctx->assets.textures[TEXTURE_SPACE_SKYBOX]);
-	glDrawArrays(GL_TRIANGLES, 0, 36);
-
-	// Resetting depth function
-	glDepthMask(GL_TRUE);
-}
-
-static
-void process_sunlight(const RenderingContext* ctx, const Shader* shader) {
-	// Setting the camera's view position uniform
-	set_vec3(shader, "view_position", ctx->camera_data.camera.position);
-
-	// Setting the sunlight uniforms - adjust these...
-	std::string base = "sunlight";
-	set_vec3(shader, (base + ".position").c_str(), ctx->lighting.sunlight_position);
-	set_vec3(shader, (base + ".ambient").c_str(), ctx->lighting.sunlight_color * 0.15f);
-	set_vec3(shader, (base + ".diffuse").c_str(), ctx->lighting.sunlight_color * 2.0f);
-	set_vec3(shader, (base + ".specular").c_str(), ctx->lighting.sunlight_color * 1.5f);
-
-	set_float(shader, (base + ".constant").c_str(), 1.0f);
-	set_float(shader, (base + ".linear").c_str(), 0.007f);
-	set_float(shader, (base + ".quadratic").c_str(), 0.0002f);
-}
-
-
-static
-void draw_planets(RenderingContext* ctx) {
-	// Drawing the sun.
-	auto sun_shader = &ctx->assets.shaders[SHADER_SUN];
-	use_shader(sun_shader);
-	apply_matrices(sun_shader);
-
-	glBindVertexArray(ctx->buffers.cube_VAO);
-	set_vec3(sun_shader, "light_color", ctx->lighting.sunlight_color);
-	glm::mat4 sun = glm::mat4(1.0f);
-	sun = glm::translate(sun, ctx->lighting.sunlight_position);
-	sun = glm::scale(sun, glm::vec3(5.0f));
-	set_mat4(sun_shader, "model_matrix", sun);
-	glDrawArrays(GL_TRIANGLES, 0, 36);
-
-
-	// Drawing the planet thingymabob.
-	auto planet_shader = &ctx->assets.shaders[SHADER_PLANET];
-	auto planet = &ctx->assets.models[MODEL_PLANET];
-	use_shader(planet_shader);
-	apply_matrices(planet_shader);
-	process_sunlight(ctx, planet_shader);
-
-	set_float(planet_shader, "material.shininess", 8.0f);
-	glm::mat4 model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
-	model = glm::scale(model, glm::vec3(4.0f));
-	model = glm::rotate(model, (Time::get_time() * glm::radians(1.0f)), glm::vec3(0.0f, 1.0f, 0.0f));
-	set_mat4(planet_shader, "model_matrix", model);
-	draw_model(planet, planet_shader);
-}
-
-static
-void draw_instanced_rocks(RenderingContext* ctx) {
-	using namespace SpaceScene;
-	auto shader = &ctx->assets.shaders[SHADER_ASTEROID];
-	auto rock   = &ctx->assets.models[MODEL_ROCK];
-	use_shader(shader);
-	apply_matrices(shader);
-	process_sunlight(ctx, shader);
-	set_float(shader, "material.shininess", 4.0f);
-
-	// Manually binding the textures for now (since we aren't using draw_model() anymore).
-	glActiveTexture(GL_TEXTURE0);	
-	set_int(shader, "material.diffuse1", 0);
-	glBindTexture(GL_TEXTURE_2D, rock->texture_ids[0]);
-
-/*
-	// Updating rotation matrices
-	// @NOTE: This causes some frame drops so we stick with just drawing the models
-	// in a static rotation.
-	for (u32 i = 0; i < AMOUNT; i++) {
-		float angle = 0.001f + (i / 100000.0f);
-		model_matrices[i] = glm::rotate(model_matrices[i], 
-			Time::get_time() * glm::radians(angle),
-			glm::vec3((1.0f - angle), (angle + 0.2f), (angle + 1.0f)));
-	}
-	
-	glBindBuffer(GL_ARRAY_BUFFER, ctx->buffers.rock_buffer);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, AMOUNT * sizeof(glm::mat4), &model_matrices[0]);
-*/
-
-	// Then drawing the rocks
-	for (u32 i = 0; i < rock->meshes.size(); i++) {
-		glBindVertexArray(rock->meshes[i].VAO);
-		glDrawElementsInstanced(GL_TRIANGLES, (GLsizei)rock->meshes[i].indices.size(), GL_UNSIGNED_INT,
-								0, AMOUNT);
-	}
-
-	glBindVertexArray(0);
-
-}
-
-static 
-void draw_space(RenderingContext* ctx) {
-	using namespace SpaceScene;
-	// Draw skybox first.
-	draw_skybox(ctx);
-	
-	// Then drawing the planets.
-	draw_planets(ctx);
-
-	// Finally, drawing the instanced rocks.
-	draw_instanced_rocks(ctx);
-}
-
+// Internal function prototypes.
+static void draw_space(RenderingContext* ctx);
 
 void generate_rock_matrices(RenderingContext* ctx) {
 	using namespace SpaceScene;
@@ -175,7 +47,7 @@ void generate_rock_matrices(RenderingContext* ctx) {
 
 		// Step 3: Rotation = add random rotation around a semi-randomly picked rotation axis vector.
 		float rotation_angle = static_cast<float>((rand() % 360));
-		model = glm::rotate(model, angle, glm::vec3(0.4f, 0.6f, 0.8f));
+		model = glm::rotate(model, rotation_angle, glm::vec3(0.4f, 0.6f, 0.8f));
 
 
 		// Finally, add the matrix data to the array of models.
@@ -408,3 +280,128 @@ void validate_rock_instancing(RenderingContext* ctx) {
 	printf("================================================\n\n");
 }
 
+
+
+// ----- Internal functions -----
+static void draw_skybox(RenderingContext* ctx) {
+	const Shader* shader  = &ctx->assets.shaders[SHADER_SKYBOX];
+	glm::mat4 view_matrix = glm::mat4(glm::mat3(get_view_matrix(&ctx->camera_data.camera)));
+
+	// Depth test passes when values are equal to the depth buffer's content
+	glDepthMask(GL_FALSE);
+	glDepthFunc(GL_LEQUAL);
+
+	// Adjusting the shader uniforms
+	use_shader(shader);
+	set_mat4(shader, "projection", ctx->camera_data.projection_matrix);
+	set_mat4(shader, "view", view_matrix);
+
+	// Drawing the skybox - we aren't using several active textures other
+	// than the one cubemap, so we don't need to set the texture uniform.
+	glBindVertexArray(ctx->buffers.skybox_VAO);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, ctx->assets.textures[TEXTURE_SPACE_SKYBOX]);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+
+	// Resetting depth function
+	glDepthMask(GL_TRUE);
+}
+
+static void process_sunlight(const RenderingContext* ctx, const Shader* shader) {
+	// Setting the camera's view position uniform
+	set_vec3(shader, "view_position", ctx->camera_data.camera.position);
+
+	// Setting the sunlight uniforms - adjust these...
+	std::string base = "sunlight";
+	set_vec3(shader, (base + ".position").c_str(), ctx->lighting.sunlight_position);
+	set_vec3(shader, (base + ".ambient").c_str(), ctx->lighting.sunlight_color * 0.15f);
+	set_vec3(shader, (base + ".diffuse").c_str(), ctx->lighting.sunlight_color * 2.0f);
+	set_vec3(shader, (base + ".specular").c_str(), ctx->lighting.sunlight_color * 1.5f);
+
+	set_float(shader, (base + ".constant").c_str(), 1.0f);
+	set_float(shader, (base + ".linear").c_str(), 0.007f);
+	set_float(shader, (base + ".quadratic").c_str(), 0.0002f);
+}
+
+
+static void draw_planets(RenderingContext* ctx) {
+	// Drawing the sun.
+	auto sun_shader = &ctx->assets.shaders[SHADER_SUN];
+	use_shader(sun_shader);
+	apply_matrices(sun_shader);
+
+	glBindVertexArray(ctx->buffers.cube_VAO);
+	set_vec3(sun_shader, "light_color", ctx->lighting.sunlight_color);
+	glm::mat4 sun = glm::mat4(1.0f);
+	sun = glm::translate(sun, ctx->lighting.sunlight_position);
+	sun = glm::scale(sun, glm::vec3(5.0f));
+	set_mat4(sun_shader, "model_matrix", sun);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+
+
+	// Drawing the planet thingymabob.
+	auto planet_shader = &ctx->assets.shaders[SHADER_PLANET];
+	auto planet = &ctx->assets.models[MODEL_PLANET];
+	use_shader(planet_shader);
+	apply_matrices(planet_shader);
+	process_sunlight(ctx, planet_shader);
+
+	set_float(planet_shader, "material.shininess", 8.0f);
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
+	model = glm::scale(model, glm::vec3(4.0f));
+	model = glm::rotate(model, (Time::get_time() * glm::radians(1.0f)), glm::vec3(0.0f, 1.0f, 0.0f));
+	set_mat4(planet_shader, "model_matrix", model);
+	draw_model(planet, planet_shader);
+}
+
+static void draw_instanced_rocks(RenderingContext* ctx) {
+	using namespace SpaceScene;
+	auto shader = &ctx->assets.shaders[SHADER_ASTEROID];
+	auto rock   = &ctx->assets.models[MODEL_ROCK];
+	use_shader(shader);
+	apply_matrices(shader);
+	process_sunlight(ctx, shader);
+	set_float(shader, "material.shininess", 4.0f);
+
+	// Manually binding the textures for now (since we aren't using draw_model() anymore).
+	glActiveTexture(GL_TEXTURE0);	
+	set_int(shader, "material.diffuse1", 0);
+	glBindTexture(GL_TEXTURE_2D, rock->texture_ids[0]);
+
+/*
+	// Updating rotation matrices
+	// @NOTE: This causes some frame drops so we stick with just drawing the models
+	// in a static rotation.
+	for (u32 i = 0; i < AMOUNT; i++) {
+		float angle = 0.001f + (i / 100000.0f);
+		model_matrices[i] = glm::rotate(model_matrices[i], 
+			Time::get_time() * glm::radians(angle),
+			glm::vec3((1.0f - angle), (angle + 0.2f), (angle + 1.0f)));
+	}
+	
+	glBindBuffer(GL_ARRAY_BUFFER, ctx->buffers.rock_buffer);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, AMOUNT * sizeof(glm::mat4), &model_matrices[0]);
+*/
+
+	// Then drawing the rocks
+	for (u32 i = 0; i < rock->meshes.size(); i++) {
+		glBindVertexArray(rock->meshes[i].VAO);
+		glDrawElementsInstanced(GL_TRIANGLES, (GLsizei)rock->meshes[i].indices.size(), GL_UNSIGNED_INT,	0, AMOUNT);
+	}
+
+	glBindVertexArray(0);
+
+}
+
+static void draw_space(RenderingContext* ctx) {
+	using namespace SpaceScene;
+	// Draw skybox first.
+	draw_skybox(ctx);
+	
+	// Then drawing the planets.
+	draw_planets(ctx);
+
+	// Finally, drawing the instanced rocks.
+	draw_instanced_rocks(ctx);
+}
