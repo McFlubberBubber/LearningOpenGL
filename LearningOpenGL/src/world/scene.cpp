@@ -13,8 +13,10 @@ namespace MainScene {
 }
 
 // Internal function prototypes.
+static void update_sky(RenderingContext* ctx);
 static void draw_world(RenderingContext* ctx);
 static void render_instanced_quads(const RenderingContext* ctx);
+
 
 void generate_blahaj_matrices(RenderingContext* ctx) {
 	using namespace MainScene;
@@ -74,49 +76,39 @@ void generate_blahaj_matrices(RenderingContext* ctx) {
 }
 
 void render_scene(RenderingContext* ctx, float dt) {
-	// ----- Binding framebuffer + enabling depth testing
 	glBindFramebuffer(GL_FRAMEBUFFER, ctx->buffers.FBO);
 	glEnable(GL_DEPTH_TEST);
 
-
-	// ----- Clearing screen and calculating sky color -----
-	ctx->lighting.apply_sky_color(Time::get_time());
-	glClearColor(ctx->lighting.current_sky_color.r,
-				 ctx->lighting.current_sky_color.g,
-			     ctx->lighting.current_sky_color.b,
-				 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-	// ----- Updating uniform buffer with camera matrices -----
+	update_sky(ctx);
 	update_camera_projection(ctx);
-
-	
-	// ----- Draw world objects -----
 	draw_world(ctx);
-
-	// ----- Instance rendering example -----
 //	render_instanced_quads(ctx);
 
-	// ----- Unbinding the framebuffer + disabling depth testing -----
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glDisable(GL_DEPTH_TEST);
+	// Multisampling branch
+	if (!ctx->app.multisampling) {
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glDisable(GL_DEPTH_TEST);
+	} else {
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, ctx->buffers.FBO);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, ctx->buffers.intermediate_FBO);
+		glBlitFramebuffer(0, 0,
+						  ctx->viewport.width, ctx->viewport.height, 0, 0,
+						  ctx->viewport.width, ctx->viewport.height,
+						  GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glDisable(GL_DEPTH_TEST);
+	}
 
-	// ----- Applying post-processing using the screen shader -----
-	apply_render_mode_to_screen_shader(ctx);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, ctx->assets.textures[TEXTURE_COLOR_BUFFER]);
-	glBindVertexArray(ctx->buffers.quad_VAO);
-	glDrawArrays(GL_TRIANGLES, 0, 6);
-	
+	draw_screen_texture(ctx);
+	if (ctx->debug_mode)
+		render_debug_overlay(ctx, dt);
+
 	// ----- Resetting -----
 	glBindVertexArray(0);
 	glBindTexture(GL_TEXTURE_2D, 0);
-
-	// ----- Drawing UI elements -----
-	if (ctx->debug_mode)
-		render_debug_overlay(ctx, dt);
 }
 
 void cleanup_main_scene() {
@@ -124,6 +116,7 @@ void cleanup_main_scene() {
 	delete[] blahaj_matrices;
 	blahaj_matrices = nullptr;
 }
+
 
 // ----- Internal functions -----
 static void draw_skybox(RenderingContext* ctx) {
@@ -247,7 +240,34 @@ static void draw_backpacks(const RenderingContext* ctx) {
 	
 }
 
-static void draw_blahajs(const RenderingContext* ctx) {
+static void update_blahaj_matrices(RenderingContext* ctx) {
+	using namespace MainScene;
+	u32 amount = ctx->world.blahaj_positions.size();
+
+	for (u32 i = 0; i < amount; i++) {
+		glm::mat4 model = glm::mat4(1.0f);
+
+		// Translations.
+		model = glm::translate(model, ctx->world.blahaj_positions[i]);
+
+		// Rotations.
+		float angle = 20.0f * (i + 0.1f);
+		model = glm::rotate(model, Time::get_time() * glm::radians(angle),
+							glm::vec3(1.0f, 2.5f, 0.5f));
+
+		// Scaling.
+//		float scale = static_cast<float>(rand()) / RAND_MAX * 1.0f + 0.5f;
+//		model = glm::scale(model, glm::vec3(scale));
+
+		blahaj_matrices[i] = model;
+	}
+	
+	// Update the buffer.
+	glBindBuffer(GL_ARRAY_BUFFER, ctx->buffers.blahaj_buffer);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, (amount * sizeof(glm::mat4)), &blahaj_matrices[0]);
+}
+
+static void draw_blahajs(RenderingContext* ctx) {
 	using namespace MainScene;
 	auto shader  = &ctx->assets.shaders[SHADER_BLAHAJ];
 	auto blahaj  = &ctx->assets.models[MODEL_BLAHAJ];
@@ -259,7 +279,10 @@ static void draw_blahajs(const RenderingContext* ctx) {
 	// (yet). One of the recommendations I got was to upload all the data to
 	// the GPU and allow the vertex shader to handle rotation calculations instead
 	// of updating the rotation matrices on the CPU side. This prevents us from
-	// calling an update_matrices() function every frame.
+	// calling an update_matrices() function every frame. But then again, this
+	// depends on how many objects we are rendering. Since there are only
+	// 5 models that are being instanced, doing this operation CPU-side isn't
+	// as bad.
 
 	// I am also realizing that after doing the space scene and this main scene
 	// that an init_scene() may be in order since there are now some preparations
@@ -287,6 +310,8 @@ static void draw_blahajs(const RenderingContext* ctx) {
 	}
 	
 #else
+	update_blahaj_matrices(ctx); // For rotations.
+
 	use_shader(shader);
 	apply_matrices(shader);
 	process_lighting(shader, ctx);
@@ -306,8 +331,7 @@ static void draw_blahajs(const RenderingContext* ctx) {
 #endif
 }
 
-
-static void draw_world_models(const RenderingContext* ctx) {
+static void draw_world_models(RenderingContext* ctx) {
 	draw_backpacks(ctx);
 	draw_blahajs(ctx);
 }
@@ -339,4 +363,28 @@ static void render_instanced_quads(const RenderingContext* ctx) {
 	glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 100);
 }
 
+static void update_sky(RenderingContext* ctx) {
+	ctx->lighting.apply_sky_color(Time::get_time());
+	glClearColor(ctx->lighting.current_sky_color.r,
+				 ctx->lighting.current_sky_color.g,
+			     ctx->lighting.current_sky_color.b,
+				 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+}
+
+/*
+// @TODO: Move to render_system.cpp?
+static void draw_screen_texture(RenderingContext* ctx) {
+	apply_render_mode_to_screen_shader(ctx);
+	glActiveTexture(GL_TEXTURE0);
+	
+	if (ctx->app.multisampling)
+		glBindTexture(GL_TEXTURE_2D, ctx->assets.textures[TEXTURE_SCREEN]);
+	else
+		glBindTexture(GL_TEXTURE_2D, ctx->assets.textures[TEXTURE_COLOR_BUFFER]);
+	
+	glBindVertexArray(ctx->buffers.quad_VAO);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+*/

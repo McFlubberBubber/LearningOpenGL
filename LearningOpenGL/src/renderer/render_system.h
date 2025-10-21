@@ -26,5 +26,4 @@ void set_texture_uniforms(const Shader* shader, bool do_emission);
 void update_camera_projection(RenderingContext* ctx);
 void resize_framebuffer(RenderingContext* context, u32 width, u32 height);
 void apply_render_mode_to_screen_shader(const RenderingContext* context);
-
-
+void draw_screen_texture(RenderingContext* ctx);

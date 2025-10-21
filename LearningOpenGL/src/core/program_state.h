@@ -24,8 +24,17 @@ struct ApplicationState {
 	u32 GL_MINOR_VER = 6;
 	u32 GL_BABY_VER  = 0;
 
-	bool fullscreen = false;
-	bool vsync      = true;
+	u32 sample_count = 4;
+
+	// These options are yet to be implemented within the application.
+	// This is because the menu would need a new sub-menu screen that would
+	// allow the user to toggle these modes, but there is also some code that
+	// occurs during the initialzation of the rendering context that may break
+	// the application (for example, the multisampling buffers would not toggle
+	// correctly, so that would need to be updated).
+	bool fullscreen    = false;
+	bool vsync         = true;
+	bool multisampling = true;
 };
 
 struct ViewportState {

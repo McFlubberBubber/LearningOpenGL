@@ -84,6 +84,7 @@ enum TextureType {
 	TEXTURE_SPACE_SKYBOX,
 
 	TEXTURE_COLOR_BUFFER,
+	TEXTURE_SCREEN,
 
 	TEXTURE_COUNT
 };
@@ -134,6 +135,8 @@ struct BufferData {
 
 	u32 rock_buffer;   // For storing the instanced matrices.
 	u32 blahaj_buffer; // Same but for the blahaj instances.
+
+	u32 intermediate_FBO;
 
 	void update_instance_offsets() {
 		int index = 0;

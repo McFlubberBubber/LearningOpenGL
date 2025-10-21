@@ -12,18 +12,20 @@ bool init_application(ApplicationState *app, ViewportState *viewport) {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, app->GL_MINOR_VER);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+	// OPTIONAL: Built in multisampling from OpenGL.
+	// glfwWindowHint(GLFW_SAMPLES, app->sample_count); // Multisampling
+
 	app->window = glfwCreateWindow(viewport->width, viewport->height, app->title, NULL, NULL);
-	if (app->window == NULL)
-	{
+	if (app->window == NULL) {
 		std::cout << "Failed to load GLFW window!" << std::endl;
 		glfwTerminate();
 		return false;
 	}
+	
 	glfwSetWindowPos(app->window, 0, 40);
 	glfwMakeContextCurrent(app->window);
 
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-	{
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cout << "Failed to initialize GLAD!" << std::endl;
 		return false;
 	}
@@ -36,6 +38,9 @@ bool init_application(ApplicationState *app, ViewportState *viewport) {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_PROGRAM_POINT_SIZE);
+
+	if (app->multisampling)
+		glEnable(GL_MULTISAMPLE);
 
 	glfwSwapInterval(app->vsync);
 

@@ -94,45 +94,39 @@ void generate_rock_matrices(RenderingContext* ctx) {
 
 void render_space_scene(RenderingContext* ctx, float dt) {
 	using namespace SpaceScene;
-
-	// ----- Binding framebuffer + enabling depth testing
 	glBindFramebuffer(GL_FRAMEBUFFER, ctx->buffers.FBO);
 	glEnable(GL_DEPTH_TEST);
 
-
-	// ----- Clearing screen and calculating sky color -----
 	ctx->lighting.current_sky_color = SKY_COLOR;
 	glClearColor(SKY_COLOR.r, SKY_COLOR.g, SKY_COLOR.b, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-	// ----- Updating uniform buffer with camera matrices -----
 	update_camera_projection(ctx);
-
-
-	// ----- Draw world objects -----
 	draw_space(ctx);
 
+	// Multisampling branch
+	if (!ctx->app.multisampling) {
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glDisable(GL_DEPTH_TEST);
+	} else {
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, ctx->buffers.FBO);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, ctx->buffers.intermediate_FBO);
+		glBlitFramebuffer(0, 0,
+						  ctx->viewport.width, ctx->viewport.height, 0, 0,
+						  ctx->viewport.width, ctx->viewport.height,
+						  GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-	// ----- Unbinding the framebuffer + disabling depth testing -----
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glDisable(GL_DEPTH_TEST);
-
-
-	// ----- Applying post-processing using the screen shader -----
-	apply_render_mode_to_screen_shader(ctx);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, ctx->assets.textures[TEXTURE_COLOR_BUFFER]);
-	glBindVertexArray(ctx->buffers.quad_VAO);
-	glDrawArrays(GL_TRIANGLES, 0, 6);
-
-	// ----- Resetting -----
-	glBindVertexArray(0);
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	// ----- Drawing UI elements -----
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glDisable(GL_DEPTH_TEST);
+	}
+	
+	draw_screen_texture(ctx);
 	if (ctx->debug_mode)
 		render_debug_overlay(ctx, dt);
+
+	glBindVertexArray(0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void cleanup_space_scene() {
