@@ -65,10 +65,10 @@ void init_world_objects (WorldObjectData* world) {
 
 void init_lighting(LightingData *lights) {
 	// Directional Lighting
-	lights->directional_light_dir = glm::vec3(1.2f, 3.0f, 2.0f);
-	lights->directional_ambient   = glm::vec3(0.0f);
-	lights->directional_diffuse   = glm::vec3(0.05f);
-	lights->directional_specular  = glm::vec3(0.2f);
+	lights->directional_light_dir = glm::vec3(-5.0f, 10.0f, -5.0f);
+	lights->directional_ambient   = glm::vec3(0.3f, 0.35f, 0.4f);
+	lights->directional_diffuse   = glm::vec3(1.0f, 0.95f, 0.8f);
+	lights->directional_specular  = glm::vec3(1.0f, 1.0f, 0.9f);
 
 
 	// Point Lighting
@@ -89,7 +89,7 @@ void init_lighting(LightingData *lights) {
 	// Initializing the sky colors
 	lights->dark_sky_color = glm::vec3(0.001f, 0.001f, 0.001f);
 	lights->grey_sky_color = glm::vec3(0.5f, 0.5f, 0.5f);
-	lights->current_sky_color = lights->grey_sky_color;		// Default setting
+	// lights->current_sky_color = lights->grey_sky_color; // Currently overriden in the main scene anyways.
 
 	// Sunlight stuff for space scene
 	lights->sunlight_position = glm::vec3(0.0f, 0.0f, -75.0f);

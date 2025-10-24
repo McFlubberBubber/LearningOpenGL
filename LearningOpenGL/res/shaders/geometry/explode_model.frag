@@ -123,7 +123,7 @@ void main ()
 */
 }
 
-
+/*
 //for calculating any directional lighting in the scene
 vec3 calculate_directional_lighting(DirLight dir_light, vec3 norm, vec3 view_direction){
 	//getting light direction using the direction
@@ -189,6 +189,104 @@ vec3 calculate_spot_lighting(SpotLight spot_light, vec3 norm, vec3 frag_pos, vec
 	//specular
 	vec3 reflect_direction = reflect(-light_direction, norm);
 	float spec = pow(max(dot(view_direction, reflect_direction), 0.0f), material.shininess);
+
+	//attenuation
+	float distance = length(spot_light.position - frag_pos);
+	float attenuation = 1.0f / (spot_light.constant + spot_light.linear * distance + spot_light.quadratic * (distance * distance));
+
+	//intensity
+	float theta = dot(light_direction, normalize(-spot_light.direction));
+	float epsilon = spot_light.cut_off - spot_light.outer_cut_off;
+	float intensity = clamp((theta - spot_light.outer_cut_off) / epsilon, 0.0f, 1.0f);		//clamping the values between 0 and 1
+
+	//applying spotlight
+	vec3 ambient = spot_light.ambient * vec3(texture(material.diffuse1, fs_in.texture_coords));
+
+	vec3 diffuse = spot_light.diffuse * diff * vec3(texture(material.diffuse1, fs_in.texture_coords));
+
+	vec3 specular = spot_light.specular * spec * vec3(texture(material.specular1, fs_in.texture_coords));
+
+	ambient *= attenuation * intensity;
+	diffuse *= attenuation * intensity;
+	specular *= attenuation * intensity;
+
+	return (ambient + diffuse + specular);
+}
+*/
+
+vec3 calculate_directional_lighting(DirLight dir_light, vec3 norm, vec3 view_direction){
+	//getting light direction using the direction
+	// vec3 light_direction = normalize(-dir_light.direction);											// normalizing the negative of dirLight's direction attribute
+	vec3 light_direction = normalize(dir_light.direction - fs_in.frag_pos);
+
+	//diffuse 
+	float diff = max(dot(norm, light_direction), 0.0f);													// calculating diffuse with dot product of normals and lightDirection
+	
+	//specular
+	vec3 reflect_direction = reflect(-light_direction, norm);											// getting the reflect direction based on the negative lightDirection and the normals
+	vec3 halfway_direction = normalize(light_direction + view_direction);
+	// float spec = pow(max(dot(view_direction, reflect_direction), 0.0f), material.shininess);			// calculating specular with power based on shininess, dot prod on view + ref directions
+	float spec = pow(max(dot(norm, halfway_direction), 0.0), material.shininess);
+
+	//combining results
+	vec3 ambient = dir_light.ambient * vec3(texture(material.diffuse1, fs_in.texture_coords));			// light ambient multiplied with material diffuse's texture
+
+	vec3 diffuse = dir_light.diffuse * diff * vec3(texture(material.diffuse1, fs_in.texture_coords));	// light diffuse multiplied with material diffuse's texture
+
+	vec3 specular = dir_light.specular * spec * vec3(texture(material.specular1, fs_in.texture_coords));// light specular multiplied with material specular's texture
+
+	//returning vec3 result
+	return (ambient + diffuse + specular);
+}
+
+
+//for calculating any number of point lights that can exist within the scene
+vec3 calculate_point_lighting(PointLight point_lights, vec3 norm, vec3 frag_pos, vec3 view_direction) {
+	//getting light direction using the position
+	vec3 light_direction = normalize(point_lights.position - frag_pos);
+
+	//diffuse
+	float diff = max(dot(norm, light_direction), 0.0f);
+
+	//specular
+	vec3 reflect_direction = reflect(-light_direction, norm);
+	vec3 halfway_direction = normalize(light_direction + view_direction);
+	// float spec = pow(max(dot(view_direction, reflect_direction), 0.0), material.shininess);
+	float spec = pow(max(dot(norm, halfway_direction), 0.0), material.shininess);
+
+
+	//attenuation
+	float distance = length(point_lights.position - frag_pos);
+	float attenuation = 1.0f / (point_lights.constant + point_lights.linear * distance + point_lights.quadratic * (distance * distance));
+
+	//combining results
+	vec3 ambient = point_lights.ambient * vec3(texture(material.diffuse1, fs_in.texture_coords));
+
+	vec3 diffuse = point_lights.diffuse * diff * vec3(texture(material.diffuse1, fs_in.texture_coords));
+
+	vec3 specular = point_lights.specular * spec * vec3(texture(material.specular1, fs_in.texture_coords));
+
+	//applying attenuation to lighting vectors
+	ambient *= attenuation;
+	diffuse *= attenuation;
+	specular *= attenuation;
+
+	return (ambient + diffuse + specular);
+}
+
+vec3 calculate_spot_lighting(SpotLight spot_light, vec3 norm, vec3 frag_pos, vec3 view_direction) {
+	//getting the light direction by using the position of the player
+	vec3 light_direction = normalize(spot_light.position - frag_pos);
+
+	//diffuse
+	float diff = max(dot(norm, light_direction), 0.0f);
+
+	//specular
+	vec3 reflect_direction = reflect(-light_direction, norm);
+	vec3 halfway_direction = normalize(light_direction + view_direction);
+	// float spec = pow(max(dot(view_direction, reflect_direction), 0.0f), material.shininess);
+	float spec = pow(max(dot(norm, halfway_direction), 0.0), material.shininess);
+
 
 	//attenuation
 	float distance = length(spot_light.position - frag_pos);

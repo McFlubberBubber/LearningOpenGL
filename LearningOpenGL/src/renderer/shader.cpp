@@ -51,7 +51,7 @@ Shader create_shader(const char* vertex_path, const char* fragment_path, const c
 		}
 
 		// Logging file paths
-		std::cout << "Vertex shader loaded at path: " << vertex_path << "\n";
+		std::cout << "Vertex shader loaded at path:   " << vertex_path << "\n";
 		std::cout << "Fragment shader loaded at path: " << fragment_path << "\n";
 	}
 	catch (std::ifstream::failure error) {

@@ -85,7 +85,7 @@ vec3 calculate_spot_lighting(SpotLight spot_light, vec3 norm, vec3 frag_pos, vec
 float linearize_depth(float depth);
 
 
-void main ()
+void main()
 {
 	//Calulating lighting properties (PHONG SHADING)
 	vec3 norm = normalize(fs_in.normal);
@@ -128,22 +128,24 @@ void main ()
 //for calculating any directional lighting in the scene
 vec3 calculate_directional_lighting(DirLight dir_light, vec3 norm, vec3 view_direction){
 	//getting light direction using the direction
-	vec3 light_direction = normalize(-dir_light.direction);											//normalizing the negative of dirLight's direction attribute
-	
+	// vec3 light_direction = normalize(-dir_light.direction);											// normalizing the negative of dirLight's direction attribute
+	vec3 light_direction = normalize(dir_light.direction - fs_in.frag_pos);
+
 	//diffuse 
-	float diff = max(dot(norm, light_direction), 0.0f);													//calculating diffuse with dot product of normals and lightDirection
+	float diff = max(dot(norm, light_direction), 0.0f);													// calculating diffuse with dot product of normals and lightDirection
 	
 	//specular
-	vec3 reflect_direction = reflect(-light_direction, norm);												//getting the reflect direction based on the negative lightDirection and the normals
-	
-	float spec = pow(max(dot(view_direction, reflect_direction), 0.0f), material.shininess);			//calculating specular with power based on shininess, dot prod on view + ref directions
+	vec3 reflect_direction = reflect(-light_direction, norm);											// getting the reflect direction based on the negative lightDirection and the normals
+	vec3 halfway_direction = normalize(light_direction + view_direction);
+	// float spec = pow(max(dot(view_direction, reflect_direction), 0.0f), material.shininess);			// calculating specular with power based on shininess, dot prod on view + ref directions
+	float spec = pow(max(dot(norm, halfway_direction), 0.0), material.shininess);
 
 	//combining results
-	vec3 ambient = dir_light.ambient * vec3(texture(material.diffuse1, fs_in.texture_coords));				//light ambient multiplied with material diffuse's texture
+	vec3 ambient = dir_light.ambient * vec3(texture(material.diffuse1, fs_in.texture_coords));			// light ambient multiplied with material diffuse's texture
 
-	vec3 diffuse = dir_light.diffuse * diff * vec3(texture(material.diffuse1, fs_in.texture_coords));		//light diffuse multiplied with material diffuse's texture
+	vec3 diffuse = dir_light.diffuse * diff * vec3(texture(material.diffuse1, fs_in.texture_coords));	// light diffuse multiplied with material diffuse's texture
 
-	vec3 specular = dir_light.specular * spec * vec3(texture(material.specular1, fs_in.texture_coords));		//light specular multiplied with material specular's texture
+	vec3 specular = dir_light.specular * spec * vec3(texture(material.specular1, fs_in.texture_coords));// light specular multiplied with material specular's texture
 
 	//returning vec3 result
 	return (ambient + diffuse + specular);
@@ -160,7 +162,10 @@ vec3 calculate_point_lighting(PointLight point_lights, vec3 norm, vec3 frag_pos,
 
 	//specular
 	vec3 reflect_direction = reflect(-light_direction, norm);
-	float spec = pow(max(dot(view_direction, reflect_direction), 0.0f), material.shininess);
+	vec3 halfway_direction = normalize(light_direction + view_direction);
+	// float spec = pow(max(dot(view_direction, reflect_direction), 0.0), material.shininess);
+	float spec = pow(max(dot(norm, halfway_direction), 0.0), material.shininess);
+
 
 	//attenuation
 	float distance = length(point_lights.position - frag_pos);
@@ -187,9 +192,13 @@ vec3 calculate_spot_lighting(SpotLight spot_light, vec3 norm, vec3 frag_pos, vec
 
 	//diffuse
 	float diff = max(dot(norm, light_direction), 0.0f);
+
 	//specular
 	vec3 reflect_direction = reflect(-light_direction, norm);
-	float spec = pow(max(dot(view_direction, reflect_direction), 0.0f), material.shininess);
+	vec3 halfway_direction = normalize(light_direction + view_direction);
+	// float spec = pow(max(dot(view_direction, reflect_direction), 0.0f), material.shininess);
+	float spec = pow(max(dot(norm, halfway_direction), 0.0), material.shininess);
+
 
 	//attenuation
 	float distance = length(spot_light.position - frag_pos);

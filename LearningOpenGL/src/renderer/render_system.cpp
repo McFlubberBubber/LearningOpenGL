@@ -100,25 +100,29 @@ void process_lighting(const Shader* shader, const RenderingContext* ctx) {
 	set_vec3(shader, "dir_light.specular", ctx->lighting.directional_specular);
 
 	// Point lighting
+	
 	for (u32 i = 0; i < (ctx->lighting.get_point_light_count()); i++) {
 		std::string base = "point_lights[" + std::to_string(i) + "]";
 
 		set_vec3(shader, (base + ".position").c_str(), ctx->lighting.point_light_positions[i]);
-		set_vec3(shader, (base + ".ambient").c_str(), ctx->lighting.point_light_colors[i] * 0.1f);
-		set_vec3(shader, (base + ".diffuse").c_str(), ctx->lighting.point_light_colors[i]);
-		set_vec3(shader, (base + ".specular").c_str(), ctx->lighting.point_light_colors[i]);
+		set_vec3(shader, (base + ".ambient").c_str(), ctx->lighting.point_light_colors[i] * 0.02f);
+		set_vec3(shader, (base + ".diffuse").c_str(), ctx->lighting.point_light_colors[i] * 0.3f);
+		set_vec3(shader, (base + ".specular").c_str(), ctx->lighting.point_light_colors[i] * 0.3f);
 
 		set_float(shader, (base + ".constant").c_str(), 1.0f);
 		set_float(shader, (base + ".linear").c_str(), 0.09f);
 		set_float(shader, (base + ".quadratic").c_str(), 0.032f);
 	}
+	
 
 	// Spot lighting
 	set_vec3(shader, "spot_light.position", ctx->camera_data.camera.position);
 	set_vec3(shader, "spot_light.direction", ctx->camera_data.camera.front);
 	set_vec3(shader, "spot_light.ambient", 0.0f, 0.0f, 0.0f);
-	set_vec3(shader, "spot_light.diffuse", 1.0f, 1.0f, 1.0f);
-	set_vec3(shader, "spot_light.specular", 1.0f, 1.0f, 1.0f);
+	// set_vec3(shader, "spot_light.diffuse", 1.0f, 1.0f, 1.0f);
+	// set_vec3(shader, "spot_light.specular", 1.0f, 1.0f, 1.0f);
+	set_vec3(shader, "spot_light.diffuse", 0.0f, 0.0f, 0.0f);  // Off
+	set_vec3(shader, "spot_light.specular", 0.0f, 0.0f, 0.0f); // Off
 
 	set_float(shader, "spot_light.constant", 1.0f);
 	set_float(shader, "spot_light.linear", 0.09f);
@@ -129,7 +133,7 @@ void process_lighting(const Shader* shader, const RenderingContext* ctx) {
 
 	// Setting the sky color uniform
 	set_vec3(shader, "sky_color", ctx->lighting.current_sky_color);
-	set_float(shader, "fog_distance", 3.0f);
+	set_float(shader, "fog_distance", 2.0f);
 }
 
 // Assumes that we are only binding one of each texture
@@ -364,9 +368,11 @@ static bool setup_screen_buffers(BufferData* buffers, GeometryData* geometry, Vi
 			return false;
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	} else {
-		// Framebuffer
+		
+		// @TODO: If we want to add an in-app toggle to multisampling, then we need to create new buffers here that would initialize them
+		// since this approach checks if the bool is toggled at the start of the application, then moves on.
+	} else { 
+		// Framebuffer (multisampled)
 		glBindFramebuffer(GL_FRAMEBUFFER, buffers->FBO);
 		glBindVertexArray(buffers->quad_VAO);
 		glBindBuffer(GL_ARRAY_BUFFER, buffers->quad_VBO);
@@ -382,7 +388,7 @@ static bool setup_screen_buffers(BufferData* buffers, GeometryData* geometry, Vi
 		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, texture_color_buffer, 0);
 
-		// Renderbuffer
+		// Renderbuffer (multisampled)
 		glBindRenderbuffer(GL_RENDERBUFFER, buffers->RBO);
 		glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_DEPTH24_STENCIL8, width, height);
 		glBindRenderbuffer(GL_RENDERBUFFER, 0);

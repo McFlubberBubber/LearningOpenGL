@@ -20,7 +20,7 @@ static void render_instanced_quads(const RenderingContext* ctx);
 
 void generate_blahaj_matrices(RenderingContext* ctx) {
 	using namespace MainScene;
-	u32 amount = ctx->world.blahaj_positions.size();
+	u32 amount = (u32)ctx->world.blahaj_positions.size();
 	blahaj_matrices = new glm::mat4[amount];
 
 	for (u32 i = 0; i < amount; i++) {
@@ -242,7 +242,7 @@ static void draw_backpacks(const RenderingContext* ctx) {
 
 static void update_blahaj_matrices(RenderingContext* ctx) {
 	using namespace MainScene;
-	u32 amount = ctx->world.blahaj_positions.size();
+	u32 amount = (u32)ctx->world.blahaj_positions.size();
 
 	for (u32 i = 0; i < amount; i++) {
 		glm::mat4 model = glm::mat4(1.0f);
@@ -324,8 +324,8 @@ static void draw_blahajs(RenderingContext* ctx) {
 
 	// Drawing the blahajs.
 	for (u32 i = 0; i < blahaj->meshes.size(); i++) {
-		glBindVertexArray(blahaj->meshes[i].VAO);
-		glDrawElementsInstanced(GL_TRIANGLES, (GLsizei)blahaj->meshes[i].indices.size(), GL_UNSIGNED_INT, 0, ctx->world.blahaj_positions.size());
+		glBindVertexArray((GLsizei)blahaj->meshes[i].VAO);
+		glDrawElementsInstanced(GL_TRIANGLES, (GLsizei)blahaj->meshes[i].indices.size(), GL_UNSIGNED_INT, 0, (GLsizei)ctx->world.blahaj_positions.size());
 	}
 	
 #endif
@@ -336,6 +336,26 @@ static void draw_world_models(RenderingContext* ctx) {
 	draw_blahajs(ctx);
 }
 
+static void draw_floor(RenderingContext* ctx) {
+	using namespace MainScene;
+	auto shader  = &ctx->assets.shaders[SHADER_WALL];
+	auto diffuse = ctx->assets.textures[TEXTURE_FLOOR];
+
+	use_shader(shader);
+	bind_textures(shader, diffuse, 0, 0);
+	apply_matrices(shader);
+	process_lighting(shader, ctx);
+	set_float(shader, "texture_tiling", 64.0f);
+	set_float(shader, "material.shininess", DEFAULT_SHININESS);
+	glBindVertexArray(ctx->buffers.cube_VAO);
+
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0.0f, -5.0f, 0.0f));
+	model = glm::scale(model, glm::vec3(50.0f, 0.01f, 50.0f));
+	set_mat4(shader, "model_matrix", model);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
 
 static void draw_world(RenderingContext* ctx) {
 	// Draw skybox-related things first.
@@ -343,8 +363,9 @@ static void draw_world(RenderingContext* ctx) {
 
 	// Draw actual world objects (the spinning, floating ones + models + lights)
 	draw_wooden_containers(ctx);
-	draw_light_sources(ctx);
+	// draw_floor(ctx);
 	draw_world_models(ctx);
+	draw_light_sources(ctx);
 
 	// Draw room + grass (includes grassland and grass) + windows last
 }
@@ -364,13 +385,15 @@ static void render_instanced_quads(const RenderingContext* ctx) {
 }
 
 static void update_sky(RenderingContext* ctx) {
-	ctx->lighting.apply_sky_color(Time::get_time());
+	// Interpolating between dark and grey sky color
+	// ctx->lighting.apply_sky_color(Time::get_time());
+	ctx->lighting.current_sky_color = glm::vec3(0.5f, 0.8f, 0.9f); // Bright blue
+
 	glClearColor(ctx->lighting.current_sky_color.r,
 				 ctx->lighting.current_sky_color.g,
 			     ctx->lighting.current_sky_color.b,
 				 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 }
 
 /*
