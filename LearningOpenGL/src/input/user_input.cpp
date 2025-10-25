@@ -33,37 +33,33 @@ static void update_input_state(InputState* input, GLFWwindow* window) {
 }
 
 
-static void handle_menu_input(GLFWwindow* window, InputState* input, Menu* menu, RenderingContext* ctx,
-	SceneState& prev_scene) {
+static void handle_menu_input(GLFWwindow* window, InputState* input, Menu* menu, RenderingContext* ctx,	SceneState& prev_scene) {
 	auto& scene = ctx->app.scene;
 
-	// Allowing user to go back to game state
-	if (is_key_pressed(input, GLFW_KEY_ESCAPE) && scene == SceneState::MENU) {
-		scene = prev_scene;
-	}
+	// Handling inputs for main page
+	if (menu->current_page == MenuPage::MAIN) {
 
-	// Handling the increment + decrement of menu choices
-	if (is_key_pressed(input, GLFW_KEY_UP))
-		decrement_menu_item(menu);
+		// Allowing user to go back to game state
+		if (is_key_pressed(input, GLFW_KEY_ESCAPE) && scene == SceneState::MENU) {
+			scene = prev_scene;
+		}
 
-	if (is_key_pressed(input, GLFW_KEY_DOWN))
-		increment_menu_item(menu);
-
-
-	// Checking for activations
-	if (is_key_pressed(input, GLFW_KEY_ENTER)) {
-		switch (menu->current_item) {
-				case MenuItem::RESUME:
+		// Checking for activations
+		if (is_key_pressed(input, GLFW_KEY_ENTER)) {
+		
+			// Main page inputs
+			switch (menu->main.current_item) {
+			case MenuItem::RESUME:
 				scene = prev_scene;
 				break;
 		
-			case MenuItem::MUSIC:
-				menu->do_music = !menu->do_music;
+			case MenuItem::OPTIONS:
+				menu->current_page = MenuPage::OPTIONS;
+				menu->options.current_item = OptionsItem::MUSIC; // Resetting
 				break;
 
 			case MenuItem::SCENE_SWITCH:
 				menu->render_normal_scene = !menu->render_normal_scene;
-
 				if (menu->render_normal_scene) {
 					scene = SceneState::MAIN;
 					display_current_scene_status(ctx);
@@ -72,7 +68,6 @@ static void handle_menu_input(GLFWwindow* window, InputState* input, Menu* menu,
 					scene = SceneState::SPACE;
 					display_current_scene_status(ctx);
 				}
-
 				break;
 
 			case MenuItem::QUIT:
@@ -81,17 +76,65 @@ static void handle_menu_input(GLFWwindow* window, InputState* input, Menu* menu,
 		
 			default:
 				break;
+			}
 		}
 	}
+	
+	// Handling inputs for options page
+	else if (menu->current_page == MenuPage::OPTIONS) {
+
+		// Allowing the user to go back a page
+		if (is_key_pressed(input, GLFW_KEY_ESCAPE)) {
+			menu->current_page = MenuPage::MAIN;
+			menu->main.current_item = MenuItem::RESUME; // Resetting 
+		}
+
+		// Checking for activations
+		if (is_key_pressed(input, GLFW_KEY_ENTER)) {
+			
+			switch (menu->options.current_item) {
+			case OptionsItem::MUSIC:
+				menu->do_music = !menu->do_music;
+				break;
+
+			case OptionsItem::GAMMA:
+				// @TODO: Use arrow keys to handle slider?
+				break;
+
+			case OptionsItem::MULTISAMPLING:
+				menu->do_multisampling = !menu->do_multisampling;
+				break;
+
+			case OptionsItem::BACK:
+				menu->current_page = MenuPage::MAIN;
+				menu->main.current_item = MenuItem::RESUME; // Resetting 
+				break;
+				
+			default:
+				break;
+			}
+		}
+	}
+
+	// These inputs are read regardless of what page we are in
+	// therefore these will always be checked.
+	if (is_key_pressed(input, GLFW_KEY_UP))
+		decrement_menu_item(menu);
+
+	if (is_key_pressed(input, GLFW_KEY_DOWN))
+		increment_menu_item(menu);
 }
 
 
-static void handle_game_input(GLFWwindow* window, InputState* input, RenderingContext* ctx, float dt) {
+static void handle_game_input(GLFWwindow* window, InputState* input, Menu* menu, RenderingContext* ctx, float dt) {
 	auto& scene = ctx->app.scene; // Make sure to get the reference of it so that we are referring to the app_state
 
 	// Allowing the user to switch to menu
-	if (is_key_pressed(input, GLFW_KEY_ESCAPE) && scene != SceneState::MENU)
+	if (is_key_pressed(input, GLFW_KEY_ESCAPE) && scene != SceneState::MENU) {
 		scene = SceneState::MENU;
+		menu->current_page = MenuPage::MAIN;
+		menu->main.current_item = MenuItem::RESUME;
+	}
 	
     // Handle first mouse movement to prevent camera jump
     if (input->first_mouse) {
@@ -160,10 +203,10 @@ void process_input(GLFWwindow* window, InputState* input, Menu* menu, RenderingC
 		handle_menu_input(window, input, menu, ctx, prev_scene);
 		break;
 	case SceneState::MAIN:
-		handle_game_input(window, input, ctx, dt);
+		handle_game_input(window, input, menu, ctx, dt);
 		break;
 	case SceneState::SPACE:
-		handle_game_input(window, input, ctx, dt);
+		handle_game_input(window, input, menu, ctx, dt);
 		break;
 	}
 

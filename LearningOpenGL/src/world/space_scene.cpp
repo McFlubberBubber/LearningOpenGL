@@ -96,6 +96,7 @@ void render_space_scene(RenderingContext* ctx, float dt) {
 	using namespace SpaceScene;
 	glBindFramebuffer(GL_FRAMEBUFFER, ctx->buffers.FBO);
 	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_FRAMEBUFFER_SRGB);
 
 	ctx->lighting.current_sky_color = SKY_COLOR;
 	glClearColor(SKY_COLOR.r, SKY_COLOR.g, SKY_COLOR.b, 1.0f);

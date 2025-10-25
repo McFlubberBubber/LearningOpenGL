@@ -222,16 +222,25 @@ u32 texture_from_file(const char* path, const std::string& directory) {
 		std::cout << "Successfully loaded: " << file_name << " (" << width << "x" << height << ", " << nr_components << " components)" << std::endl;
 
 		GLenum texture_format{};
-		if (nr_components == 1)
+		GLenum data_format{}; // This used to be relevant for when we were loading textures in SRGB format.
+		if (nr_components == 1) {
 			texture_format = GL_RED;
-		else if (nr_components == 3)
+			data_format	   = GL_RED;
+		}
+		
+		else if (nr_components == 3) {
 			texture_format = GL_RGB;
-		else if (nr_components == 4)
-			texture_format = GL_RGBA;
+			data_format    = GL_RGB;
+		}
 
+		else if (nr_components == 4) {
+			texture_format = GL_RGBA;
+			data_format    = GL_RGBA;
+		}
+		
 		// Binding texture
 		glBindTexture(GL_TEXTURE_2D, texture_id);
-		glTexImage2D(GL_TEXTURE_2D, 0, texture_format, width, height, 0, texture_format, GL_UNSIGNED_BYTE, data);
+		glTexImage2D(GL_TEXTURE_2D, 0, texture_format, width, height, 0, data_format, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
 		// Texture wrapping + mipmapping

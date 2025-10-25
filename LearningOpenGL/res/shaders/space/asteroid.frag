@@ -44,41 +44,10 @@ void main() {
 	vec3 norm			= normalize(fs_in.normal);
 	vec3 view_direction = normalize(view_position - fs_in.frag_pos);
 	vec3 result = calculate_point_lighting(sunlight, norm, fs_in.frag_pos, view_direction);
-
+	
 	frag_color = vec4(result, 1.0f);
-
 	return;
 }
-
-/*
-vec3 calculate_point_lighting(PointLight sunlight, vec3 norm, vec3 frag_pos, vec3 view_direction) {
-	//getting light direction using the position
-	vec3 light_direction = normalize(sunlight.position - frag_pos);
-
-	//diffuse
-	float diff = max(dot(norm, light_direction), 0.0f);
-
-	//specular
-	vec3 reflect_direction = reflect(-light_direction, norm);
-	float spec = pow(max(dot(view_direction, reflect_direction), 0.0f), material.shininess);
-
-	//attenuation
-	float distance = length(sunlight.position - frag_pos);
-	float attenuation = 1.0f / (sunlight.constant + sunlight.linear * distance + sunlight.quadratic * (distance * distance));
-
-	//combining results
-	vec3 ambient = sunlight.ambient * vec3(texture(material.diffuse1, fs_in.texture_coords));
-	vec3 diffuse = sunlight.diffuse * diff * vec3(texture(material.diffuse1, fs_in.texture_coords));
-	vec3 specular = sunlight.specular * spec * vec3(texture(material.specular1, fs_in.texture_coords));
-
-	//applying attenuation to lighting vectors
-	ambient *= attenuation;
-	diffuse *= attenuation;
-	specular *= attenuation;
-
-	return (ambient + diffuse + specular);
-}
-*/
 
 vec3 calculate_point_lighting(PointLight sunlight, vec3 norm, vec3 frag_pos, vec3 view_direction) {
 	//getting light direction using the position
@@ -96,8 +65,10 @@ vec3 calculate_point_lighting(PointLight sunlight, vec3 norm, vec3 frag_pos, vec
 
 	//attenuation
 	float distance = length(sunlight.position - frag_pos);
+	
+	// Trying out some stuff that is related to gamma correction things.
 	float attenuation = 1.0f / (sunlight.constant + sunlight.linear * distance + sunlight.quadratic * (distance * distance));
-
+	
 	//combining results
 	vec3 ambient = sunlight.ambient * vec3(texture(material.diffuse1, fs_in.texture_coords));
 

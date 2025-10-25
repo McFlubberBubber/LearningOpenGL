@@ -78,7 +78,8 @@ void generate_blahaj_matrices(RenderingContext* ctx) {
 void render_scene(RenderingContext* ctx, float dt) {
 	glBindFramebuffer(GL_FRAMEBUFFER, ctx->buffers.FBO);
 	glEnable(GL_DEPTH_TEST);
-
+	glDisable(GL_FRAMEBUFFER_SRGB);
+	
 	update_sky(ctx);
 	update_camera_projection(ctx);
 	draw_world(ctx);
@@ -102,11 +103,12 @@ void render_scene(RenderingContext* ctx, float dt) {
 		glDisable(GL_DEPTH_TEST);
 	}
 
+	// glEnable(GL_FRAMEBUFFER_SRGB);
+
 	draw_screen_texture(ctx);
 	if (ctx->debug_mode)
 		render_debug_overlay(ctx, dt);
 
-	// ----- Resetting -----
 	glBindVertexArray(0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 }

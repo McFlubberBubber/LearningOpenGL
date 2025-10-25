@@ -48,7 +48,14 @@ void main() {
 			break;
 	}
 
-	frag_color = color;
+	// Old code
+    // frag_color = color;
+
+	// Trying out gamma correction here.
+	float gamma = 1.0f; // This value is usually 2.2f
+	frag_color.rgb = pow(color.rgb, vec3(1.0f/gamma));
+	frag_color.a   = color.a;
+
 }
 
 vec4 process_sharpening (bool do_dark_sharpening) {
