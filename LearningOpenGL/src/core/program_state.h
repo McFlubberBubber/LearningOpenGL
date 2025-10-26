@@ -16,7 +16,9 @@ enum class SceneState {
 
 struct ApplicationState {
 	SceneState scene   = SceneState::MAIN;
-	GLFWwindow* window = nullptr;
+
+	GLFWmonitor* monitor = nullptr;
+	GLFWwindow* window   = nullptr;	
 
 	const char *title = "LearningOpenGL";
 
@@ -25,6 +27,11 @@ struct ApplicationState {
 	u32 GL_BABY_VER  = 0;
 
 	u32 sample_count = 4;
+
+	s32 windowed_xpos	= 0;
+	s32 windowed_ypos   = 30;
+	s32 windowed_width  = 1600;
+	s32 windowed_height = 1080;
 
 	// These options are yet to be implemented within the application.
 	// This is because the menu would need a new sub-menu screen that would
@@ -45,7 +52,9 @@ struct ViewportState {
 	float aspect_ratio = 16.0f/9.0f;
 };
 
-bool init_application(ApplicationState *app, ViewportState *viewport);
 void init_viewport(ViewportState *viewport);
+bool init_application(ApplicationState *app, ViewportState *viewport);
+
 void set_screen_size(ViewportState *viewport, u32 w, u32 h);
 void update_ortho(ViewportState *viewport);
+void check_for_window_updates(ApplicationState *app, ViewportState *vp);

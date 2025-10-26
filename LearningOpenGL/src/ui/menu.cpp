@@ -28,8 +28,12 @@ void init_menu(Menu* menu) {
 
 	menu->options.items = {
 		OptionsItem::MUSIC,
+		OptionsItem::DISPLAY,
+		OptionsItem::VSYNC,
+		
 		OptionsItem::GAMMA,
 		OptionsItem::MULTISAMPLING,
+
 		OptionsItem::BACK
 	};
 }
@@ -111,16 +115,22 @@ static std::string option_to_string(const Menu* menu, OptionsItem item) {
 	std::ostringstream oss;
 
 	switch (item) {
+	case::OptionsItem::DISPLAY:
+		return std::string("Display: ") + (menu->do_fullscreen ? "Fullscreen" : "Windowed");
+
 	case OptionsItem::MUSIC:
 		return std::string("Music: ") + (menu->do_music ? "ON" : "OFF");
-				
+
+	case::OptionsItem::VSYNC:
+		return std::string("V-Sync: ") + (menu->do_vsync ? "Enabled" : "Disabled");
+		
 	// @TODO: These gamma values may need to get adjusted from a simple 0-100%
 	case OptionsItem::GAMMA:
 		oss << "Gamma: " << std::fixed << std::setw(6) << std::setprecision(2) << menu->gamma;
 		return oss.str();
 
 	case OptionsItem::MULTISAMPLING:
-		return std::string("Multisampling: ") + (menu->do_multisampling ? "ON" : "OFF");
+		return std::string("Multisampling: ") + (menu->do_multisampling ? "Enabled" : "Disabled");
 		
 	case::OptionsItem::BACK:
 		return "Back";
@@ -218,7 +228,7 @@ static void draw_options(const RenderingContext* ctx, const Menu* menu) {
 	auto font = ctx->assets.fonts;
 
 	const float x = vp->width / 2.0f;
-	float y		  = vp->height / 1.6f;
+	float y		  = vp->height / 1.5f;
 
 	const float spacing = 100.0f;
 	const float scale 	= 0.9f;

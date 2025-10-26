@@ -89,25 +89,55 @@ static void handle_menu_input(GLFWwindow* window, InputState* input, Menu* menu,
 			menu->main.current_item = MenuItem::RESUME; // Resetting 
 		}
 
-		// Checking for activations
+		// Checking for activations (with ENTER key)
 		if (is_key_pressed(input, GLFW_KEY_ENTER)) {
-			
+			std::string message;
+
 			switch (menu->options.current_item) {
+			case OptionsItem::DISPLAY:
+				ctx->app.fullscreen = !ctx->app.fullscreen;
+				menu->do_fullscreen = ctx->app.fullscreen;
+
+				message = std::string("Changed display to ") +
+					(menu->do_fullscreen ? "fullscreen" : "windowed") +
+					" mode.";
+				push_message(&ctx->message_queue, message);
+				break;
+
 			case OptionsItem::MUSIC:
 				menu->do_music = !menu->do_music;
+				
+				message = std::string("Music toggled to ") + (menu->do_music ? "ON" : "OFF") + " state.";
+				push_message(&ctx->message_queue, message);
 				break;
 
+			case OptionsItem::VSYNC:
+				ctx->app.vsync = !ctx->app.vsync;
+				menu->do_vsync = ctx->app.vsync;
+				
+				message = std::string("Vsync ") + (ctx->app.vsync ? "Enabled!" : "Disabled!");
+				push_message(&ctx->message_queue, message);
+				break;
+
+
+			// @TODO: Update screen shader to use a uniform to read gamma flags +
+			// clamp values from 0.1f to 1.0f (gamma goes from 0.1 to 2.2)
 			case OptionsItem::GAMMA:
 				// @TODO: Use arrow keys to handle slider?
+				push_message(&ctx->message_queue, "Gamma slider not implemented!");
 				break;
 
+			// @TODO: Fix the buffers in BufferData to implement this.
 			case OptionsItem::MULTISAMPLING:
 				menu->do_multisampling = !menu->do_multisampling;
+
+				message = std::string("Multisampling toggle not implemented!");
+				push_message(&ctx->message_queue, message);
 				break;
 
 			case OptionsItem::BACK:
 				menu->current_page = MenuPage::MAIN;
-				menu->main.current_item = MenuItem::RESUME; // Resetting 
+				menu->main.current_item = MenuItem::RESUME; // Resetting
 				break;
 				
 			default:

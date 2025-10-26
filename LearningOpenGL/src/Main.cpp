@@ -70,21 +70,22 @@ int main() {
 
 	// ----- RENDER LOOP -----
 	while (!glfwWindowShouldClose(render_context.app.window)) {	
+		check_for_window_updates(&render_context.app, &render_context.viewport); // @TODO: Important note in the function definition here!
 		Time::update();
 		float dt = Time::get_delta_time();
 
-		// Handling input states
+		// Handling cursor stuff
 		if (render_context.app.scene != prev_scene) {
 
 			if (render_context.app.scene != SceneState::MENU) {
 				glfwGetCursorPos(render_context.app.window, &mouse_x, &mouse_y);
 				update_mouse_flags(&input_state, mouse_x, mouse_y);
 
-				glfwSetInputMode(render_context.app.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-			} 
-			
-			else {
-				glfwSetInputMode(render_context.app.window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+				glfwSetInputMode(render_context.app.window, GLFW_CURSOR,
+								 GLFW_CURSOR_DISABLED);
+			} else {
+				glfwSetInputMode(render_context.app.window, GLFW_CURSOR,
+								 GLFW_CURSOR_NORMAL);
 			}
 
 			prev_scene = render_context.app.scene;

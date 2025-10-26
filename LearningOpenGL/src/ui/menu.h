@@ -22,8 +22,12 @@ enum class MenuItem {
 
 enum class OptionsItem {
 	MUSIC,
+	DISPLAY,
+	VSYNC,
+
 	GAMMA,
 	MULTISAMPLING,
+
 	BACK,
 
 	COUNT
@@ -45,9 +49,13 @@ struct Menu {
 	OptionsState options;
 
 	// Global settings.
-	float gamma 		  	 { 1.0f };
-	bool do_music			 { true };
 	bool render_normal_scene { true };
+
+	bool do_music			 { true };
+	bool do_fullscreen       { false };
+	bool do_vsync			 { true };	
+
+	float gamma 		  	 { 1.0f };
 	bool do_multisampling 	 { true };
 };
 

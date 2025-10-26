@@ -190,13 +190,39 @@ void update_camera_projection(RenderingContext* ctx) {
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
-void resize_framebuffer(RenderingContext* context, u32 width, u32 height) {
-	update_message_queue(context);
+void resize_framebuffer(RenderingContext* ctx, u32 width, u32 height) {
+	update_message_queue(ctx);
 
-	glBindTexture(GL_TEXTURE_2D, context->assets.textures[TEXTURE_COLOR_BUFFER]);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-	glBindRenderbuffer(GL_RENDERBUFFER, context->buffers.RBO);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);	
+	// Multisampling disabled.
+	if (!ctx->app.multisampling){
+		// Texture color buffer.
+		glBindTexture(GL_TEXTURE_2D, ctx->assets.textures[TEXTURE_COLOR_BUFFER]);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+
+		// Render buffer.
+		glBindRenderbuffer(GL_RENDERBUFFER, ctx->buffers.RBO);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+	}
+
+	// Multisampling enabled
+	else {
+		// Texture color buffer.
+		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, ctx->assets.textures[TEXTURE_COLOR_BUFFER]);
+		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, ctx->app.sample_count, GL_RGB, width, height, GL_TRUE);
+
+		// Render buffer.
+		glBindRenderbuffer(GL_RENDERBUFFER, ctx->buffers.RBO);
+		glRenderbufferStorageMultisample(GL_RENDERBUFFER, ctx->app.sample_count, GL_DEPTH24_STENCIL8, width, height);
+
+		// Intermediate screen texture.
+		glBindTexture(GL_TEXTURE_2D, ctx->assets.textures[TEXTURE_SCREEN]);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, NULL);
+	}
+
+	// Clear bindings.
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
 }
 
 void apply_render_mode_to_screen_shader(const RenderingContext* context) {
