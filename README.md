@@ -8,10 +8,10 @@ This is a repository that consists of my first exposure to the world of graphics
 This is NOT a project that aims to create a functional game engine **yet**. Instead, this project is solely to play around with the features that OpenGL offers, figuring out how shaders work, rendering things to a screen, etc. It also is a way to practice my application architecture skills and learn C++ and GLSL!
 
 ![In-application picture of LearningOpenGL scene](https://gcdnb.pbrd.co/images/R68NgGzLrkd9.png?o=1)
-**(Picture taken as of 26th September, 2025)**
+**(Picture taken as of 26th September, 2025 - Early main scene)**
 
 ![Example of instance rendering a planet with asteroids](https://gcdnb.pbrd.co/images/X1h0AMAvMpfX.png?o=1)
-**(Picture takes as on 16th October, 2025)**
+**(Picture taken as of 16th October, 2025 - Space scene with instance rendering)**
 
 ## Installation
 
@@ -39,6 +39,8 @@ There should not be any linker errors (hopefully!), all include / libraries dire
 - Toggle debug mode = Q
 - Open / close menu = Escape
 - Navigate menu options = Up / Down arrow keys
+
+The menu has as "options" page that can be used to toggle some features in the application (fullscreen toggles, v-sync, etc.) and switching scenes!
 
 ## Dependencies used
 
