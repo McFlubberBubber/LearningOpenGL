@@ -19,8 +19,14 @@ struct ConfigFile {
 	bool vsync;
 	bool multisampling;
 	float gamma;
+
+	// These are kept differently since we want to allow resolution changes
+	// while in fullscreen.
+	s32 fullscreen_width;
+	s32 fullscreen_height;
 	s32 width;
 	s32 height;
+
 
 	// Audio
 	bool music;
@@ -38,6 +44,7 @@ struct ApplicationState {
 
 	GLFWmonitor* monitor = nullptr;
 	GLFWwindow* window   = nullptr;	
+	GLFWvidmode* mode	 = nullptr;
 
 	const char *title = "LearningOpenGL";
 
@@ -49,8 +56,6 @@ struct ApplicationState {
 
 	s32 windowed_xpos	= 0;
 	s32 windowed_ypos   = 30;
-	s32 windowed_width  = 1600;
-	s32 windowed_height = 900;
 
 	ConfigFile config = {};
 };
@@ -66,7 +71,7 @@ struct ViewportState {
 bool init_application(ApplicationState *app, ViewportState *viewport);
 void set_viewport(ViewportState *viewport, ApplicationState *app);
 
-void set_screen_size(ViewportState *viewport, u32 w, u32 h);
+void set_screen_size(ViewportState *viewport, ApplicationState* app, u32 w, u32 h);
 void update_ortho(ViewportState *viewport);
 void check_for_window_updates(ApplicationState *app, ViewportState *vp);
 

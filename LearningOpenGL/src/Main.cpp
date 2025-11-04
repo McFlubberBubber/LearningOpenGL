@@ -127,7 +127,8 @@ static void framebuffer_size_callback(GLFWwindow* window, s32 width, s32 height)
 	
 	glViewport(0, 0, width, height);
 	if (ctx && ctx->render_context) {
-		set_screen_size(&ctx->render_context->viewport, width, height);
+		set_screen_size(&ctx->render_context->viewport, &ctx->render_context->app,
+						width, height);
 		resize_framebuffer(ctx->render_context, width, height);
 	}
 }
