@@ -95,8 +95,8 @@ static void handle_menu_input(GLFWwindow* window, InputState* input, Menu* menu,
 
 			switch (menu->options.current_item) {
 			case OptionsItem::DISPLAY:
-				ctx->app.fullscreen = !ctx->app.fullscreen;
-				menu->do_fullscreen = ctx->app.fullscreen;
+				ctx->app.config.fullscreen = !ctx->app.config.fullscreen;
+				menu->do_fullscreen = ctx->app.config.fullscreen;
 
 				message = std::string("Changed display to ") +
 					(menu->do_fullscreen ? "fullscreen" : "windowed") +
@@ -112,10 +112,10 @@ static void handle_menu_input(GLFWwindow* window, InputState* input, Menu* menu,
 				break;
 
 			case OptionsItem::VSYNC:
-				ctx->app.vsync = !ctx->app.vsync;
-				menu->do_vsync = ctx->app.vsync;
+				ctx->app.config.vsync = !ctx->app.config.vsync;
+				menu->do_vsync = ctx->app.config.vsync;
 				
-				message = std::string("Vsync ") + (ctx->app.vsync ? "Enabled!" : "Disabled!");
+				message = std::string("Vsync ") + (ctx->app.config.vsync ? "Enabled!" : "Disabled!");
 				push_message(&ctx->message_queue, message);
 				break;
 

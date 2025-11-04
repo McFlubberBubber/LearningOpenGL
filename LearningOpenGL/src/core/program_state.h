@@ -7,6 +7,25 @@
 
 #include "types.h"
 
+struct ConfigFile {
+	// Purely for storing the configuration file path.
+	std::string path;
+
+	// The rest of the data beneath is in regards to the config.ini file that has
+	// the sections and key + values assigned like so.
+
+	// Display
+	bool fullscreen;
+	bool vsync;
+	bool multisampling;
+	float gamma;
+	s32 width;
+	s32 height;
+
+	// Audio
+	bool music;
+};
+
 // Game state
 enum class SceneState {
 	MAIN,
@@ -31,17 +50,9 @@ struct ApplicationState {
 	s32 windowed_xpos	= 0;
 	s32 windowed_ypos   = 30;
 	s32 windowed_width  = 1600;
-	s32 windowed_height = 1080;
+	s32 windowed_height = 900;
 
-	// These options are yet to be implemented within the application.
-	// This is because the menu would need a new sub-menu screen that would
-	// allow the user to toggle these modes, but there is also some code that
-	// occurs during the initialzation of the rendering context that may break
-	// the application (for example, the multisampling buffers would not toggle
-	// correctly, so that would need to be updated).
-	bool fullscreen    = false;
-	bool vsync         = true;
-	bool multisampling = true;
+	ConfigFile config = {};
 };
 
 struct ViewportState {
@@ -52,9 +63,13 @@ struct ViewportState {
 	float aspect_ratio = 16.0f/9.0f;
 };
 
-void init_viewport(ViewportState *viewport);
 bool init_application(ApplicationState *app, ViewportState *viewport);
+void set_viewport(ViewportState *viewport, ApplicationState *app);
 
 void set_screen_size(ViewportState *viewport, u32 w, u32 h);
 void update_ortho(ViewportState *viewport);
 void check_for_window_updates(ApplicationState *app, ViewportState *vp);
+
+std::string get_executable_directory();
+void load_config_file(ConfigFile* cfg);
+void update_config_from_app(const ApplicationState* app);

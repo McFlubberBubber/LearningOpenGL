@@ -1,14 +1,14 @@
 #include "program_state.h"
 #include "input/user_input.h"
+#include "inicpp.h"
 
+#include <iostream>
+#include <windows.h> // To fetch the .exe path
 #include <glm/gtc/matrix_transform.hpp>
 
-// NOTE: We init_viewport() first since that sets the width and height of the
-// window which is what the glfwWindow requires when being initialized.
-
-void init_viewport(ViewportState* viewport) {
-	viewport->width  = 1600;
-	viewport->height = 900;
+void set_viewport(ViewportState* viewport, ApplicationState *app) {
+	viewport->width  = app->windowed_width;
+	viewport->height = app->windowed_height;
 	
 	viewport->aspect_ratio = static_cast<float>(viewport->width) / static_cast<float>(viewport->height);
 	update_ortho(viewport);
@@ -17,9 +17,10 @@ void init_viewport(ViewportState* viewport) {
 bool init_application(ApplicationState *app, ViewportState *viewport) {
 	std::cout << "OpenGL Version " << app->GL_MAJOR_VER<< "." << app->GL_MINOR_VER << "." << app->GL_BABY_VER << " - " << app->title << " by McFlubberBubber." << std::endl;
 
-	// Initializing app data
-	app->windowed_width  = viewport->width;
-	app->windowed_height = viewport->height;
+	// Creating a temp instance of the user config.
+	load_config_file(&app->config);
+	app->windowed_width = app->config.width;
+	app->windowed_height = app->config.height;
 
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, app->GL_MAJOR_VER);
@@ -29,17 +30,6 @@ bool init_application(ApplicationState *app, ViewportState *viewport) {
 	// OPTIONAL: Built in multisampling from OpenGL.
 	// glfwWindowHint(GLFW_SAMPLES, app->sample_count); // Multisampling
 
-	// Window creation
-	app->window = glfwCreateWindow(app->windowed_width, app->windowed_height, app->title, NULL, NULL);
-	if (app->window == NULL) {
-		std::cout << "Failed to load GLFW window!" << std::endl;
-		glfwTerminate();
-		return false;
-	}
-	
-	glfwSetWindowPos(app->window, 0, 30);
-	glfwMakeContextCurrent(app->window);
-
 	// Getting the primary monitor
 	app->monitor = glfwGetPrimaryMonitor();
 	if (app->monitor == NULL) {
@@ -47,6 +37,23 @@ bool init_application(ApplicationState *app, ViewportState *viewport) {
 		glfwTerminate();
 		return false;
 	}
+
+	// @HARDCODE: Window creation
+	if (app->config.fullscreen) {
+		app->window = glfwCreateWindow(app->config.width, app->config.height, app->title, app->monitor, NULL);
+	} else {
+		app->window = glfwCreateWindow(app->config.width, app->config.height, app->title, NULL, NULL);
+		if (app->window == NULL) {
+			std::cout << "Failed to load GLFW window!" << std::endl;
+			glfwTerminate();
+			return false;
+		}
+	}
+
+	set_viewport(viewport, app);
+	glfwSetWindowPos(app->window, 0, 30);
+	glfwMakeContextCurrent(app->window);
+
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cout << "Failed to initialize GLAD!" << std::endl;
@@ -62,7 +69,7 @@ bool init_application(ApplicationState *app, ViewportState *viewport) {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_PROGRAM_POINT_SIZE);
 
-	if (app->multisampling)
+	if (app->config.multisampling)
 		glEnable(GL_MULTISAMPLE);
 
 	return true;
@@ -95,14 +102,14 @@ void update_ortho(ViewportState* viewport) {
 
 void check_for_window_updates(ApplicationState* app, ViewportState* vp) {
 	// V-sync updating
-	glfwSwapInterval(app->vsync ? 1 : 0);
+	glfwSwapInterval(app->config.vsync ? 1 : 0);
 
 	// Detecting display updates
-	static bool prev_display_state = app->fullscreen;
+	static bool prev_display_state = app->config.fullscreen;
 	
-	if (app->fullscreen != prev_display_state) {
+	if (app->config.fullscreen != prev_display_state) {
 		// Switching to fullscreen mode
-		if (app->fullscreen) {
+		if (app->config.fullscreen) {
 			// Save the data before going fullscreen
 			glfwGetWindowPos(app->window, &app->windowed_xpos, &app->windowed_ypos);
 			glfwGetWindowSize(app->window, &app->windowed_width, &app->windowed_height);
@@ -114,6 +121,8 @@ void check_for_window_updates(ApplicationState* app, ViewportState* vp) {
 			glfwSetWindowMonitor(app->window, app->monitor, 0, 0, 1920, 1080, refresh_rate);
 			vp->width  = 1920;
 			vp->height = 1080;
+			app->config.width = 1920;
+			app->config.height = 1080;
 
 		// Switching to windowed mode		
 		} else {
@@ -122,6 +131,100 @@ void check_for_window_updates(ApplicationState* app, ViewportState* vp) {
 			vp->height = app->windowed_height;
 		}
 
-		prev_display_state = app->fullscreen;		
+		prev_display_state = app->config.fullscreen;		
 	}
+}
+
+// @WARNING: This is Windows only code, other OS' need different functionality here.
+std::string get_executable_directory() {
+	char buffer[MAX_PATH];
+	GetModuleFileNameA(NULL, buffer, MAX_PATH);
+
+	// Find the last backslash to get directory path
+	std::string exePath(buffer);
+	size_t lastSlash = exePath.find_last_of("\\/");
+
+	if (lastSlash != std::string::npos) {
+		return exePath.substr(0, lastSlash);
+	}
+
+	return ""; // Fallback if something went wrong
+}
+
+static void print_cfg(const ConfigFile* cfg) {
+	// Display
+	std::cout << "[Display]" << std::endl;
+	std::cout << "Fullscreen    = " << cfg->fullscreen << std::endl;
+	std::cout << "V-Sync        = " << cfg->vsync << std::endl;
+	std::cout << "Multisampling = " << cfg->multisampling << std::endl;
+	std::cout << "Gamma         = " << cfg->gamma << std::endl;
+	std::cout << "Width         = " << cfg->width << std::endl;
+	std::cout << "Height        = " << cfg->height << std::endl;
+
+	// Audio
+	std::cout << "Music state   = " << cfg->music << std::endl;
+}
+
+// Initially reading the .ini file to apply to the config.ini
+void load_config_file(ConfigFile* cfg) {
+	using namespace ini;
+
+	// Getting the file path, then loading the ini.
+	cfg->path = get_executable_directory() + "\\config.ini";
+	IniFile ini;
+	ini.load(cfg->path);
+	
+	
+	// @TODO: Switch to a better .ini parser because this loop magically fixes some messed up bug,
+	// where basically, if we don't have a config.ini file already in the output directory,
+	// this code will somehow fail and the reading of the first attribute, will actually result
+	// in a data error. Therefore, we should either leave this code in, or just switch to a better
+	// library which looks to be a better option because wtf.
+	//				- nathan, 04 Nov 2025
+
+	for (const auto& sectionPair : ini) {
+		// const std::string& sectionName = sectionPair.first;
+		// const IniSection& section = sectionPair.second;
+
+		for (const auto& fieldPair : sectionPair.second) {
+			// const std::string& fieldName = fieldPair.first;
+			// const IniField& field = fieldPair.second;
+		}
+	}
+	
+
+	// Setting display stuff
+	cfg->fullscreen	   = ini["Display"]["fullscreen"].as<bool>();
+	cfg->vsync		   = ini["Display"]["vsync"].as<bool>();
+	cfg->multisampling = ini["Display"]["multisampling"].as<bool>();
+	cfg->gamma		   = ini["Display"]["gamma"].as<float>();
+	cfg->width		   = ini["Display"]["width"].as<int>();;
+	cfg->height		   = ini["Display"]["height"].as<int>();;
+
+	// Setting audio stuff
+	cfg->music = ini["Audio"]["music"].as<bool>();;
+
+	print_cfg(cfg);
+}
+
+// Called right after the main loop is finished to update the configuration.
+void update_config_from_app(const ApplicationState* app) {
+	using namespace ini;
+
+	IniFile ini;
+	ini.load(app->config.path);
+
+	ini["Display"]["fullscreen"] = app->config.fullscreen;
+	ini["Display"]["vsync"] = app->config.vsync;
+	ini["Display"]["multisampling"] = app->config.multisampling;
+	ini["Display"]["gamma"] = app->config.gamma;
+	ini["Display"]["width"] = app->config.width;
+	ini["Display"]["height"] = app->config.height;
+
+	ini["Audio"]["music"] = app->config.music;
+
+	ini.save(app->config.path);
+
+	std::cout << "Updated config file at path: " << app->config.path << std::endl;
+	print_cfg(&app->config);
 }

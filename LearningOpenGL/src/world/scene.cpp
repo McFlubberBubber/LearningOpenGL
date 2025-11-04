@@ -86,7 +86,7 @@ void render_scene(RenderingContext* ctx, float dt) {
 //	render_instanced_quads(ctx);
 
 	// Multisampling branch
-	if (!ctx->app.multisampling) {
+	if (!ctx->app.config.multisampling) {
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glDisable(GL_DEPTH_TEST);
 	} else {

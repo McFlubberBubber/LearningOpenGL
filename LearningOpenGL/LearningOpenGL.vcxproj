@@ -130,7 +130,9 @@
       <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);glfw3.lib;opengl32.lib;assimp-vc143-mtd.lib;freetyped.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(SolutionDir)Dependencies\DLLs\*.dll" "$(OutDir)" /Y</Command>
+      <Command>copy "$(SolutionDir)Dependencies\DLLs\*.dll" "$(OutDir)" /Y
+
+if not exist "$(OutDir)config.ini" copy "$(SolutionDir)LearningOpenGL\config\default_config.ini" "$(OutDir)config.ini"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -151,7 +153,9 @@
       <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);glfw3.lib;opengl32.lib;assimp-vc143-mtd.lib;freetyped.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(SolutionDir)Dependencies\DLLs\*.dll" "$(OutDir)" /Y</Command>
+      <Command>copy "$(SolutionDir)Dependencies\DLLs\*.dll" "$(OutDir)" /Y
+
+if not exist "$(OutDir)config.ini" copy "$(SolutionDir)LearningOpenGL\config\default_config.ini" "$(OutDir)config.ini"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -175,6 +179,7 @@
     <ClCompile Include="src\world\space_scene.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\inicpp.h" />
     <ClInclude Include="src\renderer\camera.h" />
     <ClInclude Include="src\renderer\post_processing.h" />
     <ClInclude Include="src\ui\debug_overlay.h" />

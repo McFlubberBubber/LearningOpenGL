@@ -105,7 +105,7 @@ void render_space_scene(RenderingContext* ctx, float dt) {
 	draw_space(ctx);
 
 	// Multisampling branch
-	if (!ctx->app.multisampling) {
+	if (!ctx->app.config.multisampling) {
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glDisable(GL_DEPTH_TEST);
 	} else {

@@ -35,8 +35,7 @@ int main() {
 	&menu
 	};
 
-	// Initializing the viewport for width and height parameters, then the application specs.
-	init_viewport(&render_context.viewport);
+
 	if (!init_application(&render_context.app, &render_context.viewport)) {
 		std::cout << "Failed to initialize application!" << std::endl;
 		return -1;
@@ -66,7 +65,7 @@ int main() {
 	generate_blahaj_matrices(&render_context);
 //	validate_rock_instancing(&render_context); // Logging info.
 
-	init_menu(&menu);
+	init_menu(&menu, &render_context.app.config);
 
 	// ----- RENDER LOOP -----
 	while (!glfwWindowShouldClose(render_context.app.window)) {	
@@ -112,6 +111,7 @@ int main() {
 		glfwPollEvents();
 	}
 	
+	update_config_from_app(&render_context.app);
 	cleanup_rendering_system(&render_context);
 	cleanup_space_scene();
 	cleanup_main_scene();

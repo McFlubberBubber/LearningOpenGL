@@ -18,7 +18,7 @@ static void draw_small_text(const RenderingContext* context);
 static void draw_menu_choices(const RenderingContext* context, const Menu* menu);
 static void draw_options(const RenderingContext* ctx, const Menu* menu);
 
-void init_menu(Menu* menu) {
+void init_menu(Menu* menu, ConfigFile *cfg) {
 	menu->main.items = {
 		MenuItem::RESUME,
 		MenuItem::OPTIONS,
@@ -36,6 +36,15 @@ void init_menu(Menu* menu) {
 
 		OptionsItem::BACK
 	};
+
+	// Fetching data from the config file.
+	menu->do_music		= cfg->music;
+	menu->do_fullscreen = cfg->fullscreen;
+	menu->do_vsync		= cfg->vsync;
+
+	menu->gamma			   = cfg->gamma;
+	menu->do_multisampling = cfg->multisampling;
+	
 }
 
 void draw_menu(RenderingContext* ctx, Menu* menu) {

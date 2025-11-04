@@ -5,6 +5,7 @@
 
 // Forward declarations
 struct RenderingContext;
+struct ConfigFile;
 
 enum class MenuPage {
 	MAIN,
@@ -48,18 +49,18 @@ struct Menu {
 	MainMenuState main;
 	OptionsState options;
 
-	// Global settings.
+	// @TODO: These settings should be read from the config file.
 	bool render_normal_scene { true };
 
-	bool do_music			 { true };
-	bool do_fullscreen       { false };
-	bool do_vsync			 { true };	
+	bool do_music;
+	bool do_fullscreen;
+	bool do_vsync; 
 
-	float gamma 		  	 { 1.0f };
-	bool do_multisampling 	 { true };
+	float gamma;
+	bool do_multisampling; 
 };
 
-void init_menu(Menu* menu);
+void init_menu(Menu* menu, ConfigFile* cfg);
 void draw_menu(RenderingContext* ctx, Menu* menu);
 void increment_menu_item(Menu* menu);
 void decrement_menu_item(Menu* menu);

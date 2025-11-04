@@ -194,7 +194,7 @@ void resize_framebuffer(RenderingContext* ctx, u32 width, u32 height) {
 	update_message_queue(ctx);
 
 	// Multisampling disabled.
-	if (!ctx->app.multisampling){
+	if (!ctx->app.config.multisampling){
 		// Texture color buffer.
 		glBindTexture(GL_TEXTURE_2D, ctx->assets.textures[TEXTURE_COLOR_BUFFER]);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
@@ -236,7 +236,7 @@ void draw_screen_texture(RenderingContext* ctx) {
 	apply_render_mode_to_screen_shader(ctx);
 	glActiveTexture(GL_TEXTURE0);
 	
-	if (ctx->app.multisampling)
+	if (ctx->app.config.multisampling)
 		glBindTexture(GL_TEXTURE_2D, ctx->assets.textures[TEXTURE_SCREEN]);
 	else
 		glBindTexture(GL_TEXTURE_2D, ctx->assets.textures[TEXTURE_COLOR_BUFFER]);
@@ -359,7 +359,7 @@ static bool setup_screen_buffers(BufferData* buffers, GeometryData* geometry, Vi
 	glGenFramebuffers(1, &buffers->intermediate_FBO);	
 	glGenRenderbuffers(1, &buffers->RBO);
 	
-	if (!app->multisampling) {
+	if (!app->config.multisampling) {
 		// Frame buffer VAO + VBO
 		glBindFramebuffer(GL_FRAMEBUFFER, buffers->FBO);
 		glBindVertexArray(buffers->quad_VAO);
