@@ -35,8 +35,9 @@ int main() {
 	&menu
 	};
 
-
-	if (!init_application(&render_context.app, &render_context.viewport)) {
+	bool app_status = init_application(&render_context.app, &render_context.viewport);
+	assert(app_status);
+	if (!app_status) {
 		std::cout << "Failed to initialize application!" << std::endl;
 		return -1;
 	} else {
@@ -54,7 +55,9 @@ int main() {
 
 	stbi_set_flip_vertically_on_load(true);
 
-	if (!init_rendering_system(&render_context)) {
+	bool renderer_status = init_rendering_system(&render_context);
+	assert(renderer_status);
+	if (!renderer_status) {
 		std::cout << "ERROR: Rendering system did not initialize!" << std::endl;
 		return -1;
 	}

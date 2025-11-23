@@ -1,25 +1,30 @@
 #pragma once
 #include <iostream>
-// This is mainly for ease of use when typing integers mainly but that's all.
-// There have been forums / threads about utilizing "using" instead of typedef
-// (something to do with templates), but for now we will be using typedef until we
-// run into any issues.
+#include <assert.h>
 
-// Long
+// We may consider putting this as a precompiled header since we will be using
+// these types a lot, and this file may get more macros that can be useful for the
+// development process. For example, the assert macros is present here on debug mode.
+
+// Typedef for precise bit counts
 typedef uint64_t u64;
-typedef int64_t s64;
-
-// Int (64 bit systems)
 typedef uint32_t u32;
-typedef int32_t s32;
-
-// Int (32 bit systems)
 typedef uint16_t u16;
-typedef int16_t s16;
+typedef uint8_t  u8;
 
-// Short
-typedef uint8_t u8;
-typedef int8_t s8;
+typedef int64_t  s64;
+typedef int32_t  s32;
+typedef int16_t  s16; 
+typedef int8_t   s8;
 
-// Chars + bytes will remain the same since they usually are always going to be
-// 1 byte across all systems.
+typedef int32_t  bool32; // This is a custom bool that doesn't force non zero values to be one.
+
+typedef float  float32;
+typedef double float64;
+
+#define kilobytes(value) ( (value) * 1024 )
+#define megabytes(value) ( kilobytes((value) * 1024) )
+#define gigabytes(value) ( megabytes((value) * 1024) )
+#define terabytes(value) ( gigabytes((value) * 1024) )
+
+#define array_count(array) ( sizeof(array) / sizeof((array)[0]) )

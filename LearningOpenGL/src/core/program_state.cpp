@@ -183,6 +183,7 @@ static void print_cfg(const ConfigFile* cfg) {
 	std::cout << "Height        = " << cfg->height << std::endl;
 
 	// Audio
+	std::cout << "[Audio]" << std::endl;
 	std::cout << "Music state   = " << cfg->music << std::endl;
 }
 
