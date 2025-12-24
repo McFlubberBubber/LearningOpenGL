@@ -123,7 +123,7 @@ void render_space_scene(RenderingContext* ctx, float dt) {
 	}
 	
 	draw_screen_texture(ctx);
-	if (ctx->debug_mode)
+	if (ctx->app.config.debug_mode)
 		render_debug_overlay(ctx, dt);
 
 	glBindVertexArray(0);

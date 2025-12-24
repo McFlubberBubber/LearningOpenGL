@@ -89,7 +89,7 @@ void display_debug_mode_status(RenderingContext* ctx) {
 
 	const std::string base = "Debug mode ";
 	std::string text = "";
-	if (ctx->debug_mode == false) {
+	if (ctx->app.config.debug_mode == false) {
 		text = base + "disabled";
 	} else {
 		text = base + "enabled";

@@ -45,7 +45,7 @@ enum ShaderType : u8{
 	SHADER_NORMALS,
 	SHADER_INSTANCE_EXAMPLE,
 
-	SHADER_TEXTBOX,
+	SHADER_TEXTBOX, // Should this be renamed to a general quad?
 
 	SHADER_ASTEROID,
 	SHADER_PLANET,

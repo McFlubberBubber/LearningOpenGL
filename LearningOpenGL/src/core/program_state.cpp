@@ -185,6 +185,10 @@ static void print_cfg(const ConfigFile* cfg) {
 	// Audio
 	std::cout << "[Audio]" << std::endl;
 	std::cout << "Music state   = " << cfg->music << std::endl;
+
+	// Dev
+	std::cout << "[Dev]" << std::endl;
+	std::cout << "Debug mode    = " << cfg->debug_mode << std::endl;
 }
 
 // Initially reading the .ini file to apply to the config.ini
@@ -195,6 +199,7 @@ void load_config_file(ConfigFile* cfg) {
 	cfg->path = get_executable_directory() + "\\config.ini";
 	IniFile ini;
 	ini.load(cfg->path);
+	assert(cfg->path != "");
 	
 	// @TODO: Switch to a better .ini parser because this loop magically fixes some messed up bug,
 	// where basically, if we don't have a config.ini file already in the output directory,
@@ -218,13 +223,16 @@ void load_config_file(ConfigFile* cfg) {
 	cfg->vsync		  		= ini["Display"]["vsync"].as<bool>();
 	cfg->multisampling		= ini["Display"]["multisampling"].as<bool>();
 	cfg->gamma		   		= ini["Display"]["gamma"].as<float>();
-	cfg->fullscreen_width   = ini["Display"]["fullscreen_width"].as<int>();;
-	cfg->fullscreen_height  = ini["Display"]["fullscreen_height"].as<int>();;
-	cfg->width		        = ini["Display"]["width"].as<int>();;
-	cfg->height		   		= ini["Display"]["height"].as<int>();;
+	cfg->fullscreen_width   = ini["Display"]["fullscreen_width"].as<int>();
+	cfg->fullscreen_height  = ini["Display"]["fullscreen_height"].as<int>();
+	cfg->width		        = ini["Display"]["width"].as<int>();
+	cfg->height		   		= ini["Display"]["height"].as<int>();
 
 	// Setting audio stuff
-	cfg->music = ini["Audio"]["music"].as<bool>();;
+	cfg->music = ini["Audio"]["music"].as<bool>();
+
+	// Setting debug-related stuff
+	cfg->debug_mode = ini["Dev"]["debug_mode"].as<bool>();
 
 	std::cout << "Loading config file at path: " << cfg->path << std::endl;
 	print_cfg(cfg);
@@ -249,6 +257,9 @@ void update_config_from_app(const ApplicationState* app) {
 
 	// [Audio]
 	ini["Audio"]["music"] = app->config.music;
+
+	// [Dev]
+	ini["Dev"]["debug_mode"] = app->config.debug_mode;
 
 	ini.save(app->config.path);
 	std::cout << "Updated config file at path: " << app->config.path << std::endl;

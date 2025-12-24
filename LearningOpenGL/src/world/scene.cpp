@@ -106,7 +106,7 @@ void render_scene(RenderingContext* ctx, float dt) {
 	// glEnable(GL_FRAMEBUFFER_SRGB);
 
 	draw_screen_texture(ctx);
-	if (ctx->debug_mode)
+	if (ctx->app.config.debug_mode)
 		render_debug_overlay(ctx, dt);
 
 	glBindVertexArray(0);

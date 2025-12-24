@@ -4,11 +4,13 @@
 
 #include "renderer/render_context.h"
 #include "renderer/render_system.h"
+
 #include "core/program_state.h"
 #include "core/time.h"
+
 #include "ui/debug_overlay.h"
 #include "ui/menu.h"
-
+#include "ui/console.h"
 
 void update_mouse_flags(InputState* input, double mouse_x, double mouse_y) {
 	input->mouse_x = mouse_x;
@@ -210,15 +212,45 @@ static void handle_game_input(GLFWwindow* window, InputState* input, Menu* menu,
 
 	// Toggling debug mode (displaying information).
 	if (is_key_pressed(input, GLFW_KEY_Q)) {
-		ctx->debug_mode = !ctx->debug_mode;
+		ctx->app.config.debug_mode = !ctx->app.config.debug_mode;
 		display_debug_mode_status(ctx);
 	}
 }
 
+static void handle_console_input(GLFWwindow* window, InputState* input, Console* console, RenderingContext* ctx) {
+
+	// @NOTE: GLFW_KEY_GRAVE_ACCENT stands for the tilda key.
+
+	// @Incomplete: We need to find a way to check for LSHIFT and Tilda key being pressed at the same
+	// time for the big console to open up.
+	/*
+	if ((is_key_down(input, GLFW_KEY_LEFT_SHIFT)) && (is_key_pressed(input, GLFW_KEY_GRAVE_ACCENT))) {
+		if (console->state != ConsoleState::OPEN_BIG) {
+			console->state = ConsoleState::OPEN_BIG;
+			push_message(&ctx->message_queue, "Opening big console");
+		} else {
+			console->state = ConsoleState::CLOSED;
+			push_message(&ctx->message_queue, "Closing big console");
+		}
+	}
+	*/
+
+	if (is_key_pressed(input, GLFW_KEY_GRAVE_ACCENT)) {
+		if (console->state != ConsoleState::OPEN_SMALL) {
+			console->state = ConsoleState::OPEN_SMALL;
+			push_message(&ctx->message_queue, "Opening small console");
+		} else {
+			console->state = ConsoleState::CLOSED;
+			push_message(&ctx->message_queue, "Closing small console");
+		}
+	}
+
+};
+
 
 // The main function that will update the input state and handle inputs between
 // the application states
-void process_input(GLFWwindow* window, InputState* input, Menu* menu, RenderingContext* ctx, float dt) {
+void process_input(GLFWwindow* window, InputState* input, Menu* menu, RenderingContext* ctx, float dt, Console* console) {
 	update_input_state(input, window);
 
 	// Storing the previous app state before the menu state.
@@ -239,6 +271,11 @@ void process_input(GLFWwindow* window, InputState* input, Menu* menu, RenderingC
 		handle_game_input(window, input, menu, ctx, dt);
 		break;
 	}
+
+	// This may require some more thinking about, but since we want to be able to open the console
+	// regardless of what state we are in, we will be checking if the user has attempted to interact
+	// with the console every frame.
+	handle_console_input(window, input, console, ctx);
 
 	input->scroll_delta = 0.0f;
 }

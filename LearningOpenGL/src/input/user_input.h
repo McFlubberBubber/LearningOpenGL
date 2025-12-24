@@ -15,6 +15,7 @@
 // Forward declarations
 struct RenderingContext;
 struct Menu;
+struct Console;
 
 struct InputState {
 	std::unordered_map<s32, bool> key_states;		// Current frame state
@@ -52,7 +53,7 @@ inline bool is_key_released(InputState* input, s32 key) {			// Released
 void update_mouse_flags(InputState *input, double mouse_x, double mouse_y);
 
 // Functions to handle user input in different contexts
-void process_input(GLFWwindow* window, InputState* input_state, Menu* menu, RenderingContext* context, float dt);
+void process_input(GLFWwindow* window, InputState* input_state, Menu* menu, RenderingContext* context, float dt, Console* console);
 
 // Callback functions
 void setup_input_callbacks(GLFWwindow* window, CallbackContext* context);

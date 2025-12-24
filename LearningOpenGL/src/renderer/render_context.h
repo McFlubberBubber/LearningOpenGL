@@ -22,8 +22,4 @@ struct RenderingContext {
 	ApplicationState app;	// @TODO: Does this structure really belong here?
 
 	PostProcessingData post_processing;
-
-
-	// Temporary flag for rendering debug overlay
-	bool debug_mode = true;
 };

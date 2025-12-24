@@ -11,6 +11,7 @@
 
 #include "input/user_input.h"
 #include "ui/menu.h"
+#include "ui/console.h"
 
 #include "world/obj_init.h"
 #include "world/scene.h"
@@ -26,7 +27,10 @@ int main() {
 	// Initializing structs...
 	RenderingContext render_context = {};
 	InputState input_state;
+	
 	Menu menu;
+	Console console;
+
 	SceneState prev_scene = render_context.app.scene;
 
 	CallbackContext callback_context = {
@@ -69,6 +73,7 @@ int main() {
 //	validate_rock_instancing(&render_context); // Logging info.
 
 	init_menu(&menu, &render_context.app.config);
+	init_console(&console);
 
 	// ----- RENDER LOOP -----
 	while (!glfwWindowShouldClose(render_context.app.window)) {	
@@ -93,7 +98,7 @@ int main() {
 			prev_scene = render_context.app.scene;
 		}
 
-		process_input(render_context.app.window, &input_state, &menu, &render_context, dt);
+		process_input(render_context.app.window, &input_state, &menu, &render_context, dt, &console);
 
 		// @TODO: Since we are now rendering MULTIPLE scenes, it would make sense to structure them together to switch between the two,
 		// but this is what we are doing for now to get it up and running.
@@ -107,6 +112,14 @@ int main() {
 		case(SceneState::SPACE):
 			render_space_scene(&render_context, dt);
 			break;
+		}
+
+		// @TODO: Since we want to animate the console being dropped down from the top, we may need
+		// to track console state in the previous frame to know whether the console has been
+		// previously open. For now, we will just be checking the console state and immediately
+		// drawing it to the screen.
+		if ((console.state == ConsoleState::OPEN_SMALL) || (console.state == ConsoleState::OPEN_BIG)) {
+			draw_console(&render_context, &console);
 		}
 
 		//checking call events and swapping buffers

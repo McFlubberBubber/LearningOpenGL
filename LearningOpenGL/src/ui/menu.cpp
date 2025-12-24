@@ -59,7 +59,7 @@ void draw_menu(RenderingContext* ctx, Menu* menu) {
 	else if (menu->current_page == MenuPage::OPTIONS)
 		draw_options(ctx, menu);
 
-	if (ctx->debug_mode)
+	if (ctx->app.config.debug_mode)
 		render_debug_overlay(ctx, Time::get_delta_time());
 }
 

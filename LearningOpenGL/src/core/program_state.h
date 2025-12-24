@@ -27,9 +27,11 @@ struct ConfigFile {
 	s32 width;
 	s32 height;
 
-
 	// Audio
 	bool music;
+
+	// Dev stuff
+	bool debug_mode;
 };
 
 // Game state

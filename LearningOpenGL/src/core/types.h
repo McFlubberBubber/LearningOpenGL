@@ -22,9 +22,11 @@ typedef int32_t  bool32; // This is a custom bool that doesn't force non zero va
 typedef float  float32;
 typedef double float64;
 
-#define kilobytes(value) ( (value) * 1024 )
-#define megabytes(value) ( kilobytes((value) * 1024) )
-#define gigabytes(value) ( megabytes((value) * 1024) )
-#define terabytes(value) ( gigabytes((value) * 1024) )
+#define KILOBYTES(value) ( (value) * 1024 )
+#define MEGABYTES(value) ( KILOBYTES((value) * 1024) )
+#define GIGABYTES(value) ( MEGABYTES((value) * 1024) )
+#define TERABYTES(value) ( GIGABYTES((value) * 1024) )
 
-#define array_count(array) ( sizeof(array) / sizeof((array)[0]) )
+#define ARRAY_COUNT(array) ( sizeof(array) / sizeof((array)[0]) )
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
