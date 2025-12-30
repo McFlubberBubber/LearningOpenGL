@@ -13,6 +13,8 @@ enum class ConsoleState {
 
 struct Console {
 	ConsoleState state = ConsoleState::CLOSED;
+	
+	float openness = 0.0f;
 };
 
 void init_console(Console* console);

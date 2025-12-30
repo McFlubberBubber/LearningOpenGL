@@ -220,32 +220,31 @@ static void handle_game_input(GLFWwindow* window, InputState* input, Menu* menu,
 static void handle_console_input(GLFWwindow* window, InputState* input, Console* console, RenderingContext* ctx) {
 
 	// @NOTE: GLFW_KEY_GRAVE_ACCENT stands for the tilda key.
-
-	// @Incomplete: We need to find a way to check for LSHIFT and Tilda key being pressed at the same
-	// time for the big console to open up.
-	/*
-	if ((is_key_down(input, GLFW_KEY_LEFT_SHIFT)) && (is_key_pressed(input, GLFW_KEY_GRAVE_ACCENT))) {
-		if (console->state != ConsoleState::OPEN_BIG) {
-			console->state = ConsoleState::OPEN_BIG;
-			push_message(&ctx->message_queue, "Opening big console");
-		} else {
-			console->state = ConsoleState::CLOSED;
-			push_message(&ctx->message_queue, "Closing big console");
-		}
-	}
-	*/
-
 	if (is_key_pressed(input, GLFW_KEY_GRAVE_ACCENT)) {
-		if (console->state != ConsoleState::OPEN_SMALL) {
-			console->state = ConsoleState::OPEN_SMALL;
-			push_message(&ctx->message_queue, "Opening small console");
-		} else {
-			console->state = ConsoleState::CLOSED;
-			push_message(&ctx->message_queue, "Closing small console");
-		}
-	}
 
-};
+		// If the user held left shift, handle the opening of the console in "big" state.
+		if (is_key_down(input, GLFW_KEY_LEFT_SHIFT)) {
+			if (console->state != ConsoleState::OPEN_BIG) {
+				console->state = ConsoleState::OPEN_BIG;
+				push_message(&ctx->message_queue, "Opening big console");
+			} else {
+				console->state = ConsoleState::CLOSED;
+				push_message(&ctx->message_queue, "Closing big console");
+			}
+			
+		} else { // Otherwise, handle opening the console in the "small" state.
+			
+			if (console->state != ConsoleState::OPEN_SMALL) {
+				console->state = ConsoleState::OPEN_SMALL;
+				push_message(&ctx->message_queue, "Opening small console");
+			} else {
+				console->state = ConsoleState::CLOSED;
+				push_message(&ctx->message_queue, "Closing small console");
+			}
+		}
+		
+	}
+}
 
 
 // The main function that will update the input state and handle inputs between

@@ -118,10 +118,14 @@ int main() {
 		// to track console state in the previous frame to know whether the console has been
 		// previously open. For now, we will just be checking the console state and immediately
 		// drawing it to the screen.
+#if 0
 		if ((console.state == ConsoleState::OPEN_SMALL) || (console.state == ConsoleState::OPEN_BIG)) {
 			draw_console(&render_context, &console);
 		}
-
+#else
+		// For now, we will be drawing the console every frame.
+		draw_console(&render_context, &console);
+#endif
 		//checking call events and swapping buffers
 		glfwSwapBuffers(render_context.app.window);
 		glfwPollEvents();
