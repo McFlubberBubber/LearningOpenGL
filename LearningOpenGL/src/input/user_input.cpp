@@ -275,7 +275,7 @@ void process_input(GLFWwindow* window, InputState* input, Menu* menu, RenderingC
 	// regardless of what state we are in, we will be checking if the user has attempted to interact
 	// with the console every frame.
 	handle_console_input(window, input, console, ctx);
-
+	
 	input->scroll_delta = 0.0f;
 }
 

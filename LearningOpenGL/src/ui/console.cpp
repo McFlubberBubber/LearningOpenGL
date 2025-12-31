@@ -1,6 +1,8 @@
 #include "console.h"
 
 #include "renderer/render_context.h"
+#include "core/time.h"
+#include "math.h" // For abs()
 
 namespace ConsoleSpecs {
 	static const glm::vec3 BG_COLOR { 0.0f, 0.2f, 0.4f };
@@ -11,9 +13,12 @@ namespace ConsoleSpecs {
 	static const glm::vec3 INPUT_FONT_COLOR {0.0f, 1.0f, 0.0f};
 
 	// These variables define what are the appropriate y-levels for the console on the screen.
-	static constexpr float SMALL_OPENNESS = 0.7f;
-	static constexpr float MAX_OPENNESS   = 0.2f;
-	static constexpr float OPENNESS_DT    = 0.05f;
+	static constexpr float SMALL_OPENNESS  = 0.7f;
+	static constexpr float BIG_OPENNESS    = 0.2f;
+	static constexpr float CLOSED_OPENNESS = 1.05f; // We are accounting for the input field.
+	static constexpr float OPENNESS_DT     = 0.3f;
+
+	static constexpr float INPUT_FIELD_HEIGHT = 50.0f;
 };
 
 
@@ -65,37 +70,39 @@ static void draw_quad(const RenderingContext* ctx, float x0, float y0, float x1,
 
 static void update_openness(Console* console) {
 	using namespace ConsoleSpecs;
-/*
-	switch(console->state) {
+
+	float target_openness = 0.0f;
+
+	switch (console->state) {
 	case ConsoleState::CLOSED:
-		while (console->openness != 0.0f) {
-			console->openness -= OPENNESS_DT;
-		}
+		target_openness = CLOSED_OPENNESS;
 		break;
 
 	case ConsoleState::OPEN_SMALL:
-		while (console->openness != 0.7f) {
-			console->openness += OPENNESS_DT;
-		}
+		target_openness = SMALL_OPENNESS;
 		break;
 
 	case ConsoleState::OPEN_BIG:
-		while (console->openness != 0.2f) {
-			console->openness += OPENNESS_DT;
-		}
+		target_openness = BIG_OPENNESS;
 		break;
 	}
-*/
+
+	float d = target_openness - console->openness;
+	if (fabs(d) > 0.001f) {
+		console->openness += d * OPENNESS_DT * (Time::get_delta_time() * 60.0f);
+	} else {
+		console->openness = target_openness;
+	}
 }
 
 void init_console(Console* console) {
-	console->state = ConsoleState::CLOSED; 
-};	
+	console->state = ConsoleState::CLOSED;
+	console->openness = ConsoleSpecs::CLOSED_OPENNESS;
+}
 
 void draw_console(RenderingContext* ctx, Console* console) {
 	using namespace ConsoleSpecs;
-	// update_openness(console);
-	
+	update_openness(console); // Animates the console movement.
 	// std::string state_string = console_state_to_string(console->state);
 	// std::cout << "Drawing console in " << state_string << "\n";
 	
@@ -103,25 +110,20 @@ void draw_console(RenderingContext* ctx, Console* console) {
 	float x1 = static_cast<float>(ctx->viewport.width);
 	float y1 = static_cast<float>(ctx->viewport.height);
 	float x0 = 0;
-	float y0 = y1 * 0.7f;
+	float y0 = y1 * console->openness;
 
-	if (console->state == ConsoleState::OPEN_SMALL) {
-		draw_quad(ctx, x0, y0, x1, y1, BG_COLOR, ALPHA);
-		draw_quad(ctx, x0, y0 - 50, x1, y0, INPUT_FIELD_COLOR, ALPHA);
+	// Don't do anything if the console state is closed.
+	if (console->state == ConsoleState::CLOSED && y0 >= y1) {
+		return;	
 	}
 
-	else if (console->state == ConsoleState::OPEN_BIG) {
-		y0 = y1 * 0.2f;
-		
-		draw_quad(ctx, x0, y0, x1, y1, BG_COLOR, ALPHA);
-		draw_quad(ctx, x0, y0 - 50, x1, y0, INPUT_FIELD_COLOR, ALPHA);
-	}
-
-
-};
+	// Drawing both the report log and the input field area.
+	draw_quad(ctx, x0, y0, x1, y1, BG_COLOR, ALPHA);
+	draw_quad(ctx, x0, y0 - INPUT_FIELD_HEIGHT, x1, y0, INPUT_FIELD_COLOR, ALPHA);
+}
 
 void close_console() {
 
-};
+}
 
 
