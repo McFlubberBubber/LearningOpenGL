@@ -3,8 +3,9 @@
 #include "renderer/render_context.h"
 #include "core/time.h"
 
-#include <math.h>  // For fabs()
-#include <cstring> // For std::memset()
+#include <math.h>   // For fabs()
+// #include <string.h> // For str 
+#include <cstring>  // For std::memset()
 
 namespace ConsoleSpecs {
 	static const glm::vec3 BG_COLOR 		 { 0.05f, 0.35f, 0.35f };
@@ -238,10 +239,7 @@ void execute_command(Console* console) {
 }
 
 
-void move_cursor(Console* console, bool is_forward) {
-	std::cout << "Cursor position: " << console->input.cursor_pos << "\n";
-	std::cout << "Text length:     " << console->input.length << "\n";
-
+void move_cursor_by_char(Console* console, bool is_forward) {
 	int old_pos = console->input.cursor_pos;
 	if (is_forward) {
 		if (console->input.cursor_pos < console->input.length) {
@@ -256,4 +254,44 @@ void move_cursor(Console* console, bool is_forward) {
 	if (console->input.cursor_pos != old_pos) {
 		console->input.cursor_blink_time = 0.0f;
 	}
+}
+
+// Quick helper function for moving the cursor by word.
+static inline bool is_space(char c) {
+	return c == ' ' || c == '\t';
+}
+
+void move_cursor_by_word(Console* console, bool is_forward) {
+	int old_pos = console->input.cursor_pos;
+	int& current_pos = console->input.cursor_pos;
+	
+	char* text = console->input.data;
+	int length = console->input.length;
+
+	if (is_forward) { // Parse in front of the cursor position.
+		if (current_pos >= length) {
+			return;
+		}
+
+		while (current_pos < length && !is_space(text[current_pos])) {
+			current_pos++;
+		}
+		while (current_pos < length && is_space(text[current_pos])) {
+			current_pos++;
+		}
+		
+	} else { // Parse behind the cursor position.
+		if (current_pos <= 0) {
+			return;
+		}
+		
+		while (current_pos > 0 && is_space(text[current_pos - 1])) {
+			current_pos--;
+		}
+		while (current_pos > 0 && !is_space(text[current_pos - 1])) {
+			current_pos--;
+		}
+	}
+
+	if (current_pos != old_pos) { console->input.cursor_blink_time = 0.0f; }
 }

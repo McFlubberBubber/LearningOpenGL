@@ -172,11 +172,20 @@ static void handle_console_key_input(Console* console, int key, int scan_code, i
 
     // Moving the cursor position.
 	case GLFW_KEY_LEFT: {
-		move_cursor(console, false);
+		if (mods & GLFW_MOD_CONTROL) {
+			move_cursor_by_word(console, false);
+		} else {
+			move_cursor_by_char(console, false);
+		}
 		break;
 	}
 	case GLFW_KEY_RIGHT: {
-		move_cursor(console, true);
+		if (mods & GLFW_MOD_CONTROL) {
+			move_cursor_by_word(console, true);
+		} else {
+			move_cursor_by_char(console, true);
+		}
+
 		break;
 	}
 

@@ -44,5 +44,7 @@ void autocomplete_command(Console* console);
 void insert_character(Console* console, char character);
 void delete_character(Console* console);
 
-void move_cursor(Console* console, bool is_forward);
+void move_cursor_by_char(Console* console, bool is_forward);
+void move_cursor_by_word(Console* console, bool is_forward);
+
 void scroll_console_logs(Console* console, bool is_up);
