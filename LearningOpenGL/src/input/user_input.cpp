@@ -34,6 +34,34 @@ static void update_input_state(InputState* input, GLFWwindow* window) {
 //	input->scroll_delta = 0.0f;
 }
 
+// This function gets called in every state since handling console input globally would be an issue
+// once we start reading in keyboard input for typing.
+static void check_for_console_toggle(GLFWwindow* window, InputState* input, Console* console, RenderingContext* ctx) {
+	// @NOTE: GLFW_KEY_GRAVE_ACCENT stands for the tilda key.
+	if (is_key_pressed(input, GLFW_KEY_GRAVE_ACCENT)) {
+
+		// If the user held left shift, handle the opening of the console in "big" state.
+		if (is_key_down(input, GLFW_KEY_LEFT_SHIFT)) {
+			if (console->state != ConsoleState::OPEN_BIG) {
+				console->state = ConsoleState::OPEN_BIG;
+				push_message(&ctx->message_queue, "Opening big console");
+			} else {
+				console->state = ConsoleState::CLOSED;
+				push_message(&ctx->message_queue, "Closing big console");
+			}
+			
+		} else { // Otherwise, handle opening the console in the "small" state.
+			
+			if (console->state != ConsoleState::OPEN_SMALL) {
+				console->state = ConsoleState::OPEN_SMALL;
+				push_message(&ctx->message_queue, "Opening small console");
+			} else {
+				console->state = ConsoleState::CLOSED;
+				push_message(&ctx->message_queue, "Closing small console");
+			}
+		}
+	}
+}
 
 static void handle_menu_input(GLFWwindow* window, InputState* input, Menu* menu, RenderingContext* ctx,	SceneState& prev_scene) {
 	auto& scene = ctx->app.scene;
@@ -157,17 +185,7 @@ static void handle_menu_input(GLFWwindow* window, InputState* input, Menu* menu,
 		increment_menu_item(menu);
 }
 
-
-static void handle_game_input(GLFWwindow* window, InputState* input, Menu* menu, RenderingContext* ctx, float dt) {
-	auto& scene = ctx->app.scene; // Make sure to get the reference of it so that we are referring to the app_state
-
-	// Allowing the user to switch to menu
-	if (is_key_pressed(input, GLFW_KEY_ESCAPE) && scene != SceneState::MENU) {
-		scene = SceneState::MENU;
-		menu->current_page = MenuPage::MAIN;
-		menu->main.current_item = MenuItem::RESUME;
-	}
-	
+static void do_mouse_movement(InputState* input, RenderingContext* ctx) {
     // Handle first mouse movement to prevent camera jump
     if (input->first_mouse) {
         input->last_mouse_x = input->mouse_x;
@@ -187,7 +205,41 @@ static void handle_game_input(GLFWwindow* window, InputState* input, Menu* menu,
         if (x_offset != 0.0f || y_offset != 0.0f)
             process_mouse_movement(&ctx->camera_data.camera, x_offset, y_offset);
     }
+}
 
+static void handle_game_input(GLFWwindow* window, InputState* input, Menu* menu, RenderingContext* ctx, float dt) {
+	auto& scene = ctx->app.scene; // Make sure to get the reference of it so that we are referring to the app_state
+
+	// Allowing the user to switch to menu
+	if (is_key_pressed(input, GLFW_KEY_ESCAPE) && scene != SceneState::MENU) {
+		scene = SceneState::MENU;
+		menu->current_page = MenuPage::MAIN;
+		menu->main.current_item = MenuItem::RESUME;
+	}
+	
+	do_mouse_movement(input, ctx);
+/*
+    // Handle first mouse movement to prevent camera jump
+    if (input->first_mouse) {
+        input->last_mouse_x = input->mouse_x;
+        input->last_mouse_y = input->mouse_y;
+        input->first_mouse = false;
+        // Skip mouse processing this frame
+    } else {
+        // Calculate mouse deltas
+        float x_offset = (float)input->mouse_x - (float)input->last_mouse_x;
+        float y_offset = (float)input->last_mouse_y - (float)input->mouse_y;
+        
+        // Update last mouse position for next frame
+        input->last_mouse_x = input->mouse_x;
+        input->last_mouse_y = input->mouse_y;
+
+        // Only process if there's actual movement
+        if (x_offset != 0.0f || y_offset != 0.0f)
+            process_mouse_movement(&ctx->camera_data.camera, x_offset, y_offset);
+    }
+*/
+	
 	if (input->scroll_delta != 0.0f) {
 		process_mouse_scroll(&ctx->camera_data.camera, (float)input->scroll_delta);
 		display_zoom(&ctx->assets, &ctx->viewport, &ctx->camera_data);
@@ -218,32 +270,9 @@ static void handle_game_input(GLFWwindow* window, InputState* input, Menu* menu,
 }
 
 static void handle_console_input(GLFWwindow* window, InputState* input, Console* console, RenderingContext* ctx) {
-
-	// @NOTE: GLFW_KEY_GRAVE_ACCENT stands for the tilda key.
-	if (is_key_pressed(input, GLFW_KEY_GRAVE_ACCENT)) {
-
-		// If the user held left shift, handle the opening of the console in "big" state.
-		if (is_key_down(input, GLFW_KEY_LEFT_SHIFT)) {
-			if (console->state != ConsoleState::OPEN_BIG) {
-				console->state = ConsoleState::OPEN_BIG;
-				push_message(&ctx->message_queue, "Opening big console");
-			} else {
-				console->state = ConsoleState::CLOSED;
-				push_message(&ctx->message_queue, "Closing big console");
-			}
-			
-		} else { // Otherwise, handle opening the console in the "small" state.
-			
-			if (console->state != ConsoleState::OPEN_SMALL) {
-				console->state = ConsoleState::OPEN_SMALL;
-				push_message(&ctx->message_queue, "Opening small console");
-			} else {
-				console->state = ConsoleState::CLOSED;
-				push_message(&ctx->message_queue, "Closing small console");
-			}
-		}
-		
-	}
+	// We want to be handling mouse movement so that the player can still look around and type in the
+	// console.
+	do_mouse_movement(input, ctx);
 }
 
 
@@ -256,6 +285,12 @@ void process_input(GLFWwindow* window, InputState* input, Menu* menu, RenderingC
 	static SceneState prev_scene = ctx->app.scene;
 	if (ctx->app.scene != SceneState::MENU) {
 		prev_scene = ctx->app.scene;
+	}
+	
+	check_for_console_toggle(window, input, console, ctx);
+	if (console->state != ConsoleState::CLOSED) {
+		handle_console_input(window, input, console, ctx);
+		return;
 	}
 
 	// Processing different input systems based on the app state.
@@ -271,11 +306,6 @@ void process_input(GLFWwindow* window, InputState* input, Menu* menu, RenderingC
 		break;
 	}
 
-	// This may require some more thinking about, but since we want to be able to open the console
-	// regardless of what state we are in, we will be checking if the user has attempted to interact
-	// with the console every frame.
-	handle_console_input(window, input, console, ctx);
-	
 	input->scroll_delta = 0.0f;
 }
 

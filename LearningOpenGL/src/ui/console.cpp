@@ -2,7 +2,8 @@
 
 #include "renderer/render_context.h"
 #include "core/time.h"
-#include "math.h" // For abs()
+
+#include "math.h" // For fabs()
 
 namespace ConsoleSpecs {
 	static const glm::vec3 BG_COLOR { 0.0f, 0.2f, 0.4f };
@@ -13,12 +14,12 @@ namespace ConsoleSpecs {
 	static const glm::vec3 INPUT_FONT_COLOR {0.0f, 1.0f, 0.0f};
 
 	// These variables define what are the appropriate y-levels for the console on the screen.
-	static constexpr float SMALL_OPENNESS  = 0.7f;
+	static constexpr float SMALL_OPENNESS  = 0.8f;
 	static constexpr float BIG_OPENNESS    = 0.2f;
-	static constexpr float CLOSED_OPENNESS = 1.05f; // We are accounting for the input field.
+	static constexpr float CLOSED_OPENNESS = 1.75f; // We are accounting for the input field.
 	static constexpr float OPENNESS_DT     = 0.3f;
 
-	static constexpr float INPUT_FIELD_HEIGHT = 50.0f;
+	static constexpr float INPUT_FIELD_HEIGHT = 34.0f;
 };
 
 
@@ -39,18 +40,8 @@ static void draw_quad(const RenderingContext* ctx, float x0, float y0, float x1,
 	const glm::mat4& ortho = ctx->viewport.ortho_projection;
 
 	set_mat4(shader, "projection", ortho);
-	set_vec3(shader, "color", color);
+	set_vec3(shader, "color", color); // Should the shader here be set to a vec4?
 	set_float(shader, "alpha", alpha);
-	
-/*
-	float vertices[] = {
-		// Positions
-		x0,			y0,			// Bottom left
-		x0 + x1,	y0,			// Bottom right
-		x0 + x1,	y0 + y1,	// Top right
-		x0,			y0 + y1,	// Top left
-	};
-*/
 
 	float vertices[] = {
 		// Positions
@@ -70,7 +61,6 @@ static void draw_quad(const RenderingContext* ctx, float x0, float y0, float x1,
 
 static void update_openness(Console* console) {
 	using namespace ConsoleSpecs;
-
 	float target_openness = 0.0f;
 
 	switch (console->state) {
@@ -120,10 +110,6 @@ void draw_console(RenderingContext* ctx, Console* console) {
 	// Drawing both the report log and the input field area.
 	draw_quad(ctx, x0, y0, x1, y1, BG_COLOR, ALPHA);
 	draw_quad(ctx, x0, y0 - INPUT_FIELD_HEIGHT, x1, y0, INPUT_FIELD_COLOR, ALPHA);
-}
-
-void close_console() {
-
 }
 
 
