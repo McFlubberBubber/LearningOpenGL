@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/types.h" // For types, strings and vectors.
+
 // Forward declarations.
 struct RenderingContext;
 
@@ -11,10 +13,22 @@ enum class ConsoleState {
 	COUNT
 };
 
+struct ConsoleLog {
+	std::string message;
+	u32 line_number;
+};
+
+struct ConsoleInput {
+	char* data[1024]; // Fixed amount of chars the user can type.
+};
+
 struct Console {
-	ConsoleState state = ConsoleState::CLOSED;
+	ConsoleInput input;
+	std::vector<ConsoleLog> logs;
 	
-	float openness;
+	ConsoleState state = ConsoleState::CLOSED;
+
+	float openness; // 1.0f = top (console is closed).
 };
 
 void init_console(Console* console);

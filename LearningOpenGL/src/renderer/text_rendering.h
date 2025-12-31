@@ -124,25 +124,19 @@ void destroy_font(Font* font);
 
 
 // Text rendering utils
-void draw_text(const Font* font, const RenderingContext* context, const std::string& text, float x, float y, float scale,
-	const glm::vec3& color, float alpha, TextAlign align, bool drop_shadow);
+void draw_text(const Font* font, const RenderingContext* context, const std::string& text, float x, float y, float scale, const glm::vec3& color, float alpha, TextAlign align, bool drop_shadow);
 
 // Drawing fading texts
 float get_string_width_in_pixels(const Font* font, const std::string& text, float scale);
-
-void trigger_fading_text(Font* font, const FontTag tag, const std::string& text, float x, float y, float scale, 
-	const glm::vec3& color, float lifetime, float fade_duration, TextAlign align); 
-
+void trigger_fading_text(Font* font, const FontTag tag, const std::string& text, float x, float y, float scale,	const glm::vec3& color, float lifetime, float fade_duration, TextAlign align); 
 void update_and_draw_fading_texts(Font* font, const RenderingContext* context, float dt);
 
 // Drawing text box stuff
-void trigger_text_box(Font* font, const FontTag tag, const std::string& text, float x, float y, float scale,
-	const glm::vec3& text_color, const glm::vec3& bg_color, float lifetime, float fade_duration, TextAlign align, float padding = 8.0f);
+void trigger_text_box(Font* font, const FontTag tag, const std::string& text, float x, float y, float scale, const glm::vec3& text_color, const glm::vec3& bg_color, float lifetime, float fade_duration, TextAlign align, float padding = 8.0f);
 
 void update_and_draw_text_boxes(Font* font, const RenderingContext* ctx, float dt);
 
-void draw_text_with_background(const Font* font, const RenderingContext* ctx, const std::string& text, float x, float y, float scale,
-	const glm::vec3 text_color, const glm::vec3& bg_color, float alpha, TextAlign align, float padding);
+void draw_text_with_background(const Font* font, const RenderingContext* ctx, const std::string& text, float x, float y, float scale, const glm::vec3 text_color, const glm::vec3& bg_color, float alpha, TextAlign align, float padding);
 
 // Message queue stuff
 bool init_message_queue(RenderingContext* ctx);

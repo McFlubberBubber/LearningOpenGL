@@ -1,6 +1,9 @@
 #pragma once
 #include <iostream>
+
 #include <assert.h>
+#include <vector>
+#include <string>
 
 // We may consider putting this as a precompiled header since we will be using
 // these types a lot, and this file may get more macros that can be useful for the

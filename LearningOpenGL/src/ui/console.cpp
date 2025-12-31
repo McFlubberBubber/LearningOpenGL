@@ -8,15 +8,16 @@
 namespace ConsoleSpecs {
 	static const glm::vec3 BG_COLOR { 0.0f, 0.2f, 0.4f };
 	static const glm::vec3 INPUT_FIELD_COLOR { 0.0f, 0.4f, 0.6f };
-	static constexpr float ALPHA = 0.9f;
-
+	static constexpr float BG_ALPHA = 0.9f;
+	
 	static const glm::vec3 LOG_FONT_COLOR {1.0f, 1.0f, 1.0f};
 	static const glm::vec3 INPUT_FONT_COLOR {0.0f, 1.0f, 0.0f};
+	static constexpr float TEXT_ALPHA = 1.0f;
 
 	// These variables define what are the appropriate y-levels for the console on the screen.
 	static constexpr float SMALL_OPENNESS  = 0.8f;
 	static constexpr float BIG_OPENNESS    = 0.2f;
-	static constexpr float CLOSED_OPENNESS = 1.75f; // We are accounting for the input field.
+	static constexpr float CLOSED_OPENNESS = 1.5f; // We are accounting for the input field.
 	static constexpr float OPENNESS_DT     = 0.3f;
 
 	static constexpr float INPUT_FIELD_HEIGHT = 34.0f;
@@ -108,8 +109,18 @@ void draw_console(RenderingContext* ctx, Console* console) {
 	}
 
 	// Drawing both the report log and the input field area.
-	draw_quad(ctx, x0, y0, x1, y1, BG_COLOR, ALPHA);
-	draw_quad(ctx, x0, y0 - INPUT_FIELD_HEIGHT, x1, y0, INPUT_FIELD_COLOR, ALPHA);
+	draw_quad(ctx, x0, y0, x1, y1, BG_COLOR, BG_ALPHA);
+	draw_quad(ctx, x0, y0 - INPUT_FIELD_HEIGHT, x1, y0, INPUT_FIELD_COLOR, BG_ALPHA);
+	
+	// Drawing text-stuff.
+	// Temp vars.
+	std::string log_example = "This is a log example!";
+	float log_x_padding		= 4.0f;
+	float log_y_padding		= 8.0f;
+	float log_x 			= x0 + log_x_padding;
+	float log_y				= y0 + log_y_padding; // This y-coord needs to vary.
+	float scale				= 0.6f;
+	draw_text(&ctx->assets.fonts[FONT_REGULAR], ctx, log_example, log_x, log_y, scale, LOG_FONT_COLOR, TEXT_ALPHA, TextAlign::LEFT, false);
+
+	
 }
-
-

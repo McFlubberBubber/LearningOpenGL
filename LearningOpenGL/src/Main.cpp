@@ -36,7 +36,8 @@ int main() {
 	CallbackContext callback_context = {
 	&render_context,
 	&input_state,
-	&menu
+	&menu,
+	&console
 	};
 
 	bool app_status = init_application(&render_context.app, &render_context.viewport);

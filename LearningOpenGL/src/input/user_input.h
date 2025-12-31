@@ -35,6 +35,7 @@ struct CallbackContext {
 	RenderingContext* render_context;
 	InputState* input_state;
 	Menu* menu;
+	Console* console;
 };
 
 // Reading user input
@@ -59,3 +60,5 @@ void process_input(GLFWwindow* window, InputState* input_state, Menu* menu, Rend
 void setup_input_callbacks(GLFWwindow* window, CallbackContext* context);
 void mouse_callback(GLFWwindow* window, double x_pos, double y_pos);
 void scroll_callback(GLFWwindow* window, double x_offet, double y_offset);
+void key_callback(GLFWwindow* window, int key, int scan_code, int action, int mods);
+void character_callback(GLFWwindow* window, u32 codepoint);

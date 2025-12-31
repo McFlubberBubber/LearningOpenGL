@@ -34,35 +34,6 @@ static void update_input_state(InputState* input, GLFWwindow* window) {
 //	input->scroll_delta = 0.0f;
 }
 
-// This function gets called in every state since handling console input globally would be an issue
-// once we start reading in keyboard input for typing.
-static void check_for_console_toggle(GLFWwindow* window, InputState* input, Console* console, RenderingContext* ctx) {
-	// @NOTE: GLFW_KEY_GRAVE_ACCENT stands for the tilda key.
-	if (is_key_pressed(input, GLFW_KEY_GRAVE_ACCENT)) {
-
-		// If the user held left shift, handle the opening of the console in "big" state.
-		if (is_key_down(input, GLFW_KEY_LEFT_SHIFT)) {
-			if (console->state != ConsoleState::OPEN_BIG) {
-				console->state = ConsoleState::OPEN_BIG;
-				push_message(&ctx->message_queue, "Opening big console");
-			} else {
-				console->state = ConsoleState::CLOSED;
-				push_message(&ctx->message_queue, "Closing big console");
-			}
-			
-		} else { // Otherwise, handle opening the console in the "small" state.
-			
-			if (console->state != ConsoleState::OPEN_SMALL) {
-				console->state = ConsoleState::OPEN_SMALL;
-				push_message(&ctx->message_queue, "Opening small console");
-			} else {
-				console->state = ConsoleState::CLOSED;
-				push_message(&ctx->message_queue, "Closing small console");
-			}
-		}
-	}
-}
-
 static void handle_menu_input(GLFWwindow* window, InputState* input, Menu* menu, RenderingContext* ctx,	SceneState& prev_scene) {
 	auto& scene = ctx->app.scene;
 
@@ -218,27 +189,6 @@ static void handle_game_input(GLFWwindow* window, InputState* input, Menu* menu,
 	}
 	
 	do_mouse_movement(input, ctx);
-/*
-    // Handle first mouse movement to prevent camera jump
-    if (input->first_mouse) {
-        input->last_mouse_x = input->mouse_x;
-        input->last_mouse_y = input->mouse_y;
-        input->first_mouse = false;
-        // Skip mouse processing this frame
-    } else {
-        // Calculate mouse deltas
-        float x_offset = (float)input->mouse_x - (float)input->last_mouse_x;
-        float y_offset = (float)input->last_mouse_y - (float)input->mouse_y;
-        
-        // Update last mouse position for next frame
-        input->last_mouse_x = input->mouse_x;
-        input->last_mouse_y = input->mouse_y;
-
-        // Only process if there's actual movement
-        if (x_offset != 0.0f || y_offset != 0.0f)
-            process_mouse_movement(&ctx->camera_data.camera, x_offset, y_offset);
-    }
-*/
 	
 	if (input->scroll_delta != 0.0f) {
 		process_mouse_scroll(&ctx->camera_data.camera, (float)input->scroll_delta);
@@ -269,10 +219,41 @@ static void handle_game_input(GLFWwindow* window, InputState* input, Menu* menu,
 	}
 }
 
-static void handle_console_input(GLFWwindow* window, InputState* input, Console* console, RenderingContext* ctx) {
-	// We want to be handling mouse movement so that the player can still look around and type in the
-	// console.
-	do_mouse_movement(input, ctx);
+
+static void handle_console_key_input(Console* console, int key, int scan_code, int action, int mods) {
+	// To ensure we handle only presses and repeats.
+	if (action != GLFW_PRESS && action != GLFW_REPEAT) { return; }
+
+	switch (key) {
+	case GLFW_KEY_ENTER: {
+		// execute_command(console);
+		break;
+	}
+		
+	case GLFW_KEY_BACKSPACE: {
+		// delete_char(console);
+		break;
+	}
+		
+	case GLFW_KEY_ESCAPE: {
+		// idk what to do here, maybe an alternative to closing the console?
+		break;
+	}
+		
+	// Maybe these cases can be used to scroll through the history of the logs?
+	case GLFW_KEY_UP: {
+		break;
+	}
+	case GLFW_KEY_DOWN: {
+		break;
+	}
+		
+	case GLFW_KEY_TAB: {
+		// autocomplete_command(console);
+		break;
+	}
+
+	}
 }
 
 
@@ -286,13 +267,13 @@ void process_input(GLFWwindow* window, InputState* input, Menu* menu, RenderingC
 	if (ctx->app.scene != SceneState::MENU) {
 		prev_scene = ctx->app.scene;
 	}
-	
-	check_for_console_toggle(window, input, console, ctx);
+
 	if (console->state != ConsoleState::CLOSED) {
-		handle_console_input(window, input, console, ctx);
+		do_mouse_movement(input, ctx); // We still want to handle mouse movements.
+		input->scroll_delta = 0.0f;
 		return;
 	}
-
+	
 	// Processing different input systems based on the app state.
 	switch(ctx->app.scene) {
 	case SceneState::MENU:
@@ -315,6 +296,9 @@ void setup_input_callbacks(GLFWwindow* window, CallbackContext* context) {
 	glfwSetWindowUserPointer(window, context);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, 	 scroll_callback);
+
+	glfwSetKeyCallback(window, key_callback);
+	glfwSetCharCallback(window, character_callback);
 }
 
 void mouse_callback(GLFWwindow* window, double x_pos, double y_pos) {
@@ -339,3 +323,71 @@ void scroll_callback(GLFWwindow* window, double x_offset, double y_offset) {
 
 	ctx->input_state->scroll_delta = y_offset;
 }
+
+// This function will allow us to check for console activations, and read special char inputs when
+// we take input for the console.
+void key_callback(GLFWwindow* window, int key, int scan_code, int action, int mods) {
+	// Handling special key presses (shift, backspace, enter...)
+	CallbackContext* ctx = static_cast<CallbackContext*>(glfwGetWindowUserPointer(window));
+	if (!ctx || !ctx->input_state || !ctx->console) {
+		return;
+	}
+
+	InputState* input = ctx->input_state;
+	Console* console  = ctx->console;
+
+	// Checking for console activations.
+	if (key == GLFW_KEY_GRAVE_ACCENT && action == GLFW_PRESS) {
+
+		// Opening console in BIGMODE!
+		if (mods & GLFW_MOD_SHIFT) {
+			if (console->state != ConsoleState::OPEN_BIG) {
+				console->state = ConsoleState::OPEN_BIG;
+				push_message(&ctx->render_context->message_queue, "Opening big console");
+			} else {
+				console->state = ConsoleState::CLOSED;
+				push_message(&ctx->render_context->message_queue, "Closing big console");
+			}
+			
+		} else { // Otherwise, open console in small mode...
+			if (console->state != ConsoleState::OPEN_SMALL) {
+				console->state = ConsoleState::OPEN_SMALL;
+				push_message(&ctx->render_context->message_queue, "Opening small console");
+			} else {
+				console->state = ConsoleState::CLOSED;
+				push_message(&ctx->render_context->message_queue, "Closing small console");
+			}
+		}
+		return;
+	}
+
+	// Handling special key inputs.
+	if (console->state != ConsoleState::CLOSED) {
+		handle_console_key_input(console, key, scan_code, action, mods);
+		return;
+	}
+	
+}
+
+// This callback is mainly here to take inputs for the console.
+void character_callback(GLFWwindow* window, u32 codepoint) {
+	CallbackContext* ctx = static_cast<CallbackContext*>(glfwGetWindowUserPointer(window));
+	if (!ctx || !ctx->input_state || !ctx->console) {
+		return;
+	}
+
+	Console* console = ctx->console;
+	if (console->state == ConsoleState::CLOSED) {
+		return; // We only want to process this callback if the console is open.
+	}
+
+	//
+	// @TODO: Append the character press to the console here.
+	// 
+
+	// Debug output (for now).
+	if (codepoint < 128) {
+		std::cout << "Console received: '" << static_cast<char>(codepoint) << "'\n";
+	}
+}
+
