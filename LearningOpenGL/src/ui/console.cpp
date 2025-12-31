@@ -3,7 +3,8 @@
 #include "renderer/render_context.h"
 #include "core/time.h"
 
-#include "math.h" // For fabs()
+#include <math.h>  // For fabs()
+#include <cstring> // For std::memset()
 
 namespace ConsoleSpecs {
 	static const glm::vec3 BG_COLOR 		 { 0.05f, 0.35f, 0.35f };
@@ -22,7 +23,11 @@ namespace ConsoleSpecs {
 	static constexpr float OPENNESS_DT     = 0.3f;
 
 	static constexpr float INPUT_FIELD_HEIGHT = 40.0f;
-	static constexpr float CURSOR_LENGTH = 15.0f;
+	static constexpr float INPUT_X_PADDING    = 4.0f;
+	static constexpr float INPUT_Y_PADDING    = 10.0f;
+	static constexpr float INPUT_SCALE        = 0.65f;
+
+	static constexpr float CARET_WIDTH = 3.0f;
 	static constexpr float CURSOR_PADDING = 4.0f;
 };
 
@@ -91,51 +96,65 @@ static void update_openness(Console* console) {
 
 static void draw_cursor(Console* console, RenderingContext* ctx, float x, float y0, float y1, float text_width) {
 	using namespace ConsoleSpecs;
-	const float input_x_padding = 4.0f;
-	float cursor_x = x + input_x_padding;
+#if 0
+	float cursor_x  = x  + INPUT_X_PADDING;
 	float cursor_y0 = y0 + CURSOR_PADDING;
 	float cursor_y1 = y1 - CURSOR_PADDING;
-
-	if (console->input.cursor_pos > 0) {
-		cursor_x += text_width;
-	}
+	cursor_x += text_width;
 	float cursor_x1 = cursor_x + CURSOR_LENGTH;
 
 	// Cursor blink
-	static float time_acc = 0.0f;
-	time_acc += Time::get_delta_time();
-
-	if (time_acc <= 1.0f) {
+	console->input.cursor_blink_time += Time::get_delta_time();
+	if (console->input.cursor_blink_time <= 1.0f) {
 		draw_quad(ctx, cursor_x, cursor_y0, cursor_x1, cursor_y1, CURSOR_COLOR, TEXT_ALPHA);
-	} else if (time_acc > 2.0f) {
-		time_acc = 0.0f;
+	} else if (console->input.cursor_blink_time > 2.0f) {
+		console->input.cursor_blink_time = 0.0f;
 	}
+	
+#else
+	float caret_x0 = x + INPUT_X_PADDING + text_width;
+	float caret_y0 = y0 + CURSOR_PADDING;
+	float caret_y1 = y1 - CURSOR_PADDING;
+	float caret_x1 = caret_x0 + CARET_WIDTH;
+
+	// Cursor blink
+	console->input.cursor_blink_time += Time::get_delta_time();
+	if (console->input.cursor_blink_time <= 1.0f) {
+		draw_quad(ctx, caret_x0, caret_y0, caret_x1, caret_y1, CURSOR_COLOR, TEXT_ALPHA);
+	} else if (console->input.cursor_blink_time > 2.0f) {
+		console->input.cursor_blink_time = 0.0f;
+	}
+
+#endif
 }
 
 static void draw_input_area(Console* console, RenderingContext* ctx, float x, float y) {
 	using namespace ConsoleSpecs;
 	auto font = &ctx->assets.fonts[FONT_REGULAR];
 	
-	const float input_x_padding = 4.0f;
-	const float input_y_padding = 12.0f;
-	const float input_scale     = 0.6f;
-	float input_x = x + input_x_padding;
-	float input_y = y - INPUT_FIELD_HEIGHT + input_y_padding;
+	float input_x = x + INPUT_X_PADDING;
+	float input_y = y - INPUT_FIELD_HEIGHT + INPUT_Y_PADDING;
 	
 	std::string text = console->input.data;
-	draw_text(font, ctx, text, input_x, input_y, input_scale, INPUT_FONT_COLOR, TEXT_ALPHA, TextAlign::LEFT, false);
+	draw_text(font, ctx, text, input_x, input_y, INPUT_SCALE, INPUT_FONT_COLOR, TEXT_ALPHA, TextAlign::LEFT, false);
+	float text_width = get_string_width_in_pixels(font, text, INPUT_SCALE); // Not being used now.
 
-	float text_width = get_string_width_in_pixels(font, text, input_scale);
+	std::string text_to_cursor = text.substr(0, console->input.cursor_pos);
+	float text_width_to_cursor = get_string_width_in_pixels(font, text_to_cursor, INPUT_SCALE);
+
 	float input_y0 = y - INPUT_FIELD_HEIGHT;
 	float input_y1 = y;
-	draw_cursor(console, ctx, x, input_y0, input_y1, text_width);
+	draw_cursor(console, ctx, x, input_y0, input_y1, text_width_to_cursor);
 }
 
 void init_console(Console* console) {
 	console->state = ConsoleState::CLOSED;
 	console->openness = ConsoleSpecs::CLOSED_OPENNESS;
 
-	console->input.cursor_pos = 0;
+	console->input.length = 0;
+	
+	console->input.cursor_pos 		 = 0;
+	console->input.cursor_blink_time = 0.0f;
 }
 
 void draw_console(RenderingContext* ctx, Console* console) {
@@ -177,27 +196,64 @@ void draw_console(RenderingContext* ctx, Console* console) {
 }
 
 
-void append_character(Console* console, char character) {
+void insert_character(Console* console, char character) {
 	if (console->input.cursor_pos >= 1023) {
 		std::cout << "CONSOLE_ERROR: Reached maximum number of character buffer!\n";
 		return;
 	}
 	
-	console->input.data[console->input.cursor_pos] = character;
-	console->input.cursor_pos++;
+	int pos = console->input.cursor_pos;
 
-#if 0
-	// Logging purposes.
-	std::string input = console->input.data;
-	std::cout << "Current input string: " << input << "\n";
-#endif
-	
+	// Make room for the new character
+	std::memmove(&console->input.data[pos + 1], &console->input.data[pos], console->input.length - pos + 1); // Moving the null terminator
+
+	console->input.data[pos] = character;
+	console->input.cursor_pos++;
+	console->input.length++;
+	console->input.cursor_blink_time = 0.0f;
 }
 
 void delete_character(Console* console) {
 	if (console->input.cursor_pos == 0) { return; }
 	
+	int pos = console->input.cursor_pos;
+	
+	// Shift everything after the cursor to the left.
+	std::memmove(&console->input.data[pos - 1], &console->input.data[pos], console->input.length - pos + 1); // We do the +1 to move the null terminator.
+	
 	console->input.cursor_pos--;	
-	console->input.data[console->input.cursor_pos] = '\0';
+	console->input.length--;
+	console->input.cursor_blink_time = 0.0f;
+}
 
+void execute_command(Console* console) {
+	std::string command = console->input.data;
+	std::cout << "Command inputted: " << command << "\n";
+
+	// Clearing the input field.
+	std::memset(console->input.data, 0, sizeof(console->input.data));
+	console->input.cursor_pos = 0;
+	console->input.length = 0;
+	console->input.cursor_blink_time = 0.0f;
+}
+
+
+void move_cursor(Console* console, bool is_forward) {
+	std::cout << "Cursor position: " << console->input.cursor_pos << "\n";
+	std::cout << "Text length:     " << console->input.length << "\n";
+
+	int old_pos = console->input.cursor_pos;
+	if (is_forward) {
+		if (console->input.cursor_pos < console->input.length) {
+			console->input.cursor_pos++;
+		}
+	} else {
+		if (console->input.cursor_pos > 0) {
+			console->input.cursor_pos--;
+		}
+	}
+
+	if (console->input.cursor_pos != old_pos) {
+		console->input.cursor_blink_time = 0.0f;
+	}
 }

@@ -148,7 +148,7 @@ static void handle_console_key_input(Console* console, int key, int scan_code, i
 
 	switch (key) {
 	case GLFW_KEY_ENTER: {
-		// execute_command(console);
+		execute_command(console);
 		break;
 	}
 		
@@ -169,6 +169,17 @@ static void handle_console_key_input(Console* console, int key, int scan_code, i
 	case GLFW_KEY_DOWN: {
 		break;
 	}
+
+    // Moving the cursor position.
+	case GLFW_KEY_LEFT: {
+		move_cursor(console, false);
+		break;
+	}
+	case GLFW_KEY_RIGHT: {
+		move_cursor(console, true);
+		break;
+	}
+
 		
 	case GLFW_KEY_TAB: {
 		// autocomplete_command(console);
@@ -322,7 +333,7 @@ void character_callback(GLFWwindow* window, u32 codepoint) {
 	//
 	char character = static_cast<char>(codepoint);
 	if (character == '`' || character == '~') { return; }
-	append_character(console, character);
+	insert_character(console, character);
 
 #if 0
 	// Debug output (for now).
