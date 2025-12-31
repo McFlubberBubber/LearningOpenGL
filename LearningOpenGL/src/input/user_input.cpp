@@ -153,7 +153,11 @@ static void handle_console_key_input(Console* console, int key, int scan_code, i
 	}
 		
 	case GLFW_KEY_BACKSPACE: {
-		delete_character(console);
+		if (mods & GLFW_MOD_CONTROL) {
+			delete_word(console);
+		} else {
+			delete_character(console);
+		}
 		break;
 	}
 		

@@ -273,6 +273,7 @@ void move_cursor_by_word(Console* console, bool is_forward) {
 			return;
 		}
 
+		// Skip the current word first, then the whitespaces.
 		while (current_pos < length && !is_space(text[current_pos])) {
 			current_pos++;
 		}
@@ -284,7 +285,8 @@ void move_cursor_by_word(Console* console, bool is_forward) {
 		if (current_pos <= 0) {
 			return;
 		}
-		
+
+		// Skip the whitespaces first, then the previous word.
 		while (current_pos > 0 && is_space(text[current_pos - 1])) {
 			current_pos--;
 		}
@@ -295,3 +297,7 @@ void move_cursor_by_word(Console* console, bool is_forward) {
 
 	if (current_pos != old_pos) { console->input.cursor_blink_time = 0.0f; }
 }
+
+void delete_word(Console* console) {
+
+};
