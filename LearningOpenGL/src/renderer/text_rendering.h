@@ -96,8 +96,8 @@ struct Message {
 struct MessageQueue {
 	std::vector<Message> messages;
 
-	// @TODO: Should these base coordinates be floats? These get positioned base on the pixel so it might be good
-	// to keep these as unsigned integers.
+	// @TODO: Should these base coordinates be floats? These get positioned base on the pixel
+	// so it might be good to keep these as unsigned integers.
 	float base_x;
 	float base_y;
 

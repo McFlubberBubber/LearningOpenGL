@@ -6,21 +6,24 @@
 #include "math.h" // For fabs()
 
 namespace ConsoleSpecs {
-	static const glm::vec3 BG_COLOR { 0.0f, 0.2f, 0.4f };
-	static const glm::vec3 INPUT_FIELD_COLOR { 0.0f, 0.4f, 0.6f };
+	static const glm::vec3 BG_COLOR 		 { 0.05f, 0.35f, 0.35f };
+	static const glm::vec3 INPUT_FIELD_COLOR { 0.07f, 0.50f, 0.50f };
 	static constexpr float BG_ALPHA = 0.9f;
 	
-	static const glm::vec3 LOG_FONT_COLOR {1.0f, 1.0f, 1.0f};
-	static const glm::vec3 INPUT_FONT_COLOR {0.0f, 1.0f, 0.0f};
+	static const glm::vec3 LOG_FONT_COLOR 	{ 1.0f, 1.0f, 1.0f };
+	static const glm::vec3 INPUT_FONT_COLOR { 0.0f, 1.0f, 0.0f };
+	static const glm::vec3 CURSOR_COLOR 	{ 0.5f, 0.9f, 0.5f };
 	static constexpr float TEXT_ALPHA = 1.0f;
 
 	// These variables define what are the appropriate y-levels for the console on the screen.
 	static constexpr float SMALL_OPENNESS  = 0.8f;
 	static constexpr float BIG_OPENNESS    = 0.2f;
-	static constexpr float CLOSED_OPENNESS = 1.5f; // We are accounting for the input field.
+	static constexpr float CLOSED_OPENNESS = 1.2f; // We are accounting for the input field.
 	static constexpr float OPENNESS_DT     = 0.3f;
 
-	static constexpr float INPUT_FIELD_HEIGHT = 34.0f;
+	static constexpr float INPUT_FIELD_HEIGHT = 40.0f;
+	static constexpr float CURSOR_LENGTH = 15.0f;
+	static constexpr float CURSOR_PADDING = 4.0f;
 };
 
 
@@ -86,9 +89,53 @@ static void update_openness(Console* console) {
 	}
 }
 
+static void draw_cursor(Console* console, RenderingContext* ctx, float x, float y0, float y1, float text_width) {
+	using namespace ConsoleSpecs;
+	const float input_x_padding = 4.0f;
+	float cursor_x = x + input_x_padding;
+	float cursor_y0 = y0 + CURSOR_PADDING;
+	float cursor_y1 = y1 - CURSOR_PADDING;
+
+	if (console->input.cursor_pos > 0) {
+		cursor_x += text_width;
+	}
+	float cursor_x1 = cursor_x + CURSOR_LENGTH;
+
+	// Cursor blink
+	static float time_acc = 0.0f;
+	time_acc += Time::get_delta_time();
+
+	if (time_acc <= 1.0f) {
+		draw_quad(ctx, cursor_x, cursor_y0, cursor_x1, cursor_y1, CURSOR_COLOR, TEXT_ALPHA);
+	} else if (time_acc > 2.0f) {
+		time_acc = 0.0f;
+	}
+}
+
+static void draw_input_area(Console* console, RenderingContext* ctx, float x, float y) {
+	using namespace ConsoleSpecs;
+	auto font = &ctx->assets.fonts[FONT_REGULAR];
+	
+	const float input_x_padding = 4.0f;
+	const float input_y_padding = 12.0f;
+	const float input_scale     = 0.6f;
+	float input_x = x + input_x_padding;
+	float input_y = y - INPUT_FIELD_HEIGHT + input_y_padding;
+	
+	std::string text = console->input.data;
+	draw_text(font, ctx, text, input_x, input_y, input_scale, INPUT_FONT_COLOR, TEXT_ALPHA, TextAlign::LEFT, false);
+
+	float text_width = get_string_width_in_pixels(font, text, input_scale);
+	float input_y0 = y - INPUT_FIELD_HEIGHT;
+	float input_y1 = y;
+	draw_cursor(console, ctx, x, input_y0, input_y1, text_width);
+}
+
 void init_console(Console* console) {
 	console->state = ConsoleState::CLOSED;
 	console->openness = ConsoleSpecs::CLOSED_OPENNESS;
+
+	console->input.cursor_pos = 0;
 }
 
 void draw_console(RenderingContext* ctx, Console* console) {
@@ -110,7 +157,10 @@ void draw_console(RenderingContext* ctx, Console* console) {
 
 	// Drawing both the report log and the input field area.
 	draw_quad(ctx, x0, y0, x1, y1, BG_COLOR, BG_ALPHA);
-	draw_quad(ctx, x0, y0 - INPUT_FIELD_HEIGHT, x1, y0, INPUT_FIELD_COLOR, BG_ALPHA);
+
+	float input_y0 = y0 - INPUT_FIELD_HEIGHT; // Start a bit lower down.
+	float input_y1 = y0; // Start where the prev quad ended.
+	draw_quad(ctx, x0, input_y0, x1, input_y1, INPUT_FIELD_COLOR, BG_ALPHA);
 	
 	// Drawing text-stuff.
 	// Temp vars.
@@ -119,8 +169,35 @@ void draw_console(RenderingContext* ctx, Console* console) {
 	float log_y_padding		= 8.0f;
 	float log_x 			= x0 + log_x_padding;
 	float log_y				= y0 + log_y_padding; // This y-coord needs to vary.
-	float scale				= 0.6f;
-	draw_text(&ctx->assets.fonts[FONT_REGULAR], ctx, log_example, log_x, log_y, scale, LOG_FONT_COLOR, TEXT_ALPHA, TextAlign::LEFT, false);
+	float log_scale			= 0.6f;
+	draw_text(&ctx->assets.fonts[FONT_REGULAR], ctx, log_example, log_x, log_y, log_scale, LOG_FONT_COLOR, TEXT_ALPHA, TextAlign::LEFT, false);
 
+	// @TODO: draw_console_logs();
+	draw_input_area(console, ctx, x0, y0);
+}
+
+
+void append_character(Console* console, char character) {
+	if (console->input.cursor_pos >= 1023) {
+		std::cout << "CONSOLE_ERROR: Reached maximum number of character buffer!\n";
+		return;
+	}
 	
+	console->input.data[console->input.cursor_pos] = character;
+	console->input.cursor_pos++;
+
+#if 0
+	// Logging purposes.
+	std::string input = console->input.data;
+	std::cout << "Current input string: " << input << "\n";
+#endif
+	
+}
+
+void delete_character(Console* console) {
+	if (console->input.cursor_pos == 0) { return; }
+	
+	console->input.cursor_pos--;	
+	console->input.data[console->input.cursor_pos] = '\0';
+
 }

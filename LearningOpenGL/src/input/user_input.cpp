@@ -142,49 +142,6 @@ static void handle_game_key_input(RenderingContext* ctx, Menu* menu, int key, in
 	}
 }
 
-#if 0
-static void handle_game_input(GLFWwindow* window, InputState* input, Menu* menu, RenderingContext* ctx, float dt) {
-	auto& scene = ctx->app.scene; // Make sure to get the reference of it so that we are referring to the app_state
-
-	// Allowing the user to switch to menu
-	if (is_key_pressed(input, GLFW_KEY_ESCAPE) && scene != SceneState::MENU) {
-		scene = SceneState::MENU;
-		menu->current_page = MenuPage::MAIN;
-		menu->main.current_item = MenuItem::RESUME;
-	}
-	
-	do_mouse_movement(input, ctx);
-	
-	if (input->scroll_delta != 0.0f) {
-		process_mouse_scroll(&ctx->camera_data.camera, (float)input->scroll_delta);
-		display_zoom(&ctx->assets, &ctx->viewport, &ctx->camera_data);
-	}
-
-	// Processing camera mode switches between FPS and freefly
-	if (update_camera_from_input(window, &ctx->camera_data, input, dt))
-		display_camera_mode_status(&ctx->assets, ctx->camera_data.mode);
-
-
-	// Handling render mode changes
-	if (is_key_pressed(input, GLFW_KEY_UP)) {
-		cycle_render_mode(&ctx->post_processing, true);
-		display_render_mode_status(ctx);
-	}
-
-	if (is_key_pressed(input, GLFW_KEY_DOWN)) {
-		cycle_render_mode(&ctx->post_processing, false);
-		display_render_mode_status(ctx);
-	}
-
-
-	// Toggling debug mode (displaying information).
-	if (is_key_pressed(input, GLFW_KEY_Q)) {
-		ctx->app.config.debug_mode = !ctx->app.config.debug_mode;
-		display_debug_mode_status(ctx);
-	}
-}
-#endif
-
 static void handle_console_key_input(Console* console, int key, int scan_code, int action, int mods) {
 	// To ensure we handle only presses and repeats.
 	if (action != GLFW_PRESS && action != GLFW_REPEAT) { return; }
@@ -196,7 +153,7 @@ static void handle_console_key_input(Console* console, int key, int scan_code, i
 	}
 		
 	case GLFW_KEY_BACKSPACE: {
-		// delete_char(console);
+		delete_character(console);
 		break;
 	}
 		
@@ -362,11 +319,16 @@ void character_callback(GLFWwindow* window, u32 codepoint) {
 
 	//
 	// @TODO: Append the character press to the console here.
-	// 
+	//
+	char character = static_cast<char>(codepoint);
+	if (character == '`' || character == '~') { return; }
+	append_character(console, character);
 
+#if 0
 	// Debug output (for now).
 	if (codepoint < 128) {
-		std::cout << "Console received: '" << static_cast<char>(codepoint) << "'\n";
+		std::cout << "Console received: '" << character << "'\n";
 	}
+#endif
 }
 
