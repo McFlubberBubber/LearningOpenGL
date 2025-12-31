@@ -43,6 +43,7 @@ enum class SceneState {
 
 struct ApplicationState {
 	SceneState scene   = SceneState::MAIN;
+	SceneState prev_scene;
 
 	GLFWmonitor* monitor = nullptr;
 	GLFWwindow* window   = nullptr;	
@@ -60,6 +61,7 @@ struct ApplicationState {
 	s32 windowed_ypos   = 30;
 
 	ConfigFile config = {};
+	bool is_running = false;
 };
 
 struct ViewportState {

@@ -99,6 +99,100 @@ void decrement_menu_item(Menu* menu) {
  	}
 }
 
+void handle_main_menu_activations(Menu* menu, RenderingContext* ctx) {
+	switch (menu->main.current_item) {
+	case MenuItem::RESUME: {
+		ctx->app.scene = ctx->app.prev_scene;
+		break;
+	}
+		
+	case MenuItem::OPTIONS: {
+		menu->current_page = MenuPage::OPTIONS;
+		menu->options.current_item = OptionsItem::MUSIC; // Resetting
+		break;
+	}
+		
+	case MenuItem::SCENE_SWITCH: {
+		menu->render_normal_scene = !menu->render_normal_scene;
+		if (menu->render_normal_scene) {
+			ctx->app.scene = SceneState::MAIN;
+			display_current_scene_status(ctx);
+		} else {
+			ctx->app.scene = SceneState::SPACE;
+			display_current_scene_status(ctx);
+		}
+		break;
+	}
+		
+	case MenuItem::QUIT: {
+		glfwSetWindowShouldClose(ctx->app.window, true);
+		ctx->app.is_running = false;
+		break;
+	}
+		
+	default: {
+		break;
+	}
+		
+	}
+}
+
+
+void handle_options_menu_activations(Menu* menu, RenderingContext* ctx) {
+	std::string message;
+	
+	switch(menu->options.current_item) {
+	case OptionsItem::DISPLAY: {
+		ctx->app.config.fullscreen = !ctx->app.config.fullscreen;
+		menu->do_fullscreen = ctx->app.config.fullscreen;
+		message = std::string("Changed display to ") + (menu->do_fullscreen ? "fullscreen" : "windowed") + " mode.";
+		push_message(&ctx->message_queue, message);
+		break;
+	}
+		
+	case OptionsItem::MUSIC: {
+		menu->do_music = !menu->do_music;
+		message = std::string("Music toggled to ") + (menu->do_music ? "ON" : "OFF") + " state.";
+		push_message(&ctx->message_queue, message);
+		break;
+	}
+		
+	case OptionsItem::VSYNC: {
+		ctx->app.config.vsync = !ctx->app.config.vsync;
+		menu->do_vsync = ctx->app.config.vsync;
+		message = std::string("Vsync ") + (ctx->app.config.vsync ? "Enabled!" : "Disabled!");
+		push_message(&ctx->message_queue, message);
+		break;
+	}
+
+	// @TODO: Update screen shader to use a uniform to read gamma flags +
+	// clamp values from 0.1f to 1.0f (gamma goes from 0.1 to 2.2)
+	case OptionsItem::GAMMA: {
+		// @TODO: Use arrow keys to handle slider?
+		push_message(&ctx->message_queue, "Gamma slider not implemented!");
+		break;
+	}
+
+	// @TODO: Fix the buffers in BufferData to implement this.
+	case OptionsItem::MULTISAMPLING: {
+		menu->do_multisampling = !menu->do_multisampling;
+		message = std::string("Multisampling toggle not implemented!");
+		push_message(&ctx->message_queue, message);
+		break;
+	}
+		
+	case OptionsItem::BACK: {
+		menu->current_page = MenuPage::MAIN;
+		menu->main.current_item = MenuItem::RESUME; // Resetting
+		break;
+	}
+		
+	default: {
+		break;
+	}
+	}
+}
+
 
 // ----- Internal Functions -----
 static std::string menu_item_to_string(const Menu* menu, MenuItem item) {

@@ -31,6 +31,8 @@ bool init_application(ApplicationState *app, ViewportState *viewport) {
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 //	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); // Prevents custom resizing.
 
+	app->is_running = true;
+
 	// OPTIONAL: Built in multisampling from OpenGL.
 	// glfwWindowHint(GLFW_SAMPLES, app->sample_count); // Multisampling
 
@@ -119,6 +121,11 @@ void update_ortho(ViewportState* viewport) {
 //			-nathan, 26th Oct 2025
 
 void check_for_window_updates(ApplicationState* app, ViewportState* vp) {
+	// Check if the window must close from GLFW.
+	if (glfwWindowShouldClose(app->window)) {
+		app->is_running = false;
+	}
+
 	// V-sync updating
 	glfwSwapInterval(app->config.vsync ? 1 : 0);
 

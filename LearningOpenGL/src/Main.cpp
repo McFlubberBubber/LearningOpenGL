@@ -32,6 +32,7 @@ int main() {
 	Console console;
 
 	SceneState prev_scene = render_context.app.scene;
+	render_context.app.prev_scene = render_context.app.scene;
 
 	CallbackContext callback_context = {
 	&render_context,
@@ -77,32 +78,30 @@ int main() {
 	init_console(&console);
 
 	// ----- RENDER LOOP -----
-	while (!glfwWindowShouldClose(render_context.app.window)) {	
-		check_for_window_updates(&render_context.app, &render_context.viewport); // @TODO: Important note in the function definition here!
+	while (render_context.app.is_running) {	
+		// @TODO: Important note in the function definition here!
+		check_for_window_updates(&render_context.app, &render_context.viewport);
+		
 		Time::update();
 		float dt = Time::get_delta_time();
 
-		// Handling cursor stuff
-		if (render_context.app.scene != prev_scene) {
-
-			if (render_context.app.scene != SceneState::MENU) {
+		static SceneState last_scene = SceneState::MAIN;
+		if (render_context.app.scene != last_scene) {
+			if (render_context.app.scene == SceneState::MENU) {
+				glfwSetInputMode(render_context.app.window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			} else {
 				glfwGetCursorPos(render_context.app.window, &mouse_x, &mouse_y);
 				update_mouse_flags(&input_state, mouse_x, mouse_y);
-
-				glfwSetInputMode(render_context.app.window, GLFW_CURSOR,
-								 GLFW_CURSOR_DISABLED);
-			} else {
-				glfwSetInputMode(render_context.app.window, GLFW_CURSOR,
-								 GLFW_CURSOR_NORMAL);
+				glfwSetInputMode(render_context.app.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 			}
-
-			prev_scene = render_context.app.scene;
+			last_scene = render_context.app.scene;
 		}
 
 		process_input(render_context.app.window, &input_state, &menu, &render_context, dt, &console);
 
-		// @TODO: Since we are now rendering MULTIPLE scenes, it would make sense to structure them together to switch between the two,
-		// but this is what we are doing for now to get it up and running.
+		// @TODO: Since we are now rendering MULTIPLE scenes, it would make sense
+		// to structure them together to switch between the two, but this is what
+		// we are doing for now to get it up and running.
 		switch (render_context.app.scene) {
 		case (SceneState::MAIN):
 			render_scene(&render_context, dt);
@@ -127,6 +126,7 @@ int main() {
 		// For now, we will be drawing the console every frame.
 		draw_console(&render_context, &console);
 #endif
+		
 		//checking call events and swapping buffers
 		glfwSwapBuffers(render_context.app.window);
 		glfwPollEvents();

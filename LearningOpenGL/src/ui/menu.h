@@ -62,6 +62,10 @@ struct Menu {
 
 void init_menu(Menu* menu, ConfigFile* cfg);
 void draw_menu(RenderingContext* ctx, Menu* menu);
+
 void increment_menu_item(Menu* menu);
 void decrement_menu_item(Menu* menu);
+
+void handle_main_menu_activations(Menu* menu, RenderingContext*);
+void handle_options_menu_activations(Menu* menu, RenderingContext* ctx);
 	
