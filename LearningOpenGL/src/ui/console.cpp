@@ -299,5 +299,32 @@ void move_cursor_by_word(Console* console, bool is_forward) {
 }
 
 void delete_word(Console* console) {
+	int& current_pos = console->input.cursor_pos;
+	if (current_pos <= 0) {
+		return;
+	}
+	
+	int old_pos = console->input.cursor_pos;
+	char* text = console->input.data;
+	int& current_length = console->input.length;
+	
+	// First, eat all the whitespaces, then the word
+	while (current_pos > 0 && is_space(text[current_pos - 1])) {
+		current_pos--;
+	}
+	while (current_pos > 0 && !is_space(text[current_pos - 1])) {
+		current_pos--;
+	}
 
-};
+	int num_of_chars_to_delete = old_pos - current_pos;
+	if (num_of_chars_to_delete > 0) {
+		// Move everything from the old_pos to the current_pos.
+		// Src: where the text originally starts (old_pos).
+		// Dest: where the new text should go to (current_pos).
+		// Size: remaining text with its null terminator.
+		std::memmove(&text[current_pos], &text[old_pos], current_length - old_pos + 1);
+		current_length -+ num_of_chars_to_delete;
+		console->input.cursor_blink_time = 0.0f;
+	}
+}
+
