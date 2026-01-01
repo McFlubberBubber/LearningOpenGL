@@ -5,6 +5,16 @@
 // Forward declarations.
 struct RenderingContext;
 
+enum class LogType {
+	COMMAND = 0,
+	OUTPUT,
+	ERROR,
+	WARNING,
+	INFO,
+
+	COUNT
+};
+
 enum class ConsoleState {
 	CLOSED = 0,
 	OPEN_SMALL,
@@ -15,7 +25,7 @@ enum class ConsoleState {
 
 struct ConsoleLog {
 	std::string message;
-	u32 line_number;
+	LogType type = LogType::INFO;
 };
 
 struct ConsoleInput {
@@ -29,6 +39,8 @@ struct ConsoleInput {
 struct Console {
 	ConsoleInput input;
 	std::vector<ConsoleLog> logs;
+	std::vector<std::string> command_history;
+	int history_index = -1; // -1 = not browsing history.
 	
 	ConsoleState state = ConsoleState::CLOSED;
 
@@ -48,4 +60,4 @@ void delete_word(Console* console);
 void move_cursor_by_char(Console* console, bool is_forward);
 void move_cursor_by_word(Console* console, bool is_forward);
 
-void scroll_console_logs(Console* console, bool is_up);
+void navigate_command_history(Console* console, bool is_forward);

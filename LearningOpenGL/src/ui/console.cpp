@@ -8,14 +8,18 @@
 #include <cstring>  // For std::memset()
 
 namespace ConsoleSpecs {
-	static const glm::vec3 BG_COLOR 		 { 0.05f, 0.35f, 0.35f };
-	static const glm::vec3 INPUT_FIELD_COLOR { 0.07f, 0.50f, 0.50f };
+	// Just in case, to prevent bloat.
+	static constexpr u32 MAX_LOGS    = 1000;
+	static constexpr u32 MAX_HISTORY = 100;
+	
+	static const glm::vec3 BG_COLOR { 0.05f, 0.35f, 0.35f };
 	static constexpr float BG_ALPHA = 0.9f;
 	
-	static const glm::vec3 LOG_FONT_COLOR 	{ 1.0f, 1.0f, 1.0f };
-	static const glm::vec3 INPUT_FONT_COLOR { 0.0f, 1.0f, 0.0f };
-	static const glm::vec3 CURSOR_COLOR 	{ 0.5f, 0.9f, 0.5f };
-	static constexpr float TEXT_ALPHA = 1.0f;
+	static const glm::vec3 LOG_FONT_COLOR { 1.0f, 1.0f, 1.0f }; // @Cleanup: not needed?
+	static constexpr float LOG_SCALE 	   = 0.6f;
+	static constexpr float LOG_X_PADDING   = 4.0f;
+	static constexpr float LOG_Y_PADDING   = 8.0f;
+	static constexpr float LOG_LINE_HEIGHT = 36.0f;
 
 	// These variables define what are the appropriate y-levels for the console on the screen.
 	static constexpr float SMALL_OPENNESS  = 0.8f;
@@ -23,13 +27,25 @@ namespace ConsoleSpecs {
 	static constexpr float CLOSED_OPENNESS = 1.2f; // We are accounting for the input field.
 	static constexpr float OPENNESS_DT     = 0.3f;
 
+	static const glm::vec3 INPUT_FIELD_COLOR { 0.07f, 0.50f, 0.50f }; // @Cleanup: not needed too?
+	static const glm::vec3 INPUT_FONT_COLOR  { 0.0f, 1.0f, 0.0f };
 	static constexpr float INPUT_FIELD_HEIGHT = 40.0f;
 	static constexpr float INPUT_X_PADDING    = 4.0f;
 	static constexpr float INPUT_Y_PADDING    = 10.0f;
 	static constexpr float INPUT_SCALE        = 0.65f;
-
-	static constexpr float CARET_WIDTH = 3.0f;
+	
+	static const glm::vec3 CURSOR_COLOR	{ 0.5f, 0.9f, 0.5f };
+	static constexpr float CARET_WIDTH 	  = 3.0f;
 	static constexpr float CURSOR_PADDING = 4.0f;
+
+	static constexpr float TEXT_ALPHA = 1.0f;
+
+	// These colors under are specifically for the different log messages.
+	static const glm::vec3 WHITE  { 1.0f, 1.0f, 1.0f }; // COMMAND
+	static const glm::vec3 BRONZE { 0.8f, 0.7f, 0.5f }; // OUTPUT
+	static const glm::vec3 RED    { 1.0f, 0.0f, 0.0f }; // ERROR
+	static const glm::vec3 ORANGE { 1.0f, 0.5f, 0.1f }; // WARNING
+	static const glm::vec3 GRAY   { 0.5f, 0.5f, 0.5f }; // INFO : can consider a green?
 };
 
 
@@ -111,7 +127,6 @@ static void draw_cursor(Console* console, RenderingContext* ctx, float x, float 
 	} else if (console->input.cursor_blink_time > 2.0f) {
 		console->input.cursor_blink_time = 0.0f;
 	}
-	
 #else
 	float caret_x0 = x + INPUT_X_PADDING + text_width;
 	float caret_y0 = y0 + CURSOR_PADDING;
@@ -148,6 +163,76 @@ static void draw_input_area(Console* console, RenderingContext* ctx, float x, fl
 	draw_cursor(console, ctx, x, input_y0, input_y1, text_width_to_cursor);
 }
 
+static void draw_logs(Console* console, RenderingContext* ctx, float y) {
+	using namespace ConsoleSpecs;
+    auto font = &ctx->assets.fonts[FONT_REGULAR];
+    if (console->logs.empty()) return;
+	
+	float text_x = LOG_X_PADDING;
+	float text_y = y + LOG_Y_PADDING;
+	float screen_height = static_cast<float>(ctx->viewport.height);
+	int log_count = (int)console->logs.size(); 
+	glm::vec3 color;
+
+	for (int i = log_count - 1; i >= 0; --i) {
+		auto& log = console->logs[i];
+		switch (log.type) {
+		case LogType::COMMAND: { color = WHITE;  break; }
+		case LogType::OUTPUT:  { color = BRONZE; break; }
+		case LogType::ERROR:   { color = RED;	 break; }
+		case LogType::WARNING: { color = ORANGE; break; }
+		case LogType::INFO:	   { color = WHITE;  break; }
+		default:  			   { color = WHITE;  break; } 
+		}
+		
+		draw_text(font, ctx, log.message, text_x, text_y, INPUT_SCALE, color, TEXT_ALPHA, TextAlign::LEFT, false);
+		
+		text_y += LOG_LINE_HEIGHT;
+	}
+}
+
+
+// These functions below are all in relation to what happens after the user presses ENTER.
+static void push_log(Console* console, const std::string& command, LogType type = LogType::INFO) {
+	ConsoleLog log;
+	log.message = command;
+	log.type    = type;
+
+	console->logs.push_back(log);
+
+	// Ensure that we don't go over the max limit of logs within the vector.
+	if (console->logs.size() > ConsoleSpecs::MAX_LOGS) {
+		console->logs.erase(console->logs.begin()); // Remove the oldest log first.
+	}
+}
+
+static void add_to_history(Console* console, const std::string& command) {
+	// Prevent adding duplicates to the history.
+	if (!console->command_history.empty() && console->command_history.back() == command) {
+		return;
+	}
+
+	console->command_history.push_back(command);
+	console->history_index = -1;
+
+	// Check we don't go over the command_history limit.
+	if (console->command_history.size() > ConsoleSpecs::MAX_HISTORY) {
+		console->command_history.erase(console->command_history.begin());
+	}
+	
+}
+
+static void parse_and_execute(Console* console, const std::string& command) {
+	// @Incomplete: do this.
+}
+
+static void clear_input(Console* console) {
+	std::memset(console->input.data, 0, sizeof(console->input.data));
+	console->input.cursor_pos = 0;
+	console->input.length = 0;
+	console->input.cursor_blink_time = 0.0f;
+}
+
 void init_console(Console* console) {
 	console->state = ConsoleState::CLOSED;
 	console->openness = ConsoleSpecs::CLOSED_OPENNESS;
@@ -156,13 +241,21 @@ void init_console(Console* console) {
 	
 	console->input.cursor_pos 		 = 0;
 	console->input.cursor_blink_time = 0.0f;
+
+	std::string welcome_msg = "Welcome to the console! Type 'help' for a list of commands.";
+	push_log(console, welcome_msg, LogType::INFO);
+
+	// @NOTE: This is for testing purposes.
+	std::string test1 = "test1";
+	push_log(console, test1, LogType::COMMAND);
+
+	std::string test2 = "test2";
+	push_log(console, test2, LogType::COMMAND);
 }
 
 void draw_console(RenderingContext* ctx, Console* console) {
 	using namespace ConsoleSpecs;
 	update_openness(console); // Animates the console movement.
-	// std::string state_string = console_state_to_string(console->state);
-	// std::cout << "Drawing console in " << state_string << "\n";
 	
 	// Temporary variables, might move these to a namespace here.
 	float x1 = static_cast<float>(ctx->viewport.width);
@@ -176,23 +269,12 @@ void draw_console(RenderingContext* ctx, Console* console) {
 	}
 
 	// Drawing both the report log and the input field area.
-	draw_quad(ctx, x0, y0, x1, y1, BG_COLOR, BG_ALPHA);
-
 	float input_y0 = y0 - INPUT_FIELD_HEIGHT; // Start a bit lower down.
 	float input_y1 = y0; // Start where the prev quad ended.
+	draw_quad(ctx, x0, y0, x1, y1, BG_COLOR, BG_ALPHA);
 	draw_quad(ctx, x0, input_y0, x1, input_y1, INPUT_FIELD_COLOR, BG_ALPHA);
-	
-	// Drawing text-stuff.
-	// Temp vars.
-	std::string log_example = "This is a log example!";
-	float log_x_padding		= 4.0f;
-	float log_y_padding		= 8.0f;
-	float log_x 			= x0 + log_x_padding;
-	float log_y				= y0 + log_y_padding; // This y-coord needs to vary.
-	float log_scale			= 0.6f;
-	draw_text(&ctx->assets.fonts[FONT_REGULAR], ctx, log_example, log_x, log_y, log_scale, LOG_FONT_COLOR, TEXT_ALPHA, TextAlign::LEFT, false);
 
-	// @TODO: draw_console_logs();
+	draw_logs(console, ctx, input_y1); // We pass the input_y1 as a ref to the input field.
 	draw_input_area(console, ctx, x0, y0);
 }
 
@@ -228,14 +310,13 @@ void delete_character(Console* console) {
 }
 
 void execute_command(Console* console) {
+	if (console->input.length == 0) { return; }
 	std::string command = console->input.data;
-	std::cout << "Command inputted: " << command << "\n";
 
-	// Clearing the input field.
-	std::memset(console->input.data, 0, sizeof(console->input.data));
-	console->input.cursor_pos = 0;
-	console->input.length = 0;
-	console->input.cursor_blink_time = 0.0f;
+	push_log(console, "> " + command, LogType::COMMAND);
+	add_to_history(console, command);
+	parse_and_execute(console, command);
+	clear_input(console);
 }
 
 
@@ -323,8 +404,15 @@ void delete_word(Console* console) {
 		// Dest: where the new text should go to (current_pos).
 		// Size: remaining text with its null terminator.
 		std::memmove(&text[current_pos], &text[old_pos], current_length - old_pos + 1);
-		current_length -+ num_of_chars_to_delete;
+		current_length -= num_of_chars_to_delete;
 		console->input.cursor_blink_time = 0.0f;
 	}
 }
 
+void navigate_command_history(Console* console, bool is_forward) {
+	if (is_forward) {
+
+	} else {
+
+	}
+}

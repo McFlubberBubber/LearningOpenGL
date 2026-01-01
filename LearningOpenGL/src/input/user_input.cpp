@@ -166,11 +166,13 @@ static void handle_console_key_input(Console* console, int key, int scan_code, i
 		break;
 	}
 		
-	// Maybe these cases can be used to scroll through the history of the logs?
+	// Use this to scroll through the console command history, much like a terminal.
 	case GLFW_KEY_UP: {
+		navigate_command_history(console, false);
 		break;
 	}
 	case GLFW_KEY_DOWN: {
+		navigate_command_history(console, true);
 		break;
 	}
 
