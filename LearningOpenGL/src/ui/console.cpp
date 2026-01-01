@@ -170,12 +170,15 @@ static void draw_logs(Console* console, RenderingContext* ctx, float y) {
 	
 	float text_x = LOG_X_PADDING;
 	float text_y = y + LOG_Y_PADDING;
-	float screen_height = static_cast<float>(ctx->viewport.height);
+	float console_top = static_cast<float>(ctx->viewport.height) * 0.99f;
 	int log_count = (int)console->logs.size(); 
 	glm::vec3 color;
 
 	for (int i = log_count - 1; i >= 0; --i) {
 		auto& log = console->logs[i];
+
+		if (text_y > console_top) { break; };
+		
 		switch (log.type) {
 		case LogType::COMMAND: { color = WHITE;  break; }
 		case LogType::OUTPUT:  { color = BRONZE; break; }
