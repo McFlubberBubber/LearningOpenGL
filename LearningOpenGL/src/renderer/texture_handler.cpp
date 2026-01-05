@@ -39,7 +39,7 @@ bool add_cubemap_texture(Assets* assets, TextureType texture, const std::vector<
 
 
 // Internal helper functions - private?
-u32 load_2D_texture(const char* path) {
+u32 load_2D_texture(const char* path) { // u32 = unsigned int
 	u32 texture_id{};
 	s32 width, height, nr_components;
 	unsigned char* data = stbi_load(path, &width, &height, &nr_components, 0);

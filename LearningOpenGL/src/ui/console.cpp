@@ -48,6 +48,10 @@ namespace ConsoleSpecs {
 	static const glm::vec3 GRAY   { 0.5f, 0.5f, 0.5f }; // INFO : can consider a green?
 };
 
+// Quick helper function for identifying if the char we are on is a space or indent.
+static inline bool is_space(char c) {
+	return c == ' ' || c == '\t';
+}
 
 static std::string console_state_to_string(ConsoleState state) {
 	switch (state) {
@@ -113,21 +117,6 @@ static void update_openness(Console* console) {
 
 static void draw_cursor(Console* console, RenderingContext* ctx, float x, float y0, float y1, float text_width) {
 	using namespace ConsoleSpecs;
-#if 0
-	float cursor_x  = x  + INPUT_X_PADDING;
-	float cursor_y0 = y0 + CURSOR_PADDING;
-	float cursor_y1 = y1 - CURSOR_PADDING;
-	cursor_x += text_width;
-	float cursor_x1 = cursor_x + CURSOR_LENGTH;
-
-	// Cursor blink
-	console->input.cursor_blink_time += Time::get_delta_time();
-	if (console->input.cursor_blink_time <= 1.0f) {
-		draw_quad(ctx, cursor_x, cursor_y0, cursor_x1, cursor_y1, CURSOR_COLOR, TEXT_ALPHA);
-	} else if (console->input.cursor_blink_time > 2.0f) {
-		console->input.cursor_blink_time = 0.0f;
-	}
-#else
 	float caret_x0 = x + INPUT_X_PADDING + text_width;
 	float caret_y0 = y0 + CURSOR_PADDING;
 	float caret_y1 = y1 - CURSOR_PADDING;
@@ -140,8 +129,6 @@ static void draw_cursor(Console* console, RenderingContext* ctx, float x, float 
 	} else if (console->input.cursor_blink_time > 2.0f) {
 		console->input.cursor_blink_time = 0.0f;
 	}
-
-#endif
 }
 
 static void draw_input_area(Console* console, RenderingContext* ctx, float x, float y) {
@@ -184,7 +171,7 @@ static void draw_logs(Console* console, RenderingContext* ctx, float y) {
 		case LogType::OUTPUT:  { color = BRONZE; break; }
 		case LogType::ERROR:   { color = RED;	 break; }
 		case LogType::WARNING: { color = ORANGE; break; }
-		case LogType::INFO:	   { color = WHITE;  break; }
+		case LogType::INFO:	   { color = BRONZE;  break; }
 		default:  			   { color = WHITE;  break; } 
 		}
 		
@@ -225,8 +212,80 @@ static void add_to_history(Console* console, const std::string& command) {
 	
 }
 
-static void parse_and_execute(Console* console, const std::string& command) {
-	// @Incomplete: do this.
+static void clear_console_logs(Console* console) {
+	console->logs.clear();
+}
+
+static void clear_console_command_history(Console* console) {
+	if (console->command_history.empty()) { return; }
+	console->command_history.clear();
+}
+
+static void log_unknown_command(Console* console) {
+	std::string command = console->input.data;
+	push_log(console, command + ": Unkown command.", LogType::ERROR);
+}
+
+static void parse_and_tokenize(Console* console, const std::string& command) {
+	std::vector<std::string> tokens;
+	std::string remaining = command;
+
+	// Eat any spaces the user may have entered before inputting their command.
+	size_t spaces = 0;
+	while (spaces < remaining.size() && is_space(remaining[spaces])) {
+		spaces++;
+	}
+	remaining = remaining.substr(spaces);
+	
+	// We already check if the command has any length, so we don't need to check anything else.
+	bool in_quotes = false;
+	std::string current_token;
+	for (size_t i = 0; i < remaining.length(); i++) {
+		char c = remaining[i];
+
+		// Toggling the in_quotes flag if we find the pair of quotes in the command.
+		if (c == '"') {
+			in_quotes = !in_quotes;
+			
+		} else if (c == ' ' && !in_quotes) { // If we find a whitespace..
+
+			// If we have a token that has data, send it.
+			if (!current_token.empty()) {
+				tokens.push_back(current_token);
+				current_token.clear();
+			}
+			
+		} else { // Else, keep adding to the current_token.
+			current_token += c;
+		}
+	}
+
+	if (!current_token.empty()) { // If there was a token at the end, add that.
+		tokens.push_back(current_token);
+	}
+
+	// Printing tokens found for now.
+	for (auto& it : tokens) {
+		std::cout << "Token found: " << it << "\n";
+	}
+
+	// @Hardcode: There will be more commands in the future, but for now, we call the functions
+	// manually.
+	if (tokens.size() > 1) {
+		if (tokens[0].compare("reset")) {
+			std::cout << "reset was entered!" << "\n";
+			clear_console_command_history(console);
+			return;
+		}
+	}
+
+	if (tokens[0].compare("clear") == 0) {
+		clear_console_logs(console);
+		return;
+	}
+
+	// If we don't hit any of the early-exits, log an unknown command to the console.
+	log_unknown_command(console);
 }
 
 static void clear_input(Console* console) {
@@ -234,7 +293,9 @@ static void clear_input(Console* console) {
 	console->input.cursor_pos = 0;
 	console->input.length = 0;
 	console->input.cursor_blink_time = 0.0f;
+//	console->history_index = -1;
 }
+
 
 void init_console(Console* console) {
 	console->state = ConsoleState::CLOSED;
@@ -247,13 +308,6 @@ void init_console(Console* console) {
 
 	std::string welcome_msg = "Welcome to the console! Type 'help' for a list of commands.";
 	push_log(console, welcome_msg, LogType::INFO);
-
-	// @NOTE: This is for testing purposes.
-	std::string test1 = "test1";
-	push_log(console, test1, LogType::COMMAND);
-
-	std::string test2 = "test2";
-	push_log(console, test2, LogType::COMMAND);
 }
 
 void draw_console(RenderingContext* ctx, Console* console) {
@@ -318,10 +372,9 @@ void execute_command(Console* console) {
 
 	push_log(console, "> " + command, LogType::COMMAND);
 	add_to_history(console, command);
-	parse_and_execute(console, command);
+	parse_and_tokenize(console, command);
 	clear_input(console);
 }
-
 
 void move_cursor_by_char(Console* console, bool is_forward) {
 	int old_pos = console->input.cursor_pos;
@@ -338,11 +391,6 @@ void move_cursor_by_char(Console* console, bool is_forward) {
 	if (console->input.cursor_pos != old_pos) {
 		console->input.cursor_blink_time = 0.0f;
 	}
-}
-
-// Quick helper function for moving the cursor by word.
-static inline bool is_space(char c) {
-	return c == ' ' || c == '\t';
 }
 
 void move_cursor_by_word(Console* console, bool is_forward) {
@@ -413,9 +461,37 @@ void delete_word(Console* console) {
 }
 
 void navigate_command_history(Console* console, bool is_forward) {
-	if (is_forward) {
+	if (console->command_history.empty()) { return; }
+	clear_input(console);
+	std::string current_command = {};
 
+	int command_history_count = static_cast<int>(console->command_history.size());
+	command_history_count -= 1; // This is for zero-indexing
+
+	if (!is_forward) {
+		console->history_index--;
+		if (console->history_index <= 0) {
+			console->history_index = 0;
+		}
 	} else {
-
+		console->history_index++;
+		if (console->history_index >= command_history_count) {
+			console->history_index = command_history_count;
+		}
 	}
+	
+	std::cout << "history_index: " << console->history_index << "\n";
+	std::cout << "command_history_count: " << command_history_count << "\n";
+
+	// @INCOMPLETE: This shit is buggy as FUCK.
+	current_command = console->command_history[console->history_index];
+	std::cout << "Current command in history: " << current_command << "\n";
+	for (char c : current_command) {
+		insert_character(console, c);
+	}
+
+	// Updating stuff...
+	console->input.cursor_pos = static_cast<int>(current_command.length());
+	console->input.length	  = static_cast<int>(current_command.length());
+	console->input.cursor_blink_time = 0.0f;
 }
