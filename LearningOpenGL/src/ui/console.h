@@ -39,9 +39,10 @@ struct ConsoleInput {
 struct Console {
 	ConsoleInput input;
 	std::vector<ConsoleLog> logs;
+	
 	std::vector<std::string> command_history;
 	int history_index = -1; // -1 = not browsing history.
-	
+
 	ConsoleState state = ConsoleState::CLOSED;
 
 	float openness; // 1.0f = top (console is closed).

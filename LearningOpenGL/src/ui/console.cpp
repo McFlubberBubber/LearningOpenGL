@@ -219,6 +219,7 @@ static void clear_console_logs(Console* console) {
 static void clear_console_command_history(Console* console) {
 	if (console->command_history.empty()) { return; }
 	console->command_history.clear();
+	push_log(console, "Cleared command history from console.", LogType::OUTPUT);
 }
 
 static void log_unknown_command(Console* console) {
@@ -271,11 +272,15 @@ static void parse_and_tokenize(Console* console, const std::string& command) {
 
 	// @Hardcode: There will be more commands in the future, but for now, we call the functions
 	// manually.
-	if (tokens.size() > 1) {
-		if (tokens[0].compare("reset")) {
-			std::cout << "reset was entered!" << "\n";
-			clear_console_command_history(console);
+	if (tokens[0].compare("reset") == 0) {
+		if (tokens.size() < 2) {
+			push_log(console, "Error: expected usage = reset <type>.", LogType::ERROR);
 			return;
+		} else {
+			if (tokens[1].compare("command_history") == 0) {
+				clear_console_command_history(console);
+				return;
+			}
 		}
 	}
 
@@ -466,6 +471,9 @@ void navigate_command_history(Console* console, bool is_forward) {
 	std::string current_command = {};
 
 	int command_history_count = static_cast<int>(console->command_history.size());
+	if (console->history_index == -1) {
+		console->history_index = command_history_count;
+	}
 	command_history_count -= 1; // This is for zero-indexing
 
 	if (!is_forward) {
@@ -483,15 +491,10 @@ void navigate_command_history(Console* console, bool is_forward) {
 	std::cout << "history_index: " << console->history_index << "\n";
 	std::cout << "command_history_count: " << command_history_count << "\n";
 
-	// @INCOMPLETE: This shit is buggy as FUCK.
 	current_command = console->command_history[console->history_index];
 	std::cout << "Current command in history: " << current_command << "\n";
+
 	for (char c : current_command) {
 		insert_character(console, c);
 	}
-
-	// Updating stuff...
-	console->input.cursor_pos = static_cast<int>(current_command.length());
-	console->input.length	  = static_cast<int>(current_command.length());
-	console->input.cursor_blink_time = 0.0f;
 }
