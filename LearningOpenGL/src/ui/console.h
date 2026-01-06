@@ -1,9 +1,22 @@
 #pragma once
 
-#include "core/types.h" // For types, strings and vectors.
+#include "core/types.h"  // For types, strings and vectors.
+#include <unordered_map> // For hashmap lookups for argument parsing. 
 
 // Forward declarations.
 struct RenderingContext;
+struct Console;
+
+enum CommandType {
+	CMD_CLEAR = 0,
+	CMD_RESET,
+
+	CMD_COUNT
+};
+
+struct Command {
+	void (*procedure_ptr)(Console*, const std::vector<std::string>&);
+};
 
 enum class LogType {
 	COMMAND = 0,
@@ -37,13 +50,16 @@ struct ConsoleInput {
 };
 
 struct Console {
+	ConsoleState state = ConsoleState::CLOSED;
+
 	ConsoleInput input;
 	std::vector<ConsoleLog> logs;
 	
 	std::vector<std::string> command_history;
 	int history_index = -1; // -1 = not browsing history.
 
-	ConsoleState state = ConsoleState::CLOSED;
+	Command commands[CMD_COUNT] = { 0 };
+	std::unordered_map<std::string, Command> arguments;
 
 	float openness; // 1.0f = top (console is closed).
 };

@@ -212,16 +212,6 @@ static void add_to_history(Console* console, const std::string& command) {
 	
 }
 
-static void clear_console_logs(Console* console) {
-	console->logs.clear();
-}
-
-static void clear_console_command_history(Console* console) {
-	if (console->command_history.empty()) { return; }
-	console->command_history.clear();
-	push_log(console, "Cleared command history from console.", LogType::OUTPUT);
-}
-
 static void log_unknown_command(Console* console) {
 	std::string command = console->input.data;
 	push_log(console, command + ": Unkown command.", LogType::ERROR);
@@ -265,32 +255,22 @@ static void parse_and_tokenize(Console* console, const std::string& command) {
 		tokens.push_back(current_token);
 	}
 
-	// Printing tokens found for now.
-	for (auto& it : tokens) {
-		std::cout << "Token found: " << it << "\n";
-	}
-
-	// @Hardcode: There will be more commands in the future, but for now, we call the functions
-	// manually.
-	if (tokens[0].compare("reset") == 0) {
-		if (tokens.size() < 2) {
-			push_log(console, "Error: expected usage = reset <type>.", LogType::ERROR);
+	// Just trying out the hashmap lookup stuff. Could be VERY buggy.
+	auto it = console->arguments.find(tokens[0]);
+	if (it != console->arguments.end()) {
+		if (it->second.procedure_ptr == NULL) {
+			std::cout << "procedure_ptr not found for: " << it->first << "\n";
 			return;
+			
 		} else {
-			if (tokens[1].compare("command_history") == 0) {
-				clear_console_command_history(console);
-				return;
-			}
+			std::cout << "procedure_ptr found for: " << it->first << "\n";
+			it->second.procedure_ptr(console, tokens);
 		}
+		
+	} else { // Else, we have not found a command that matches.
+		std::cout << "Command not found for matching token: " << tokens[0] << "\n";
+		log_unknown_command(console);
 	}
-
-	if (tokens[0].compare("clear") == 0) {
-		clear_console_logs(console);
-		return;
-	}
-
-	// If we don't hit any of the early-exits, log an unknown command to the console.
-	log_unknown_command(console);
 }
 
 static void clear_input(Console* console) {
@@ -302,7 +282,49 @@ static void clear_input(Console* console) {
 }
 
 
+static void clear_logs(Console* console, const std::vector<std::string>& tokens) {
+	if (tokens.size() != 1) {
+		push_log(console, "ERROR::expected usage: clear", LogType::ERROR);
+		return;
+	}
+
+	console->logs.clear();
+	return;
+}
+
+static void clear_command_history(Console* console, const std::vector<std::string>& tokens) {
+	if (console->command_history.empty()) { return; }
+	
+	if (tokens.size() != 2) {
+		push_log(console, "ERROR::expected usage: reset <keyword>", LogType::ERROR);
+		return;
+	}
+
+	if (tokens[1].compare("command_history") == 0) {
+		console->command_history.clear();
+		push_log(console, "Cleared command history from console.", LogType::OUTPUT);
+		return;
+	} else {
+		push_log(console, "ERROR::keyword does not exist!", LogType::ERROR);
+		push_log(console, "Did you mean to type ""command_history""?", LogType::ERROR);
+		return;
+	}
+}
+
+static void init_arguments(Console* console) {
+	auto& args = console->arguments;
+
+	args.insert({ "clear", console->commands[CMD_CLEAR] });
+	args.insert({ "reset", console->commands[CMD_RESET] });
+}
+
+// ----- Public functions -----
 void init_console(Console* console) {
+	console->commands[CMD_CLEAR].procedure_ptr = clear_logs;
+	console->commands[CMD_RESET].procedure_ptr = clear_command_history;
+	
+	init_arguments(console);
+	
 	console->state = ConsoleState::CLOSED;
 	console->openness = ConsoleSpecs::CLOSED_OPENNESS;
 
@@ -487,14 +509,10 @@ void navigate_command_history(Console* console, bool is_forward) {
 			console->history_index = command_history_count;
 		}
 	}
-	
-	std::cout << "history_index: " << console->history_index << "\n";
-	std::cout << "command_history_count: " << command_history_count << "\n";
 
 	current_command = console->command_history[console->history_index];
-	std::cout << "Current command in history: " << current_command << "\n";
-
 	for (char c : current_command) {
-		insert_character(console, c);
+		insert_character(console, c); // @Speed: We could try putting the whole command in at the same
+									  // time instead of inserting it one by one?
 	}
 }
