@@ -18,7 +18,7 @@ static void draw_small_text(const RenderingContext* context);
 static void draw_menu_choices(const RenderingContext* context, const Menu* menu);
 static void draw_options(const RenderingContext* ctx, const Menu* menu);
 
-void init_menu(Menu* menu, ConfigFile *cfg) {
+void init_menu(Menu* menu, RenderingContext* ctx) {
 	menu->main.items = {
 		MenuItem::RESUME,
 		MenuItem::OPTIONS,
@@ -37,17 +37,25 @@ void init_menu(Menu* menu, ConfigFile *cfg) {
 		OptionsItem::BACK
 	};
 
+
+	menu->render_ctx_ptr = ctx;
+	if (menu->render_ctx_ptr == NULL) {
+		std::cout << "Pointer to rendering context within menu is NULL!\n";
+		return;
+	}
+
+	
 	// Fetching data from the config file.
+	auto cfg = &ctx->app.config;
 	menu->do_music		= cfg->music;
 	menu->do_fullscreen = cfg->fullscreen;
 	menu->do_vsync		= cfg->vsync;
 
 	menu->gamma			   = cfg->gamma;
 	menu->do_multisampling = cfg->multisampling;
-	
 }
 
-void draw_menu(RenderingContext* ctx, Menu* menu) {
+void draw_menu(Menu* menu, RenderingContext* ctx) {
 	glClearColor(0.05f, 0.2f, 0.25f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -102,38 +110,39 @@ void decrement_menu_item(Menu* menu) {
 void handle_main_menu_activations(Menu* menu, RenderingContext* ctx) {
 	switch (menu->main.current_item) {
 	case MenuItem::RESUME: {
-		ctx->app.scene = ctx->app.prev_scene;
+		ctx->app.is_menu_open = false;
 		break;
 	}
-		
+
 	case MenuItem::OPTIONS: {
 		menu->current_page = MenuPage::OPTIONS;
 		menu->options.current_item = OptionsItem::MUSIC; // Resetting
 		break;
 	}
-		
+
 	case MenuItem::SCENE_SWITCH: {
-		menu->render_normal_scene = !menu->render_normal_scene;
-		if (menu->render_normal_scene) {
-			ctx->app.scene = SceneState::MAIN;
-			display_current_scene_status(ctx);
-		} else {
-			ctx->app.scene = SceneState::SPACE;
-			display_current_scene_status(ctx);
+		auto& scene = menu->render_ctx_ptr->app.scene;
+		if (scene == SceneState::SPACE) {
+			scene = SceneState::MAIN;
+			display_current_scene_status(menu->render_ctx_ptr);
+		}
+		else if (scene == SceneState::MAIN) {
+			scene = SceneState::SPACE;
+			display_current_scene_status(menu->render_ctx_ptr);
 		}
 		break;
 	}
-		
+
 	case MenuItem::QUIT: {
 		glfwSetWindowShouldClose(ctx->app.window, true);
 		ctx->app.is_running = false;
 		break;
 	}
-		
+
 	default: {
 		break;
 	}
-		
+
 	}
 }
 
@@ -196,19 +205,30 @@ void handle_options_menu_activations(Menu* menu, RenderingContext* ctx) {
 
 // ----- Internal Functions -----
 static std::string menu_item_to_string(const Menu* menu, MenuItem item) {
+	auto& scene = menu->render_ctx_ptr->app.scene;
+	
 	switch (item) {
-	case MenuItem::RESUME:
+	case MenuItem::RESUME: {
 		return "Resume";
-			
-	case MenuItem::SCENE_SWITCH:
-		return std::string("Current Scene: ") + (menu->render_normal_scene ? "Normal" : "Space");
-
-	case MenuItem::OPTIONS:
+	} 
+		
+	case MenuItem::SCENE_SWITCH: {
+		std::string base = "Current Scene: ";
+		if (scene == SceneState::MAIN) {
+			return base + "Normal";
+		} else if (scene == SceneState::SPACE) {
+			return base + "Space";
+		}
+	} 
+		
+	case MenuItem::OPTIONS: {
 		return "Options";
-			
-	case MenuItem::QUIT:
+	} 
+		
+	case MenuItem::QUIT: {
 		return "Quit";
-			
+	} 
+		
 	default:
 		return "Unknown";
  	}

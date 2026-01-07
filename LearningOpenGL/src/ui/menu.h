@@ -50,7 +50,7 @@ struct Menu {
 	OptionsState options;
 
 	// @TODO: These settings should be read from the config file.
-	bool render_normal_scene { true };
+	RenderingContext* render_ctx_ptr = NULL;
 
 	bool do_music;
 	bool do_fullscreen;
@@ -60,8 +60,8 @@ struct Menu {
 	bool do_multisampling; 
 };
 
-void init_menu(Menu* menu, ConfigFile* cfg);
-void draw_menu(RenderingContext* ctx, Menu* menu);
+void init_menu(Menu* menu, RenderingContext* ctx);
+void draw_menu(Menu* menu, RenderingContext* ctx);
 
 void increment_menu_item(Menu* menu);
 void decrement_menu_item(Menu* menu);

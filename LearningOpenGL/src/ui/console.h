@@ -11,6 +11,8 @@ enum CommandType {
 	CMD_CLEAR = 0,
 	CMD_RESET,
 
+	CMD_SCENE_CHANGE,
+	
 	CMD_COUNT
 };
 
@@ -61,11 +63,14 @@ struct Console {
 	Command commands[CMD_COUNT] = { 0 };
 	std::unordered_map<std::string, Command> arguments;
 
+	RenderingContext* render_ctx = NULL; // This is here to make console commands access the "app".
+
 	float openness; // 1.0f = top (console is closed).
+	bool is_initialized = false;
 };
 
-void init_console(Console* console);
-void draw_console(RenderingContext* ctx, Console* console);
+void init_console(Console* console, RenderingContext* ctx);
+void draw_console(Console* console, RenderingContext* ctx);
 
 void execute_command(Console* console);
 void autocomplete_command(Console* console);

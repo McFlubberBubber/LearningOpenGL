@@ -311,18 +311,44 @@ static void clear_command_history(Console* console, const std::vector<std::strin
 	}
 }
 
-static void init_arguments(Console* console) {
-	auto& args = console->arguments;
+static void change_current_scene(Console* console, const std::vector<std::string>& tokens) {
+	if (console->command_history.empty()) { return; }
 
+	auto ctx = console->render_ctx;
+
+	if (tokens.size() != 2) {
+		push_log(console, "ERROR::expected usage: scene <keyword>", LogType::ERROR);
+		return;
+	}
+
+	if (tokens[1].compare("normal") == 0) {
+		ctx->app.scene = SceneState::MAIN;
+		push_log(console, "Changing current scene to NORMAL.", LogType::OUTPUT);
+		return;
+	} else if (tokens[1].compare("space") == 0) {
+		ctx->app.scene = SceneState::SPACE;
+		push_log(console, "Changing current scene to SPACE.", LogType::OUTPUT);
+		return;
+	} else {
+		push_log(console, "ERROR::keyword does not exist!", LogType::ERROR);
+		push_log(console, "Type ""help scene"" to see a list of keywords.", LogType::ERROR);
+		return;
+	}
+}
+
+static void init_arguments(Console* console) {
+	console->commands[CMD_CLEAR].procedure_ptr = clear_logs;
+	console->commands[CMD_RESET].procedure_ptr = clear_command_history;
+	console->commands[CMD_SCENE_CHANGE].procedure_ptr = change_current_scene;
+
+	auto& args = console->arguments;
 	args.insert({ "clear", console->commands[CMD_CLEAR] });
 	args.insert({ "reset", console->commands[CMD_RESET] });
+	args.insert({ "scene", console->commands[CMD_SCENE_CHANGE] });
 }
 
 // ----- Public functions -----
-void init_console(Console* console) {
-	console->commands[CMD_CLEAR].procedure_ptr = clear_logs;
-	console->commands[CMD_RESET].procedure_ptr = clear_command_history;
-	
+void init_console(Console* console, RenderingContext* ctx) {
 	init_arguments(console);
 	
 	console->state = ConsoleState::CLOSED;
@@ -333,12 +359,25 @@ void init_console(Console* console) {
 	console->input.cursor_pos 		 = 0;
 	console->input.cursor_blink_time = 0.0f;
 
+	console->render_ctx = ctx;
+	if (console->render_ctx == NULL) {
+		std::cout << "Console pointer to renderer is NULL!\n";
+		console->is_initialized = false;
+		return;
+	}
+
+	console->is_initialized = true;
 	std::string welcome_msg = "Welcome to the console! Type 'help' for a list of commands.";
 	push_log(console, welcome_msg, LogType::INFO);
 }
 
-void draw_console(RenderingContext* ctx, Console* console) {
+void draw_console(Console* console, RenderingContext* ctx) {
 	using namespace ConsoleSpecs;
+	if (!console->is_initialized) {
+		push_message(&ctx->message_queue, "Console not initialized!");
+		return;
+	}
+
 	update_openness(console); // Animates the console movement.
 	
 	// Temporary variables, might move these to a namespace here.

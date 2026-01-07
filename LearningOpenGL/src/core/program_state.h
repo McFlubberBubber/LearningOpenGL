@@ -37,13 +37,13 @@ struct ConfigFile {
 // Game state
 enum class SceneState {
 	MAIN,
-	MENU,
 	SPACE
 };
 
 struct ApplicationState {
 	SceneState scene   = SceneState::MAIN;
 	SceneState prev_scene;
+	bool is_menu_open = false;
 
 	GLFWmonitor* monitor = nullptr;
 	GLFWwindow* window   = nullptr;	

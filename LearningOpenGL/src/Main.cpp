@@ -57,7 +57,7 @@ int main() {
 	// Initialize values for input_state.
 	double mouse_x, mouse_y;
 	glfwGetCursorPos(render_context.app.window, &mouse_x, &mouse_y);
-	update_mouse_flags(&input_state, mouse_x, mouse_y);
+	reset_mouse_tracking(&input_state, mouse_x, mouse_y);
 
 	stbi_set_flip_vertically_on_load(true);
 
@@ -74,8 +74,8 @@ int main() {
 	generate_blahaj_matrices(&render_context);
 //	validate_rock_instancing(&render_context); // Logging info.
 
-	init_menu(&menu, &render_context.app.config);
-	init_console(&console);
+	init_menu(&menu, &render_context);
+	init_console(&console, &render_context);
 
 	// ----- RENDER LOOP -----
 	while (render_context.app.is_running) {	
@@ -85,49 +85,42 @@ int main() {
 		Time::update();
 		float dt = Time::get_delta_time();
 
-		static SceneState last_scene = SceneState::MAIN;
-		if (render_context.app.scene != last_scene) {
-			if (render_context.app.scene == SceneState::MENU) {
-				glfwSetInputMode(render_context.app.window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-			} else {
-				glfwGetCursorPos(render_context.app.window, &mouse_x, &mouse_y);
-				update_mouse_flags(&input_state, mouse_x, mouse_y);
-				glfwSetInputMode(render_context.app.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		glfwGetCursorPos(render_context.app.window, &mouse_x, &mouse_y);
+		update_mouse_position(&input_state, mouse_x, mouse_y);
+		
+		static bool was_menu_open = false;
+		if (render_context.app.is_menu_open) {
+			if (!was_menu_open) {
+				reset_mouse_tracking(&input_state, mouse_x, mouse_y);
 			}
-			last_scene = render_context.app.scene;
+			glfwSetInputMode(render_context.app.window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		} else {
+			if (was_menu_open) {
+				reset_mouse_tracking(&input_state, mouse_x, mouse_y);
+			}
+			glfwSetInputMode(render_context.app.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		}
+		was_menu_open = render_context.app.is_menu_open;
 
 		process_input(render_context.app.window, &input_state, &menu, &render_context, dt, &console);
 
-		// @TODO: Since we are now rendering MULTIPLE scenes, it would make sense
-		// to structure them together to switch between the two, but this is what
-		// we are doing for now to get it up and running.
 		switch (render_context.app.scene) {
 		case (SceneState::MAIN):
 			render_scene(&render_context, dt);
-			break;
-		case (SceneState::MENU):
-			draw_menu(&render_context, &menu);
 			break;
 		case(SceneState::SPACE):
 			render_space_scene(&render_context, dt);
 			break;
 		}
 
-		// @TODO: Since we want to animate the console being dropped down from the top, we may need
-		// to track console state in the previous frame to know whether the console has been
-		// previously open. For now, we will just be checking the console state and immediately
-		// drawing it to the screen.
-#if 0
-		if ((console.state == ConsoleState::OPEN_SMALL) || (console.state == ConsoleState::OPEN_BIG)) {
-			draw_console(&render_context, &console);
+		if (render_context.app.is_menu_open) {
+			draw_menu(&menu, &render_context);
 		}
-#else
-		// For now, we will be drawing the console every frame.
-		draw_console(&render_context, &console);
-#endif
+
+		// We could branch this out so that this function call never happens, but there is a check
+		// already within this function.
+		draw_console(&console, &render_context);
 		
-		//checking call events and swapping buffers
 		glfwSwapBuffers(render_context.app.window);
 		glfwPollEvents();
 	}

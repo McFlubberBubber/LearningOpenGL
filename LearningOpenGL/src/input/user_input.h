@@ -51,7 +51,8 @@ inline bool is_key_released(InputState* input, s32 key) {			// Released
 	return !input->key_states[key] && input->last_key_states[key];
 }
 
-void update_mouse_flags(InputState *input, double mouse_x, double mouse_y);
+void reset_mouse_tracking(InputState *input, double mouse_x, double mouse_y);
+void update_mouse_position(InputState* input, double mouse_x, double mouse_y);
 
 // Functions to handle user input in different contexts
 void process_input(GLFWwindow* window, InputState* input_state, Menu* menu, RenderingContext* context, float dt, Console* console);

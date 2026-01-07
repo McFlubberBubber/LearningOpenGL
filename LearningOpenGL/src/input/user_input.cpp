@@ -12,7 +12,7 @@
 #include "ui/menu.h"
 #include "ui/console.h"
 
-void update_mouse_flags(InputState* input, double mouse_x, double mouse_y) {
+void reset_mouse_tracking(InputState* input, double mouse_x, double mouse_y) {
 	input->mouse_x = mouse_x;
 	input->mouse_y = mouse_y;
 	input->last_mouse_x = mouse_x;
@@ -21,17 +21,14 @@ void update_mouse_flags(InputState* input, double mouse_x, double mouse_y) {
 	input->first_mouse = true;
 }
 
+void update_mouse_position(InputState* input, double mouse_x, double mouse_y) {
+	input->mouse_x = mouse_x;
+	input->mouse_y = mouse_y;
+}
+
 static void update_input_state(InputState* input, GLFWwindow* window) {
 	// Copy current state into the last
 	input->last_key_states = input->key_states;
-
-#if 0
-	// Updating current states
-	for (int key = GLFW_KEY_SPACE; key <= GLFW_KEY_LAST; key++) {
-		int state = glfwGetKey(window, key);
-		input->key_states[key] = (state == GLFW_PRESS);
-	}
-#endif
 
 	// Only check for movement keys.
 	static const int movement_keys[] = {
@@ -65,8 +62,8 @@ static void handle_menu_key_input(Menu* menu, RenderingContext* ctx, int key, in
 
 	// Escape button behaviour.
 	case GLFW_KEY_ESCAPE: {
-		if (menu->current_page == MenuPage::MAIN) { // Go back to game when in main.
-			scene = ctx->app.prev_scene;
+		if (menu->current_page == MenuPage::MAIN) {
+			ctx->app.is_menu_open = false;
 		} else if (menu->current_page == MenuPage::OPTIONS) { // Else, go back to main.
 			menu->current_page = MenuPage::MAIN;
 			menu->main.current_item = MenuItem::RESUME;
@@ -114,7 +111,7 @@ static void handle_game_key_input(RenderingContext* ctx, Menu* menu, int key, in
 	switch (key) {
 	// Handling ESCAPE to go to the menu.
 	case GLFW_KEY_ESCAPE: {
-		scene = SceneState::MENU;
+		ctx->app.is_menu_open = true;
 		menu->current_page = MenuPage::MAIN;
 		menu->main.current_item = MenuItem::RESUME;
 		break;
@@ -219,7 +216,7 @@ void process_input(GLFWwindow* window, InputState* input, Menu* menu, RenderingC
 	}
 
 	// Menu does not require continous input, probably.
-	if (ctx->app.scene == SceneState::MENU) {
+	if (ctx->app.is_menu_open) {
 		input->scroll_delta = 0.0f;
 		return;
 	}
@@ -320,7 +317,7 @@ void key_callback(GLFWwindow* window, int key, int scan_code, int action, int mo
 	}
 
 	// Handling menu input.
-	if (render_ctx->app.scene == SceneState::MENU && is_pressed) {
+	if (render_ctx->app.is_menu_open && is_pressed) {
 		handle_menu_key_input(menu, render_ctx, key, mods);
 		return;
 	}
