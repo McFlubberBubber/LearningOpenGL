@@ -1,0 +1,14 @@
+# This is a comment!
+# This will be read, but it won't be processed into the hotloader system thing.
+
+:/Display
+vsync false
+
+:/Audio
+master_volume 1.0
+music_volume  0.5
+
+:/Dev
+console_small_openness 0.8
+console_big_openess    0.2
+console_openness_dt    0.3

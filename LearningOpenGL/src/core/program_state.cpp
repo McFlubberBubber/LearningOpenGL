@@ -1,9 +1,10 @@
 #include "program_state.h"
+
+#include "core/windows_utils.h"
 #include "input/user_input.h"
 #include "inicpp.h"
 
 #include <iostream>
-#include <windows.h> // To fetch the .exe path
 #include <glm/gtc/matrix_transform.hpp>
 
 void set_viewport(ViewportState* viewport, ApplicationState *app) {
@@ -159,22 +160,6 @@ void check_for_window_updates(ApplicationState* app, ViewportState* vp) {
 
 		prev_display_state = app->config.fullscreen;		
 	}
-}
-
-// @WARNING: This is Windows only code, other OS' need different functionality here.
-std::string get_executable_directory() {
-	char buffer[MAX_PATH];
-	GetModuleFileNameA(NULL, buffer, MAX_PATH);
-
-	// Find the last backslash to get directory path
-	std::string exePath(buffer);
-	size_t lastSlash = exePath.find_last_of("\\/");
-
-	if (lastSlash != std::string::npos) {
-		return exePath.substr(0, lastSlash);
-	}
-
-	return ""; // Fallback if something went wrong
 }
 
 static void print_cfg(const ConfigFile* cfg) {

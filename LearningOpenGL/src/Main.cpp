@@ -5,6 +5,7 @@
 #include "core/time.h"
 #include "core/program_state.h"
 #include "core/types.h"
+#include "core/hotloader.h"
 
 #include "renderer/render_context.h"
 #include "renderer/render_system.h"
@@ -77,11 +78,17 @@ int main() {
 	init_menu(&menu, &render_context);
 	init_console(&console, &render_context);
 
+	// Hotloader stuff...
+	Hotloader hotloader = {};
+	const char* vars_path = "config/hotloaded.variables";
+	init_hotloader(&hotloader, vars_path);
+
 	// ----- RENDER LOOP -----
 	while (render_context.app.is_running) {	
 		// @TODO: Important note in the function definition here!
 		check_for_window_updates(&render_context.app, &render_context.viewport);
-		
+		update_hotloader(&hotloader);
+			
 		Time::update();
 		float dt = Time::get_delta_time();
 
@@ -129,6 +136,8 @@ int main() {
 	cleanup_rendering_system(&render_context);
 	cleanup_space_scene();
 	cleanup_main_scene();
+	cleanup_hotloader(&hotloader);
+	
 	glfwTerminate();
 
 	return 0;

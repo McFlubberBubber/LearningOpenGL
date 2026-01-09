@@ -10,11 +10,11 @@
 struct InputState;
 struct CameraData;
 
-const float DEFAULT_YAW 			= -90.0f;
-const float DEFAULT_PITCH 			= 0.0f;
-const float DEFAULT_SENSITIVITY 	= 0.1f;
-const float DEFAULT_ZOOM			= 75.0f;
-const float DEFAULT_SPEED			= 5.0f;
+static constexpr float DEFAULT_YAW 			= -90.0f;
+static constexpr float DEFAULT_PITCH 			= 0.0f;
+static constexpr float DEFAULT_SENSITIVITY 	= 0.1f;
+static constexpr float DEFAULT_ZOOM			= 75.0f;
+static constexpr float DEFAULT_SPEED			= 5.0f;
 
 
 enum class CameraMode {

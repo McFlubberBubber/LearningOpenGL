@@ -163,6 +163,8 @@ if not exist "$(OutDir)config.ini" copy "$(SolutionDir)LearningOpenGL\config\def
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\core\hotloader.cpp" />
+    <ClCompile Include="src\core\windows_utils.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\renderer\camera.cpp" />
     <ClCompile Include="src\glad.c" />
@@ -184,6 +186,8 @@ if not exist "$(OutDir)config.ini" copy "$(SolutionDir)LearningOpenGL\config\def
     <ClCompile Include="src\world\space_scene.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\core\hotloader.h" />
+    <ClInclude Include="src\core\windows_utils.h" />
     <ClInclude Include="src\inicpp.h" />
     <ClInclude Include="src\renderer\camera.h" />
     <ClInclude Include="src\renderer\post_processing.h" />

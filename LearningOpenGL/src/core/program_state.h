@@ -79,6 +79,5 @@ void set_screen_size(ViewportState *viewport, ApplicationState* app, u32 w, u32 
 void update_ortho(ViewportState *viewport);
 void check_for_window_updates(ApplicationState *app, ViewportState *vp);
 
-std::string get_executable_directory();
 void load_config_file(ConfigFile* cfg);
 void update_config_from_app(const ApplicationState* app);
