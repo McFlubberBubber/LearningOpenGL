@@ -93,23 +93,32 @@ static void update_openness(Console* console) {
 	using namespace ConsoleSpecs;
 	float target_openness = 0.0f;
 
+	// Testing...
+	auto vars = &console->render_ctx->vars;
+	float HL_small_openness = vars->dev.console_small_openness;
+	float HL_big_openness = vars->dev.console_big_openness;
+	float HL_openness_dt = vars->dev.console_openness_dt;
+
 	switch (console->state) {
 	case ConsoleState::CLOSED:
 		target_openness = CLOSED_OPENNESS;
 		break;
 
 	case ConsoleState::OPEN_SMALL:
-		target_openness = SMALL_OPENNESS;
+//		target_openness = SMALL_OPENNESS;
+		target_openness = HL_small_openness;
 		break;
 
 	case ConsoleState::OPEN_BIG:
-		target_openness = BIG_OPENNESS;
+//		target_openness = BIG_OPENNESS;
+		target_openness = HL_big_openness;
 		break;
 	}
 
 	float d = target_openness - console->openness;
 	if (fabs(d) > 0.001f) {
-		console->openness += d * OPENNESS_DT * (Time::get_delta_time() * 60.0f);
+//		console->openness += d * OPENNESS_DT * (Time::get_delta_time() * 60.0f);
+		console->openness += d * HL_openness_dt * (Time::get_delta_time() * 60.0f);
 	} else {
 		console->openness = target_openness;
 	}

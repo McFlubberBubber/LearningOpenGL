@@ -1,5 +1,8 @@
 #include "core/hotloader.h"
 
+#include "renderer/render_context.h"
+#include "core/vars.h"
+
 #include <cstring>
 
 static void init_filewatcher(FileWatcher* watcher, const char* filepath) {
@@ -9,8 +12,10 @@ static void init_filewatcher(FileWatcher* watcher, const char* filepath) {
 	std::cout << "Watching file at path: " << watcher->path << "\n";
 }
 
-static void hotloader_callback(Hotloader* hotloader) {
+static void hotloader_callback(Hotloader* hotloader, RenderingContext* ctx) {
 	std::cout << "File changed at path: " << hotloader->watcher.path << "\n";
+	
+	reload_vars(&ctx->vars, hotloader->watcher.path);
 }
 
 bool check_for_file_updates(FileWatcher* watcher) {
@@ -32,12 +37,12 @@ void init_hotloader(Hotloader* hotloader, const char* filepath) {
 	hotloader->is_initialized = true;
 }
 
-void update_hotloader(Hotloader* hotloader) {
+void update_hotloader(Hotloader* hotloader, RenderingContext* ctx) {
 	if (!hotloader->is_initialized) { return; }
 
 	if (check_for_file_updates(&hotloader->watcher)) {
 		if (hotloader->callback) {
-			hotloader->callback(hotloader);
+			hotloader->callback(hotloader, ctx);
 		}
 	}
 }

@@ -118,7 +118,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\GLAD\include;$(SolutionDir)Dependencies\GLM\include;$(SolutionDir)Dependencies\ASSIMP\include;$(SolutionDir)Dependencies\FREETYPE\include;$(ProjectDir)src</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp14</LanguageStandard>
@@ -164,6 +164,7 @@ if not exist "$(OutDir)config.ini" copy "$(SolutionDir)LearningOpenGL\config\def
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\core\hotloader.cpp" />
+    <ClCompile Include="src\core\vars.cpp" />
     <ClCompile Include="src\core\windows_utils.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\renderer\camera.cpp" />
@@ -187,6 +188,7 @@ if not exist "$(OutDir)config.ini" copy "$(SolutionDir)LearningOpenGL\config\def
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\core\hotloader.h" />
+    <ClInclude Include="src\core\vars.h" />
     <ClInclude Include="src\core\windows_utils.h" />
     <ClInclude Include="src\inicpp.h" />
     <ClInclude Include="src\renderer\camera.h" />
