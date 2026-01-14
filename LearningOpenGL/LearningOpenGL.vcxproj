@@ -184,6 +184,7 @@ if not exist "$(OutDir)config.ini" copy "$(SolutionDir)LearningOpenGL\config\def
     <ClCompile Include="src\renderer\text_rendering.cpp" />
     <ClCompile Include="src\core\time.cpp" />
     <ClCompile Include="src\input\user_input.cpp" />
+    <ClCompile Include="src\world\shadow_scene.cpp" />
     <ClCompile Include="src\world\space_scene.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -211,6 +212,7 @@ if not exist "$(OutDir)config.ini" copy "$(SolutionDir)LearningOpenGL\config\def
     <ClInclude Include="src\core\time.h" />
     <ClInclude Include="src\core\types.h" />
     <ClInclude Include="src\input\user_input.h" />
+    <ClInclude Include="src\world\shadow_scene.h" />
     <ClInclude Include="src\world\space_scene.h" />
   </ItemGroup>
   <ItemGroup>

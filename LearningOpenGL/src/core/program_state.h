@@ -37,7 +37,10 @@ struct ConfigFile {
 // Game state
 enum class SceneState {
 	MAIN,
-	SPACE
+	SPACE,
+	SHADOW,
+
+	COUNT
 };
 
 struct ApplicationState {

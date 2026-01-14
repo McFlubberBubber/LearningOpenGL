@@ -30,6 +30,9 @@ static void cleanup_models(Assets* assets);
 static void cleanup_textures(Assets* assets);
 static void cleanup_fonts(Assets* assets);
 
+// Global variables for now... 
+u32 SHADOW_WIDTH  = 1024;
+u32 SHADOW_HEIGHT = 1024;
 
 // Managing the rendering system
 bool init_rendering_system (RenderingContext* context) {
@@ -239,14 +242,29 @@ void apply_render_mode_to_screen_shader(const RenderingContext* context) {
 	set_int(shader, "render_mode", static_cast<s32>(context->post_processing.mode));
 }
 
-void draw_screen_texture(RenderingContext* ctx) {
+void draw_screen_texture(RenderingContext* ctx, bool do_debug_depth_map) {
+	// @NOTE: This function is called for normally rendering the scene and not doing any
+	// debug visualisation stuff (like the shader can do with the depth visuals).
+	// So for the time being, when we call this function, we will set the flag of
+	// do_debug_depth_map to false everytime.
+	auto shader = &ctx->assets.shaders[SHADER_SCREEN];
+	set_bool(shader, "do_debug_depth_map", do_debug_depth_map);
+
 	apply_render_mode_to_screen_shader(ctx);
-	glActiveTexture(GL_TEXTURE0);
-	
-	if (ctx->app.config.multisampling)
+
+	if (ctx->app.config.multisampling) {
+		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, ctx->assets.textures[TEXTURE_SCREEN]);
-	else
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, ctx->assets.textures[TEXTURE_DEPTH_MAP]);
+	} else {
+		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, ctx->assets.textures[TEXTURE_COLOR_BUFFER]);
+
+		// We don't know if this part works if multisampling is off.
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, ctx->assets.textures[TEXTURE_DEPTH_MAP]);
+	}
 	
 	glBindVertexArray(ctx->buffers.quad_VAO);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -356,6 +374,7 @@ static bool setup_screen_buffers(BufferData* buffers, GeometryData* geometry, Vi
 
 	u32 texture_color_buffer = assets->textures[TEXTURE_COLOR_BUFFER];
 	u32 texture_screen       = assets->textures[TEXTURE_SCREEN];
+	u32 texture_depth_map    = assets->textures[TEXTURE_DEPTH_MAP];
 
 	auto samples = app->sample_count;
 
@@ -365,6 +384,7 @@ static bool setup_screen_buffers(BufferData* buffers, GeometryData* geometry, Vi
 	glGenFramebuffers(1, &buffers->FBO);
 	glGenFramebuffers(1, &buffers->intermediate_FBO);	
 	glGenRenderbuffers(1, &buffers->RBO);
+	glGenFramebuffers(1, &buffers->depth_map_FBO);
 	
 	if (!app->config.multisampling) {
 		// Frame buffer VAO + VBO
@@ -377,7 +397,6 @@ static bool setup_screen_buffers(BufferData* buffers, GeometryData* geometry, Vi
 		glEnableVertexAttribArray(1);
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 
-
 		// Texture color attachment
 		glBindTexture(GL_TEXTURE_2D, texture_color_buffer);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
@@ -385,14 +404,14 @@ static bool setup_screen_buffers(BufferData* buffers, GeometryData* geometry, Vi
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_color_buffer, 0);
 
-
 		// Setting render buffers
 		glBindRenderbuffer(GL_RENDERBUFFER, buffers->RBO);
 		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);  // Creating a depth + stencil render buffer
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, buffers->RBO);
-		// The rule with knowing when to use an RBO is when you never need to sample data from a buffer,
-		// then you should use a render buffer for that specific buffer. BUT if you do need to sample data
-		// (like color and texture values), then you should use a texture attachment instead.
+		// The rule with knowing when to use an RBO is when you never need to sample data from
+		// a buffer, then you should use a render buffer for that specific buffer.
+		// BUT if you do need to sample data (like color and texture values), then
+		// you should use a texture attachment instead.
 
 		// Checking if the frame buffer status is complete
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
@@ -401,9 +420,12 @@ static bool setup_screen_buffers(BufferData* buffers, GeometryData* geometry, Vi
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		
-		// @TODO: If we want to add an in-app toggle to multisampling, then we need to create new buffers here that would initialize them
-		// since this approach checks if the bool is toggled at the start of the application, then moves on.
-	} else { 
+		// @TODO: If we want to add an in-app toggle to multisampling, then we need to
+		// create new buffers here that would initialize them since this approach checks if
+		// the bool is toggled at the start of the application, then moves on.
+		
+	} else {
+		
 		// Framebuffer (multisampled)
 		glBindFramebuffer(GL_FRAMEBUFFER, buffers->FBO);
 		glBindVertexArray(buffers->quad_VAO);
@@ -414,7 +436,7 @@ static bool setup_screen_buffers(BufferData* buffers, GeometryData* geometry, Vi
 		glEnableVertexAttribArray(1);
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 
-		// Color attachment (multisampled)
+		// Texture color attachment (multisampled)
 		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture_color_buffer);
 		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGB, width, height, GL_TRUE);
 		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
@@ -426,9 +448,15 @@ static bool setup_screen_buffers(BufferData* buffers, GeometryData* geometry, Vi
 		glBindRenderbuffer(GL_RENDERBUFFER, 0);
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, buffers->RBO);
 
+		// Shadow depth attachment
+		glBindFramebuffer(GL_FRAMEBUFFER, buffers->depth_map_FBO);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, texture_depth_map, 0);
+		glDrawBuffer(GL_NONE);
+		glReadBuffer(GL_NONE);
+
 		// Checking if the frame buffer status is complete
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-			std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+			std::cout << "ERROR::FRAMEBUFFER:: Shadow framebuffer is not complete!" << std::endl;
 			return false;
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -530,11 +558,6 @@ static bool init_buffers(RenderingContext* ctx) {
 
 	setup_textbox_buffers(buffers, geometry);
 
-	// Cleanup
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-
-	
 	std::cout << "----- Finished initializing buffers! -----\n" << std::endl;
 	return true;
 }
@@ -589,7 +612,11 @@ static bool init_shaders(Assets* assets) {
 		// For the space scene.
 		{"space/asteroid.vert", "space/asteroid.frag", nullptr},
 		{"space/planet.vert", "space/planet.frag", nullptr},
-		{"space/sun.vert", "space/sun.frag", nullptr}
+		{"space/sun.vert", "space/sun.frag", nullptr},
+
+		// For the shadow rendering scene.
+		{"shadows/depth_shader.vert", "shadows/depth_shader.frag", nullptr},
+		{"shadows/shadow_mapping.vert", "shadows/shadow_mapping.frag", nullptr}
 	};
 
 	// Creating each shader
@@ -668,8 +695,10 @@ static bool init_textures(Assets* assets) {
 		nullptr,  // Main skybox
 		nullptr,  // Space skybox
 		
-		nullptr,  // Color buffer
-		nullptr   // Screen texture
+		nullptr,   // Color buffer
+		nullptr,   // Screen texture
+
+		nullptr, // Depth Map texture
 	};
 
 	for (u32 i = 0; i < TEXTURE_COUNT; i++) {
@@ -706,6 +735,22 @@ static bool init_textures(Assets* assets) {
 	glGenTextures(1, &assets->textures[TEXTURE_COLOR_BUFFER]);
 	glGenTextures(1, &assets->textures[TEXTURE_SCREEN]);
 
+	// Preparing shadow rendering textures.
+	glGenTextures(1, &assets->textures[TEXTURE_DEPTH_MAP]);
+	glBindTexture(GL_TEXTURE_2D, assets->textures[TEXTURE_DEPTH_MAP]);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+#if 1
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER); 
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	float border_color[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);
+#else
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); 
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+#endif
+	
 	std::cout << "----- Finished initializing textures! -----\n" << std::endl;
 	return true;
 }

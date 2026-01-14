@@ -122,6 +122,12 @@ void handle_main_menu_activations(Menu* menu, RenderingContext* ctx) {
 
 	case MenuItem::SCENE_SWITCH: {
 		auto& scene = menu->render_ctx_ptr->app.scene;
+		
+		// Cycling the scenes.
+		int current_scene = static_cast<int>(scene);
+		int total_scenes  = static_cast<int>(SceneState::COUNT);
+		scene = static_cast<SceneState>((current_scene + 1) % total_scenes);
+#if 0
 		if (scene == SceneState::SPACE) {
 			scene = SceneState::MAIN;
 			display_current_scene_status(menu->render_ctx_ptr);
@@ -130,6 +136,7 @@ void handle_main_menu_activations(Menu* menu, RenderingContext* ctx) {
 			scene = SceneState::SPACE;
 			display_current_scene_status(menu->render_ctx_ptr);
 		}
+#endif
 		break;
 	}
 
@@ -218,6 +225,8 @@ static std::string menu_item_to_string(const Menu* menu, MenuItem item) {
 			return base + "Normal";
 		} else if (scene == SceneState::SPACE) {
 			return base + "Space";
+		} else if (scene == SceneState::SHADOW) {
+			return base + "Shadow";
 		}
 	} 
 		

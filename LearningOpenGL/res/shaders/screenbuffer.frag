@@ -8,6 +8,12 @@ out vec4 frag_color;
 
 //UNIFORMS
 uniform sampler2D screen_texture;		// Initialized to 0 already.
+
+uniform sampler2D depth_map;
+uniform float near_plane;
+uniform float far_plane;
+uniform bool do_debug_depth_map;
+
 uniform int render_mode;
 
 //VARIBLES
@@ -22,10 +28,11 @@ const int DARK_SHARPEN_MODE	= 4;
 
 //FUNCTION PROTOTYPES
 vec4 process_sharpening(bool do_dark_sharpening);
+float linearize_depth(float depth);
 
 void main() {
+	if (do_debug_depth_map == false) {
 	vec4 color = texture(screen_texture, texture_output);
-
 	switch (render_mode) {
 		case INVERT_MODE:
 			color.rgb = 1.0f - color.rgb;
@@ -55,7 +62,12 @@ void main() {
 	float gamma = 1.0f; // This value is usually 2.2f
 	frag_color.rgb = pow(color.rgb, vec3(1.0f/gamma));
 	frag_color.a   = color.a;
-
+	
+	} else {
+		float depth_value = texture(depth_map, texture_output).r;
+		// frag_color = vec4(vec3(linearize_depth(depth_value) / far_plane), 1.0); // Perspective.
+		frag_color = vec4(vec3(depth_value), 1.0); // Orthographic.
+	}
 }
 
 vec4 process_sharpening (bool do_dark_sharpening) {
@@ -91,3 +103,9 @@ vec4 process_sharpening (bool do_dark_sharpening) {
 
 	return vec4(acc, 1.0f);
 }
+
+float linearize_depth(float depth) {
+	float z = depth * 2.0 - 1.0; // Back to normalized device coords.
+	return (2.0 * near_plane * far_plane) / (far_plane + near_plane - z * (far_plane - near_plane));
+}
+

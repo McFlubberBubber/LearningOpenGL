@@ -6,10 +6,12 @@
 #include "core/time.h"
 
 namespace MainScene {
-	constexpr float DEFAULT_SHININESS = 32.0f;
+	static constexpr float DEFAULT_SHININESS = 32.0f;
 
 	// Blahaj instance rendering.
 	glm::mat4 *blahaj_matrices;
+	
+	static constexpr bool SHOW_DEBUG_DEPTH_MAP = false;
 }
 
 // Internal function prototypes.
@@ -105,7 +107,7 @@ void render_scene(RenderingContext* ctx, float dt) {
 
 	// glEnable(GL_FRAMEBUFFER_SRGB);
 
-	draw_screen_texture(ctx);
+	draw_screen_texture(ctx, MainScene::SHOW_DEBUG_DEPTH_MAP);
 	if (ctx->app.config.debug_mode)
 		render_debug_overlay(ctx, dt);
 

@@ -21,11 +21,7 @@ namespace ConsoleSpecs {
 	static constexpr float LOG_Y_PADDING   = 8.0f;
 	static constexpr float LOG_LINE_HEIGHT = 36.0f;
 
-	// These variables define what are the appropriate y-levels for the console on the screen.
-	static constexpr float SMALL_OPENNESS  = 0.8f;
-	static constexpr float BIG_OPENNESS    = 0.2f;
 	static constexpr float CLOSED_OPENNESS = 1.2f; // We are accounting for the input field.
-	static constexpr float OPENNESS_DT     = 0.3f;
 
 	static const glm::vec3 INPUT_FIELD_COLOR { 0.07f, 0.50f, 0.50f }; // @Cleanup: not needed too?
 	static const glm::vec3 INPUT_FONT_COLOR  { 0.0f, 1.0f, 0.0f };
@@ -93,7 +89,7 @@ static void update_openness(Console* console) {
 	using namespace ConsoleSpecs;
 	float target_openness = 0.0f;
 
-	// Testing...
+	// These variables are hotloaded, therefore we prefix them with HL, might get changed in the future.
 	auto vars = &console->render_ctx->vars;
 	float HL_small_openness = vars->dev.console_small_openness;
 	float HL_big_openness = vars->dev.console_big_openness;

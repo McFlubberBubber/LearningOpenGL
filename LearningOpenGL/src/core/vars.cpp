@@ -38,7 +38,7 @@ static bool parse_float(const char* s, float* result) {
 	return false;
 }
 
-static bool parse_integer(const char* s, int* result) {
+static bool parse_int(const char* s, int* result) {
 	static constexpr int base10 = 10;
 	char* end;
 	s64 value = strtol(s, &end, base10);
@@ -131,11 +131,11 @@ void reload_vars(HotloadedVariables* vars, const char* path) {
 					/* printf("%s = %s\n", #name, var_value); */ \
 					found = true; \
 				} else { \
-					fprintf(stderr, "Failed to parse " #type " value '%s' for %s at line %d\n", var_value, #name, line_number); \
+					fprintf(stderr, "ERROR: Failed to parse a " #type " value: '%s' for %s at line %d\n", var_value, #name, line_number); \
 				} \
 			}
 
-		VAR_BINDINGS // Expands to the var.h bindings macro we had.
+		VAR_BINDINGS // Expands to the vars.h bindings macro we had.
 
 		#undef BIND
 			

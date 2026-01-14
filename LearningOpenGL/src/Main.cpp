@@ -18,6 +18,7 @@
 #include "world/obj_init.h"
 #include "world/scene.h"
 #include "world/space_scene.h"
+#include "world/shadow_scene.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -85,6 +86,9 @@ int main() {
 	init_hotloader(&hotloader, vars_path);
 	init_vars(&render_context.vars, vars_path);
 
+	// Initializing scenes, if needed.
+	init_shadow_scene(&render_context);
+
 	// ----- RENDER LOOP -----
 	while (render_context.app.is_running) {	
 		// @TODO: Important note in the function definition here!
@@ -119,6 +123,9 @@ int main() {
 			break;
 		case(SceneState::SPACE):
 			render_space_scene(&render_context, dt);
+			break;
+		case(SceneState::SHADOW):
+			render_shadow_scene(&render_context, dt);
 			break;
 		}
 

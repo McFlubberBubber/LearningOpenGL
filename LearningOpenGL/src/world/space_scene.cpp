@@ -10,6 +10,8 @@ namespace SpaceScene {
 	glm::mat4 *model_matrices;
 
 	const glm::vec3 SKY_COLOR = {0.1f, 0.1f, 0.1f};
+
+	static constexpr bool SHOW_DEBUG_DEPTH_MAP = false;
 }
 
 // Internal function prototypes.
@@ -122,7 +124,7 @@ void render_space_scene(RenderingContext* ctx, float dt) {
 		glDisable(GL_DEPTH_TEST);
 	}
 	
-	draw_screen_texture(ctx);
+	draw_screen_texture(ctx, SHOW_DEBUG_DEPTH_MAP);
 	if (ctx->app.config.debug_mode)
 		render_debug_overlay(ctx, dt);
 

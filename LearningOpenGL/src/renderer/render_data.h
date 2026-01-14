@@ -51,6 +51,9 @@ enum ShaderType : u8{
 	SHADER_PLANET,
 	SHADER_SUN,
 
+	SHADER_DEPTH, // For shadow scene rendering.
+	SHADER_SHADOW_MAPPING,
+
 	SHADER_COUNT
 };
 
@@ -85,6 +88,8 @@ enum TextureType {
 
 	TEXTURE_COLOR_BUFFER,
 	TEXTURE_SCREEN,
+
+	TEXTURE_DEPTH_MAP, // Shadow rendering...
 
 	TEXTURE_COUNT
 };
@@ -137,6 +142,9 @@ struct BufferData {
 	u32 blahaj_buffer; // Same but for the blahaj instances.
 
 	u32 intermediate_FBO;
+
+	// Shadow rendering stuff..
+	u32 depth_map_FBO;
 
 	void update_instance_offsets() {
 		int index = 0;
