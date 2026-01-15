@@ -90,7 +90,7 @@ static void update_openness(Console* console) {
 	float target_openness = 0.0f;
 
 	// These variables are hotloaded, therefore we prefix them with HL, might get changed in the future.
-	auto vars = &console->render_ctx->vars;
+	auto vars = &console->render_ctx_ptr->vars;
 	float HL_small_openness = vars->dev.console_small_openness;
 	float HL_big_openness = vars->dev.console_big_openness;
 	float HL_openness_dt = vars->dev.console_openness_dt;
@@ -319,7 +319,7 @@ static void clear_command_history(Console* console, const std::vector<std::strin
 static void change_current_scene(Console* console, const std::vector<std::string>& tokens) {
 	if (console->command_history.empty()) { return; }
 
-	auto ctx = console->render_ctx;
+	auto ctx = console->render_ctx_ptr;
 
 	if (tokens.size() != 2) {
 		push_log(console, "ERROR::expected usage: scene <keyword>", LogType::ERROR);
@@ -364,8 +364,8 @@ void init_console(Console* console, RenderingContext* ctx) {
 	console->input.cursor_pos 		 = 0;
 	console->input.cursor_blink_time = 0.0f;
 
-	console->render_ctx = ctx;
-	if (console->render_ctx == NULL) {
+	console->render_ctx_ptr = ctx;
+	if (console->render_ctx_ptr == NULL) {
 		std::cout << "Console pointer to renderer is NULL!\n";
 		console->is_initialized = false;
 		return;

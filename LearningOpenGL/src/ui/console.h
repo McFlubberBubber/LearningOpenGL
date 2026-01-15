@@ -63,7 +63,7 @@ struct Console {
 	Command commands[CMD_COUNT] = { 0 };
 	std::unordered_map<std::string, Command> arguments;
 
-	RenderingContext* render_ctx = NULL; // This is here to make console commands access the "app".
+	RenderingContext* render_ctx_ptr = NULL; // This is here to make console commands access the "app".
 
 	float openness; // 1.0f = top (console is closed).
 	bool is_initialized = false;
