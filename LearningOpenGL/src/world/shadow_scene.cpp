@@ -12,8 +12,11 @@ namespace ShadowScene {
 	static constexpr float NEAR_PLANE = 0.1f;
 	static constexpr float FAR_PLANE  = 100.0f;
 
+	static const glm::vec3 LIGHT_COLOR = glm::vec3(1.0f, 0.0f, 0.0f);
 	static constexpr float LIGHT_FRUSTUM = 10.0f;
-	static const glm::mat4 LIGHT_PROJECTION = glm::ortho(-LIGHT_FRUSTUM, LIGHT_FRUSTUM, -LIGHT_FRUSTUM, LIGHT_FRUSTUM, NEAR_PLANE, FAR_PLANE);
+	static const glm::mat4 LIGHT_PROJECTION = glm::ortho(-LIGHT_FRUSTUM, LIGHT_FRUSTUM,
+														 -LIGHT_FRUSTUM, LIGHT_FRUSTUM,
+														  NEAR_PLANE, FAR_PLANE);
 	static const glm::mat4 LIGHT_VIEW = glm::lookAt(glm::vec3(-2.0f, 4.0f, -1.0f),
 													glm::vec3( 0.0f, 0.0f,  0.0f),
 													glm::vec3( 0.0f, 1.0f,  0.0f));
@@ -21,6 +24,16 @@ namespace ShadowScene {
 	static const glm::vec3 LIGHT_POS = glm::vec3(-2.0f, 5.0f, -3.0f);
 
 	static constexpr bool SHOW_DEBUG_DEPTH_MAP = true;
+
+	// Point shadow stuff.
+	static const float ASPECT = (static_cast<float>(SHADOW_WIDTH) /
+								 static_cast<float>(SHADOW_HEIGHT));
+	static constexpr float NEAR = 1.0f;
+	static constexpr float FAR  = 25.0f;
+	// FOV is set to 90 degrees here to fill out the dimensions of each face on the cubemap.
+	static const glm::mat4 SHADOW_PROJ = glm::perspective(glm::radians(90.0f), ASPECT, NEAR, FAR);
+
+	// std::vector<glm::mat4> SHADOW_TRANSFORMS = {};
 }
 
 static void draw_world_with_shader(RenderingContext* ctx, Shader* shader) {
@@ -64,12 +77,12 @@ static void draw_world_with_shader(RenderingContext* ctx, Shader* shader) {
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-static void draw_directional_light_source(RenderingContext* ctx) {
+static void draw_light_source(RenderingContext* ctx) {
 	auto light_shader = &ctx->assets.shaders[SHADER_LIGHT_CUBE];
 	use_shader(light_shader);
 	apply_matrices(light_shader);
 	glBindVertexArray(ctx->buffers.cube_VAO);
-	set_vec3(light_shader, "light_color", glm::vec3(1.0f));
+	set_vec3(light_shader, "light_color", ShadowScene::LIGHT_COLOR);
 	glm::mat4 model = glm::mat4(1.0f);
 	model = glm::translate(model, ShadowScene::LIGHT_POS);
 	model = glm::scale(model, glm::vec3(0.5f));
@@ -87,6 +100,11 @@ void init_shadow_scene(RenderingContext* ctx) {
 	set_int(shadow_shader, "diffuse", 0);
 	set_int(shadow_shader, "shadow_map", 1);
 
+	auto point_shadows_shader = &ctx->assets.shaders[SHADER_POINT_SHADOWS];
+	use_shader(point_shadows_shader);
+	set_int(point_shadows_shader, "diffuse", 0);
+	set_int(point_shadows_shader, "shadow_map", 1);
+
 	auto screen_shader = &ctx->assets.shaders[SHADER_SCREEN];
 	use_shader(screen_shader);
 	set_int(screen_shader, "depth_map", 1);
@@ -94,9 +112,13 @@ void init_shadow_scene(RenderingContext* ctx) {
 
 void render_shadow_scene(RenderingContext* ctx, float dt) {
 	using namespace ShadowScene;
+
 	glClearColor(0.01f, 0.01f, 0.01f, 1.0f);
 	update_camera_projection(ctx);
-	
+
+#if 0
+	// This branch is for directional shadow mapping.
+
 	// 1. First, render depth of scene to the texture (from light's perspective).	
 	glBindFramebuffer(GL_FRAMEBUFFER, ctx->buffers.depth_map_FBO);
 	glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
@@ -127,6 +149,7 @@ void render_shadow_scene(RenderingContext* ctx, float dt) {
 	use_shader(shadow_shader);
 	apply_matrices(shadow_shader);
 	set_vec3(shadow_shader, "view_pos", ctx->camera_data.camera.position);
+	set_vec3(shadow_shader, "light_color", LIGHT_COLOR);
 	set_vec3(shadow_shader, "light_pos", LIGHT_POS);
 	set_mat4(shadow_shader, "light_space_matrix", LIGHT_SPACE_MATRIX);
 	glActiveTexture(GL_TEXTURE0);
@@ -135,6 +158,66 @@ void render_shadow_scene(RenderingContext* ctx, float dt) {
 	glBindTexture(GL_TEXTURE_2D, ctx->assets.textures[TEXTURE_DEPTH_MAP]);
 	draw_world_with_shader(ctx, shadow_shader);
 	draw_directional_light_source(ctx);
+
+#else
+	// This branch is for point shadow rendering.
+
+	// 0. Initializing the shadow transforms for point shadow rendering.
+	// We do this here incase the light position changes during the render.
+	glm::mat4 shadow_matrix[6];
+	shadow_matrix[0] = SHADOW_PROJ * glm::lookAt(LIGHT_POS, LIGHT_POS + glm::vec3(1.0f, 0.0f, 0.0f),
+												 glm::vec3(0.0f, -1.0f, 0.0f));
+	shadow_matrix[1] = SHADOW_PROJ * glm::lookAt(LIGHT_POS, LIGHT_POS + glm::vec3(-1.0f, 0.0f, 0.0f),
+												 glm::vec3(0.0f, -1.0f, 0.0f));
+	shadow_matrix[2] = SHADOW_PROJ * glm::lookAt(LIGHT_POS, LIGHT_POS + glm::vec3(0.0f, 1.0f, 0.0f),
+												 glm::vec3(0.0f, 0.0f, 1.0f));
+	shadow_matrix[3] = SHADOW_PROJ * glm::lookAt(LIGHT_POS, LIGHT_POS + glm::vec3(0.0f, -1.0f, 0.0f),
+												 glm::vec3(0.0f, -0.0f, -1.0f));
+	shadow_matrix[4] = SHADOW_PROJ * glm::lookAt(LIGHT_POS, LIGHT_POS + glm::vec3(0.0f, 0.0f, 1.0f),
+												 glm::vec3(0.0f, -1.0f, 0.0f));
+	shadow_matrix[5] = SHADOW_PROJ * glm::lookAt(LIGHT_POS, LIGHT_POS + glm::vec3(0.0f, 0.0f, -1.0f),
+												 glm::vec3(0.0f, -1.0f, 0.0f));
+
+	// 1. First, render depth of scene to the texture (from light's perspective).	
+	glBindFramebuffer(GL_FRAMEBUFFER, ctx->buffers.depth_map_FBO);
+	glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+	glClear(GL_DEPTH_BUFFER_BIT);
+	
+	auto depth_shader = &ctx->assets.shaders[SHADER_POINT_SHADOWS_DEPTH];
+	use_shader(depth_shader);
+	for (u32 i = 0; i < 6; ++i) {
+		std::string s = "shadow_matrices[" + std::to_string(i) + "]";
+		set_mat4(depth_shader, s.c_str(), shadow_matrix[i]);
+	}
+	set_float(depth_shader, "far_plane", FAR);
+	set_vec3(depth_shader, "light_pos", LIGHT_POS);
+	draw_world_with_shader(ctx, depth_shader);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// 2. Render the scene normally.
+	glViewport(0, 0, ctx->viewport.width, ctx->viewport.height);
+	glBindFramebuffer(GL_FRAMEBUFFER, ctx->buffers.FBO);
+	// glDisable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	auto shadow_shader = &ctx->assets.shaders[SHADER_POINT_SHADOWS];
+	use_shader(shadow_shader);
+	apply_matrices(shadow_shader);
+	set_vec3(shadow_shader, "view_pos", ctx->camera_data.camera.position);
+	set_vec3(shadow_shader, "light_color", LIGHT_COLOR);
+	set_vec3(shadow_shader, "light_pos", LIGHT_POS);
+	set_float(shadow_shader, "far_plane", FAR);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, ctx->assets.textures[TEXTURE_FLOOR]);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, ctx->assets.textures[TEXTURE_DEPTH_CUBEMAP]);
+	draw_world_with_shader(ctx, shadow_shader);
+	draw_light_source(ctx);
+
+#endif
 
 	// 3. Resolve MSAA if enabled.
 	if (ctx->app.config.multisampling) {

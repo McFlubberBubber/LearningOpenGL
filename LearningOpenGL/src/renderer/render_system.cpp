@@ -372,9 +372,10 @@ static bool setup_screen_buffers(BufferData* buffers, GeometryData* geometry, Vi
 	const u32 width = viewport->width;
 	const u32 height = viewport->height;
 
-	u32 texture_color_buffer = assets->textures[TEXTURE_COLOR_BUFFER];
-	u32 texture_screen       = assets->textures[TEXTURE_SCREEN];
-	u32 texture_depth_map    = assets->textures[TEXTURE_DEPTH_MAP];
+	u32 texture_color_buffer  = assets->textures[TEXTURE_COLOR_BUFFER];
+	u32 texture_screen        = assets->textures[TEXTURE_SCREEN];
+	u32 texture_depth_map     = assets->textures[TEXTURE_DEPTH_MAP];
+	u32 texture_depth_cubemap = assets->textures[TEXTURE_DEPTH_CUBEMAP];
 
 	auto samples = app->sample_count;
 
@@ -450,7 +451,11 @@ static bool setup_screen_buffers(BufferData* buffers, GeometryData* geometry, Vi
 
 		// Shadow depth attachment
 		glBindFramebuffer(GL_FRAMEBUFFER, buffers->depth_map_FBO);
+#if 0
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, texture_depth_map, 0);
+#else
+		glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, texture_depth_cubemap, 0);		
+#endif
 		glDrawBuffer(GL_NONE);
 		glReadBuffer(GL_NONE);
 
@@ -616,7 +621,11 @@ static bool init_shaders(Assets* assets) {
 
 		// For the shadow rendering scene.
 		{"shadows/depth_shader.vert", "shadows/depth_shader.frag", nullptr},
-		{"shadows/shadow_mapping.vert", "shadows/shadow_mapping.frag", nullptr}
+		{"shadows/shadow_mapping.vert", "shadows/shadow_mapping.frag", nullptr},
+		{"shadows/point_shadows_depth.vert", "shadows/point_shadows_depth.frag", "shadows/point_shadows_depth.geom"},
+		{"shadows/point_shadows.vert", "shadows/point_shadows.frag", nullptr}
+
+
 	};
 
 	// Creating each shader
@@ -699,6 +708,7 @@ static bool init_textures(Assets* assets) {
 		nullptr,   // Screen texture
 
 		nullptr, // Depth Map texture
+		nullptr  // Depth cubemap texture
 	};
 
 	for (u32 i = 0; i < TEXTURE_COUNT; i++) {
@@ -735,22 +745,29 @@ static bool init_textures(Assets* assets) {
 	glGenTextures(1, &assets->textures[TEXTURE_COLOR_BUFFER]);
 	glGenTextures(1, &assets->textures[TEXTURE_SCREEN]);
 
-	// Preparing shadow rendering textures.
+	// Preparing directional shadow rendering textures.
 	glGenTextures(1, &assets->textures[TEXTURE_DEPTH_MAP]);
 	glBindTexture(GL_TEXTURE_2D, assets->textures[TEXTURE_DEPTH_MAP]);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-#if 1
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER); 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 	float border_color[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);
-#else
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-#endif
-	
+
+	// Preparing point shadow rendering cubemap textures.
+	glGenTextures(1, &assets->textures[TEXTURE_DEPTH_CUBEMAP]);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, assets->textures[TEXTURE_DEPTH_CUBEMAP]);
+	for (u32 i = 0; i < 6; ++i) {
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT24, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); 
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
 	std::cout << "----- Finished initializing textures! -----\n" << std::endl;
 	return true;
 }

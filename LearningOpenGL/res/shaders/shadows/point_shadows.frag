@@ -1,21 +1,23 @@
 #version 460 core
+
 out vec4 frag_color;
 
 in VS_OUT {
 	vec3 frag_pos;
 	vec3 normal;
 	vec2 texture_coords;
-	vec4 frag_pos_light_space;
 } fs_input;
 
 uniform sampler2D diffuse;
-uniform sampler2D shadow_map;
+uniform samplerCube shadow_map; // Now a cubemap.
 
 uniform vec3 light_pos;
 uniform vec3 light_color;
 uniform vec3 view_pos;
 
-float do_shadow_calculations(vec4 fpls); // fpls = frag pos light space. 
+uniform float far_plane; // We also now take the far plane.
+
+float do_shadow_calculations(vec3 frag_pos);
 
 void main() {
 	// Using the blinn-phong lighting from the advanced lighting chapter.
@@ -25,7 +27,7 @@ void main() {
 	vec3 normal = normalize(fs_input.normal);
 
 	// Ambient
-	vec3 ambient = 0.15 * light_color;
+	vec3 ambient = 0.3 * light_color;
 
 	// Diffuse
 	vec3 light_dir = normalize(light_pos - fs_input.frag_pos);
@@ -46,30 +48,22 @@ void main() {
 	// Essentially, the (1.0 - shadow) identifies which part of the frag_pos is NOT in shadow,
 	// therefore the remaining diffuse and specular components get used.
 	//
-	float shadow  = do_shadow_calculations(fs_input.frag_pos_light_space);
+	float shadow  = do_shadow_calculations(fs_input.frag_pos);
 	vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * color;
 	frag_color = vec4(lighting, 1.0f);
 }
 
-float do_shadow_calculations(vec4 fpls) {
-	// First, perform perspective divide to get normalized device coords (returns [-1, 1]).
-	vec3 proj_coords = fpls.xyz / fpls.w;
+float do_shadow_calculations(vec3 frag_pos) {
+	// Calculate the diff and use it to sample the cubemap.
+	vec3 frag_to_light  = frag_pos - light_pos;
+	float closest_depth = texture(shadow_map, frag_to_light).r;
 
-	// Then, transform the NDC coords to [0, 1].
-	proj_coords = proj_coords * 0.5 + 0.5;
+	// Change the value from [0, 1] to [0, far_plane].
+	closest_depth *= far_plane;
 
-	// Check if fragment is outside the light's frustum.
-    if (proj_coords.z > 1.0) return 0.0;  // Beyond far plane
-    if (proj_coords.z < 0.0) return 0.0;  // Beyond near plane (behind light)
-    
-    if (proj_coords.x < 0.0 || proj_coords.x > 1.0 ||
-        proj_coords.y < 0.0 || proj_coords.y > 1.0) {
-        return 0.0;  // Outside frustum bounds - not in shadow
-    }
-
-	float closest_depth = texture(shadow_map, proj_coords.xy).r;
-	float current_depth = proj_coords.z;
-
+	// Get the current_depth by getting the length of frag_to_light
+	float current_depth = length(frag_to_light);
+	
 	vec3 normal = normalize(fs_input.normal);
 	vec3 light_dir = normalize(light_pos - fs_input.frag_pos);
 	float bias = max(0.05 * (1.0 - dot(normal, light_dir)), 0.005);
@@ -78,17 +72,16 @@ float do_shadow_calculations(vec4 fpls) {
 	// given fragment is within a shadow or not.
 	float shadow = 0.0;
 
-	// We use PCF (percentage-closer filtering) to soften the shadows by making them appear
-	// less blocky, therefore we just take the surrounding texels of the depth map and average them
-	// to make them kinda blurry.
-	vec2 texel_size = 1.0 / textureSize(shadow_map, 0);
+/*
+  	vec2 texel_size = 1.0 / textureSize(shadow_map, 0);
 	for (int x = -1; x <= 1; ++x) {
 		for (int y = -1; y <= 1; ++y) {
 			float pcf_depth = texture(shadow_map, proj_coords.xy + vec2(x, y) * texel_size).r;
 			shadow += current_depth - bias > pcf_depth ? 1.0 : 0.0;
 		}
 	}
-
 	shadow /= 9.0;
+*/
+	shadow = current_depth - bias > closest_depth ? 1.0 : 0.0;
 	return shadow;
 }

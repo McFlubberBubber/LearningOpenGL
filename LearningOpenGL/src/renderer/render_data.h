@@ -51,8 +51,11 @@ enum ShaderType : u8{
 	SHADER_PLANET,
 	SHADER_SUN,
 
-	SHADER_DEPTH, // For shadow scene rendering.
+	SHADER_DEPTH, // Only for directional shadow mapping.
 	SHADER_SHADOW_MAPPING,
+
+	SHADER_POINT_SHADOWS_DEPTH, // For point shadow rendering.
+	SHADER_POINT_SHADOWS,
 
 	SHADER_COUNT
 };
@@ -89,7 +92,8 @@ enum TextureType {
 	TEXTURE_COLOR_BUFFER,
 	TEXTURE_SCREEN,
 
-	TEXTURE_DEPTH_MAP, // Shadow rendering...
+	TEXTURE_DEPTH_MAP,    // Directional shadow rendering.
+	TEXTURE_DEPTH_CUBEMAP, // Point shadow rendering.
 
 	TEXTURE_COUNT
 };
