@@ -14,7 +14,7 @@ This is NOT a project that aims to create a functional game engine **yet**. Inst
 **(Picture taken as of 16th October, 2025 - Space scene with instance rendering)**
 
 ![Example of point shadow rendering with a moving light source and some basic objects](media/shadow_scene_with_hotloader.png)
-**(Picture taken as of 15th January, 2025 - First time trying point shadow rendering, along utilization of hotloaded variable-tweak file)**
+**(Picture taken as of 15th January, 2026 - First time trying point shadow rendering, along utilization of hotloaded variable-tweak file)**
 
 
 ## Installation
