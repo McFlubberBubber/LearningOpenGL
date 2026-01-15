@@ -13,6 +13,10 @@ This is NOT a project that aims to create a functional game engine **yet**. Inst
 ![Example of instance rendering a planet with asteroids](media/space_scene.png)
 **(Picture taken as of 16th October, 2025 - Space scene with instance rendering)**
 
+![Example of point shadow rendering with a moving light source and some basic objects](media/shadow_scene_with_hotloader.png)
+**(Picture taken as of 15th January, 2025 - First time trying point shadow rendering, along utilization of hotloaded variable-tweak file)**
+
+
 ## Installation
 
 - You can clone the whole project by just downloading the zip file here on **GitHub** (the green button with <>Code).
