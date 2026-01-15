@@ -12,7 +12,8 @@ namespace ShadowScene {
 	static constexpr float NEAR_PLANE = 0.1f;
 	static constexpr float FAR_PLANE  = 100.0f;
 
-	static const glm::vec3 LIGHT_COLOR = glm::vec3(1.0f, 0.0f, 0.0f);
+	static glm::vec3 LIGHT_POS   = glm::vec3(-2.0f, 5.0f, -3.0f);
+	static glm::vec3 LIGHT_COLOR;
 	static constexpr float LIGHT_FRUSTUM = 10.0f;
 	static const glm::mat4 LIGHT_PROJECTION = glm::ortho(-LIGHT_FRUSTUM, LIGHT_FRUSTUM,
 														 -LIGHT_FRUSTUM, LIGHT_FRUSTUM,
@@ -21,9 +22,8 @@ namespace ShadowScene {
 													glm::vec3( 0.0f, 0.0f,  0.0f),
 													glm::vec3( 0.0f, 1.0f,  0.0f));
 	static const glm::mat4 LIGHT_SPACE_MATRIX = LIGHT_PROJECTION * LIGHT_VIEW;
-	static const glm::vec3 LIGHT_POS = glm::vec3(-2.0f, 5.0f, -3.0f);
 
-	static constexpr bool SHOW_DEBUG_DEPTH_MAP = true;
+	static constexpr bool SHOW_DEBUG_DEPTH_MAP = true; // Not used.
 
 	// Point shadow stuff.
 	static const float ASPECT = (static_cast<float>(SHADOW_WIDTH) /
@@ -116,6 +116,21 @@ void render_shadow_scene(RenderingContext* ctx, float dt) {
 	glClearColor(0.01f, 0.01f, 0.01f, 1.0f);
 	update_camera_projection(ctx);
 
+	// Moving the light source overtime.
+	float time = Time::get_time();
+	float radius = 5.0f;
+	float speed = 0.5f;
+	LIGHT_POS.x = static_cast<float>(cos(time * speed) * radius);
+	LIGHT_POS.z = static_cast<float>(sin(time * speed) * radius);
+	
+	// Matching the LIGHT_COLOR to the hotloaded var.
+	auto vars = &ctx->vars;
+	float HL_light_color_x = vars->scene.shadow_light_color_x;
+	float HL_light_color_y = vars->scene.shadow_light_color_y;
+	float HL_light_color_z = vars->scene.shadow_light_color_z;
+	glm::vec3 HL_light_color = glm::vec3(HL_light_color_x, HL_light_color_y, HL_light_color_z);
+	LIGHT_COLOR = HL_light_color;
+		
 #if 0
 	// This branch is for directional shadow mapping.
 

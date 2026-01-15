@@ -17,6 +17,16 @@ uniform vec3 view_pos;
 
 uniform float far_plane; // We also now take the far plane.
 
+// Array of offset direction for sampling.
+vec3 grid_sampling_disk[20] = vec3[]
+(
+   vec3(1, 1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1, 1,  1), 
+   vec3(1, 1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1, 1, -1),
+   vec3(1, 1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1, 1,  0),
+   vec3(1, 0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1, 0, -1),
+   vec3(0, 1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0, 1, -1)
+);
+
 float do_shadow_calculations(vec3 frag_pos);
 
 void main() {
@@ -56,32 +66,22 @@ void main() {
 float do_shadow_calculations(vec3 frag_pos) {
 	// Calculate the diff and use it to sample the cubemap.
 	vec3 frag_to_light  = frag_pos - light_pos;
-	float closest_depth = texture(shadow_map, frag_to_light).r;
-
-	// Change the value from [0, 1] to [0, far_plane].
-	closest_depth *= far_plane;
-
-	// Get the current_depth by getting the length of frag_to_light
 	float current_depth = length(frag_to_light);
-	
-	vec3 normal = normalize(fs_input.normal);
-	vec3 light_dir = normalize(light_pos - fs_input.frag_pos);
-	float bias = max(0.05 * (1.0 - dot(normal, light_dir)), 0.005);
 
-	// Now, just check if the current_depth is higher than the closest_depth to know whether a
-	// given fragment is within a shadow or not.
 	float shadow = 0.0;
+	float bias   = 0.15;
+	int samples  = 20;
+	
+	float view_distance = length(view_pos - frag_pos);
+	float disk_radius   = (1.0 + (view_distance / far_plane)) / 25.0;
 
-/*
-  	vec2 texel_size = 1.0 / textureSize(shadow_map, 0);
-	for (int x = -1; x <= 1; ++x) {
-		for (int y = -1; y <= 1; ++y) {
-			float pcf_depth = texture(shadow_map, proj_coords.xy + vec2(x, y) * texel_size).r;
-			shadow += current_depth - bias > pcf_depth ? 1.0 : 0.0;
-		}
+	for (int i = 0; i < samples; ++i) {
+		float closest_depth = texture(shadow_map, frag_to_light + grid_sampling_disk[i] * disk_radius).r;
+		closest_depth *= far_plane; // Undo the [0, 1] mapping.
+		if (current_depth - bias > closest_depth)
+			shadow += 1.0;
 	}
-	shadow /= 9.0;
-*/
-	shadow = current_depth - bias > closest_depth ? 1.0 : 0.0;
+
+	shadow /= float(samples); // OpenGL doesn't use C-style casts.
 	return shadow;
 }

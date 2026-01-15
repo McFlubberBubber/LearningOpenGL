@@ -11,6 +11,10 @@
 	BIND(Audio, master_volume, vars->audio.master_volume, float) \
 	BIND(Audio, music_volume, vars->audio.music_volume, float) \
 	\
+	/* :/Scene */ \
+	BIND(Scene, shadow_light_color_x, vars->scene.shadow_light_color_x, float) \
+	BIND(Scene, shadow_light_color_y, vars->scene.shadow_light_color_y, float) \
+	BIND(Scene, shadow_light_color_z, vars->scene.shadow_light_color_z, float) \
 	/* :/Dev */ \
 	BIND(Dev, console_small_openness, vars->dev.console_small_openness, float) \
 	BIND(Dev, console_big_openness, vars->dev.console_big_openness, float) \
@@ -21,7 +25,8 @@ enum Section {
 	
 	SECTION_DISPLAY,
 	SECTION_AUDIO,
-	SECTION_DEV
+	SECTION_DEV,
+	SECTION_SCENE
 };
 
 struct Display {
@@ -33,6 +38,13 @@ struct Audio {
 	float music_volume;
 };
 
+struct Scene {
+	float shadow_light_color_x;
+	float shadow_light_color_y;
+	float shadow_light_color_z;
+};
+
+
 struct Dev {
 	float console_small_openness;
 	float console_big_openness;
@@ -42,6 +54,7 @@ struct Dev {
 struct HotloadedVariables {
 	Display display;
 	Audio audio;
+	Scene scene;
 	Dev dev;
 };
 
