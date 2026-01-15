@@ -64,6 +64,22 @@ static void draw_world_with_shader(RenderingContext* ctx, Shader* shader) {
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+static void draw_directional_light_source(RenderingContext* ctx) {
+	auto light_shader = &ctx->assets.shaders[SHADER_LIGHT_CUBE];
+	use_shader(light_shader);
+	apply_matrices(light_shader);
+	glBindVertexArray(ctx->buffers.cube_VAO);
+	set_vec3(light_shader, "light_color", glm::vec3(1.0f));
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::translate(model, ShadowScene::LIGHT_POS);
+	model = glm::scale(model, glm::vec3(0.5f));
+	set_mat4(light_shader, "model_matrix", model);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+
+	glBindVertexArray(0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 void init_shadow_scene(RenderingContext* ctx) {
 	using namespace ShadowScene;
 	auto shadow_shader = &ctx->assets.shaders[SHADER_SHADOW_MAPPING];
@@ -118,6 +134,7 @@ void render_shadow_scene(RenderingContext* ctx, float dt) {
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, ctx->assets.textures[TEXTURE_DEPTH_MAP]);
 	draw_world_with_shader(ctx, shadow_shader);
+	draw_directional_light_source(ctx);
 
 	// 3. Resolve MSAA if enabled.
 	if (ctx->app.config.multisampling) {
@@ -135,7 +152,7 @@ void render_shadow_scene(RenderingContext* ctx, float dt) {
 	}
 	
 	// 4. Draw screen texture.
-	draw_screen_texture(ctx, true);
+	draw_screen_texture(ctx, false);
 	if (ctx->app.config.debug_mode)
 		render_debug_overlay(ctx, dt);
 
