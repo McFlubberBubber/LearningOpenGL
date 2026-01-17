@@ -1,0 +1,22 @@
+========================================
+CHECKLIST OF THINGS THAT MAY NEED DOING:
+========================================
+
+> Things in this checklist will be updated overtime, and things that have been completed will be removed from the list aswell.
+
+# Scenes
+- Try out shadow mapping / point shadows in the main / space scene to test them out?
+- Try out using noise maps to generate a terrain.
+
+# Renderer
+- Implement a hotloader for the shaders to iterate while the application is running.
+- Finish LearnOpenGL.com
+- Thoroughly test if other model file formats work with the model importer. Last I checked, mainly .obj files worked well, but .fbx and other types didn't work out too well.
+- Possibly create a seperate "draw.cpp" file that includes all drawing utils? (easy primitive rendering that is efficient).
+- Do some shader cleanup? Some shaders are not being used at all.
+
+# Console
+- Add text wrapping to input field for readbility during long input commands.
+- Add proper 'help' messages to improve usability.
+- Improve on some error messages, specifically the hotloader feedback.
+- Adjust some log color types, they don't seem that great currently (maybe add those variables to the hotloader?)
