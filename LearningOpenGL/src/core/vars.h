@@ -2,6 +2,9 @@
 
 #include "core/types.h"
 
+// Forward declarations.
+struct Console;
+
 // Bindings to variables to their structs and stuff...
 #define VAR_BINDINGS \
 	/* :/Display */ \
@@ -53,6 +56,7 @@ struct Dev {
 
 struct HotloadedVariables {
 	const char* file_path;
+	Console* console_ptr; // This is here for access to console logging.
 
 	Display display;
 	Audio audio;
@@ -60,8 +64,8 @@ struct HotloadedVariables {
 	Dev dev;
 };
 
-void init_vars(HotloadedVariables* vars, const char* path);
+void init_vars(HotloadedVariables* vars, const char* path, Console* console);
 void reload_vars(HotloadedVariables* vars);
 
-void write_to_vars(HotloadedVariables* vars, const std::vector<std::string>& tokens);
+bool write_to_vars(HotloadedVariables* vars, const std::vector<std::string>& tokens);
 std::vector<std::string> get_all_lines(HotloadedVariables* vars);

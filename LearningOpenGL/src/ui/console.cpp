@@ -189,9 +189,9 @@ static void draw_logs(Console* console, RenderingContext* ctx, float y) {
 
 
 // These functions below are all in relation to what happens after the user presses ENTER.
-static void push_log(Console* console, const std::string& command, LogType type = LogType::INFO) {
+void push_log(Console* console, const std::string& message, LogType type = LogType::INFO) {
 	ConsoleLog log;
-	log.message = command;
+	log.message = message;
 	log.type    = type;
 
 	console->logs.push_back(log);
@@ -361,8 +361,9 @@ static void update_vars_file(Console* console, const std::vector<std::string>& t
 
 	if (tokens.size() == 2 && tokens[1].compare("help") == 0) {
 		// Display how to use hotloader command.
+		push_log(console, """hotloader"" allows you to modify ONLY the values of the vars in the hotloaded file.", LogType::INFO);
+		push_log(console, "Within the hotloader, there are several sections that you can choose to modify. Type hotloader help <section> to view the different vars under each section", LogType::INFO);
 	}
-
 
 	if (tokens.size() != 4) {
 		push_log(console, "ERROR::expected usage: hotloader <section> <variable> <value>", LogType::ERROR);
@@ -372,7 +373,11 @@ static void update_vars_file(Console* console, const std::vector<std::string>& t
 	}
 	
 	auto vars = &console->render_ctx_ptr->vars;
-	write_to_vars(vars, tokens);
+	if (write_to_vars(vars, tokens)) {
+		push_log(console, "Successfully updated vars file.", LogType::OUTPUT);
+	} else {
+		push_log(console, "ERROR: Failed to update vars file! Check report below.", LogType::ERROR);
+	}
 }
 
 static void init_arguments(Console* console) {

@@ -1,5 +1,7 @@
 #include "core/vars.h"
 
+#include "ui/console.h" // For console logging.
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -65,9 +67,10 @@ static bool parse_bool(const char* s, bool* result) {
 	return false;
 }
 
-
-void init_vars(HotloadedVariables* vars, const char* path) {
+void init_vars(HotloadedVariables* vars, const char* path, Console* console) {
 	vars->file_path = path;
+	vars->console_ptr = console;
+	assert(vars->console_ptr != NULL);
 
 	reload_vars(vars);
 	return;
@@ -147,16 +150,121 @@ void reload_vars(HotloadedVariables* vars) {
 	// printf("Vars reloaded from path: %s\n", path);
 }
 
-void write_to_vars(HotloadedVariables* vars, const std::vector<std::string>& tokens) {
-	FILE* file = fopen(vars->file_path, "w");
-
+bool write_to_vars(HotloadedVariables* vars, const std::vector<std::string>& tokens) {
+	FILE* file = fopen(vars->file_path, "r");
 	if (!file) {
 		fprintf(stderr, "ERROR: opening vars file at path: %s\n", vars->file_path);
-		return;
+		return false;
 	}
 
+	static constexpr int MAX_LINES = 2048;
+	static constexpr int MAX_LINE_LENGTH = 512;
 
+	typedef char Line[MAX_LINE_LENGTH];
+	Line* lines = (Line*)malloc(MAX_LINES * sizeof(Line));
+	memset(lines, 0, MAX_LINES * sizeof(Line));
+	if (!lines) {
+		fprintf(stderr, "ERROR: Failed to allocate memory for lines!\n");
+		fclose(file);
+		return false;
+	}
+	int line_count = 0;
+	
+	const char* target_section = tokens[1].c_str();
+	const char* target_var     = tokens[2].c_str();
+	const char* new_value      = tokens[3].c_str();
+
+	// First, read file into memory.
+	while (fgets(lines[line_count], MAX_LINE_LENGTH, file) && line_count < MAX_LINES) {
+		int len = (int)strlen(lines[line_count]);
+		if (len > 0 && lines[line_count][len - 1] == '\n') {
+			lines[line_count][len - 1] = '\0';
+		}
+		line_count++;
+	}
 	fclose(file);
+
+	char current_section[64] = { 0 };
+	bool found = false;
+
+	// Then, modify the contents of the file in memory.
+	for (size_t i = 0; i < line_count; ++i) {
+		
+		if (line_count >= MAX_LINES) {
+			fprintf(stderr, "ERROR: Config file too large\n");
+			break;
+		}
+		
+		const char* trimmed = skip_whitespace(lines[i]);
+		if (trimmed[0] == '\0' || trimmed[0] == '#') { continue; }
+
+		if (trimmed[0] == ':' && trimmed[1] == '/') {
+			const char* section = skip_whitespace(trimmed + 2);
+			strncpy(current_section, section, sizeof(current_section) - 1); // Space for null-term.
+			current_section[sizeof(current_section) - 1] = '\0';
+			continue;
+		}
+
+		if (strcmp(current_section, target_section) != 0) {
+			continue;
+		}
+
+		char* equals = strchr(lines[i], '=');
+		if (!equals) { continue; }
+		char* equals_backup = equals;
+
+		*equals = '\0';
+		char* var_name = (char*)skip_whitespace(lines[i]);
+		trim_end(var_name);
+
+		// If we find our variable...
+		if (strcmp(var_name, target_var) == 0) {
+			*equals_backup = '=';
+			char* value_start = (char*)skip_whitespace(equals_backup + 1);
+			char* comment = strchr(value_start, '#');
+			char new_line[MAX_LINE_LENGTH];
+
+			if (comment) {
+				snprintf(new_line, sizeof(new_line), "%.*s= %s %s", (int)(equals_backup - lines[i]),
+						 lines[i], new_value, comment);
+			} else {
+				snprintf(new_line, sizeof(new_line), "%.*s= %s", (int)(equals_backup - lines[i]),
+						 lines[i], new_value);
+			}
+
+			strncpy(lines[i], new_line, MAX_LINE_LENGTH - 1);
+			lines[i][MAX_LINE_LENGTH - 1] = '\0';
+			found = true;
+			break;
+		} else {
+			*equals_backup = '=';
+		}
+	}
+
+	if (!found) {
+		char buffer[256];
+		snprintf(buffer, sizeof(buffer), "ERROR: Variable %s not found in section %s", target_var, target_section);
+		push_log(vars->console_ptr, std::string(buffer), LogType::ERROR);
+		free(lines);
+		return false;
+	}
+
+	// Finally, write the new contents into the actual file in write mode.
+	file = fopen(vars->file_path, "w");
+	if (!file) {
+		fprintf(stderr, "ERROR: opening vars file at path: %s\n", vars->file_path);
+		free(lines);
+		return false;
+	}
+
+	for (int i = 0; i < line_count; ++i) {
+		fprintf(file, "%s\n", lines[i]);
+	}
+	
+	fclose(file);
+	free(lines);
+	// reload_vars(vars);
+	return true;
 }
 
 std::vector<std::string> get_all_lines(HotloadedVariables* vars) {
@@ -181,9 +289,7 @@ std::vector<std::string> get_all_lines(HotloadedVariables* vars) {
 		// Skipping comments.
 		if (trimmed[0] == '#') { continue; }
 
-		std::string current = trimmed;
-		results.push_back(current);
-		
+		results.push_back(trimmed);
 	} // End of while loop.
 	
 	fclose(file);

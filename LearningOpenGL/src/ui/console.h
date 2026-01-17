@@ -85,3 +85,5 @@ void move_cursor_by_char(Console* console, bool is_forward);
 void move_cursor_by_word(Console* console, bool is_forward);
 
 void navigate_command_history(Console* console, bool is_forward);
+
+void push_log(Console* console, const std::string& message, LogType type);

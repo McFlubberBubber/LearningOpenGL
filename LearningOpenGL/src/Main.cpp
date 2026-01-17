@@ -84,7 +84,7 @@ int main() {
 	Hotloader hotloader = {};
 	const char* vars_path = "config/hotloaded.variables";
 	init_hotloader(&hotloader, vars_path);
-	init_vars(&render_context.vars, vars_path);
+	init_vars(&render_context.vars, vars_path, &console);
 
 	// Initializing scenes, if needed.
 	init_shadow_scene(&render_context);
