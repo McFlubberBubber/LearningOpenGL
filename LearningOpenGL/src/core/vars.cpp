@@ -67,19 +67,17 @@ static bool parse_bool(const char* s, bool* result) {
 
 
 void init_vars(HotloadedVariables* vars, const char* path) {
-	// Setting some default values if we want to...
-	//
+	vars->file_path = path;
 
-	reload_vars(vars, path);
-
+	reload_vars(vars);
 	return;
 }
 
-void reload_vars(HotloadedVariables* vars, const char* path) {
-	FILE* file = fopen(path, "r");
+void reload_vars(HotloadedVariables* vars) {
+	FILE* file = fopen(vars->file_path, "r");
 
 	if (!file) {
-		fprintf(stderr, "ERROR: opening vars file at path: %s\n", path);
+		fprintf(stderr, "ERROR: opening vars file at path: %s\n", vars->file_path);
 		return;
 	}
 
@@ -147,4 +145,47 @@ void reload_vars(HotloadedVariables* vars, const char* path) {
 	
 	fclose(file);
 	// printf("Vars reloaded from path: %s\n", path);
+}
+
+void write_to_vars(HotloadedVariables* vars, const std::vector<std::string>& tokens) {
+	FILE* file = fopen(vars->file_path, "w");
+
+	if (!file) {
+		fprintf(stderr, "ERROR: opening vars file at path: %s\n", vars->file_path);
+		return;
+	}
+
+
+	fclose(file);
+}
+
+std::vector<std::string> get_all_lines(HotloadedVariables* vars) {
+	FILE* file = fopen(vars->file_path, "r");
+	std::vector<std::string> results = {};
+	
+	if (!file) {
+		fprintf(stderr, "ERROR: opening vars file at path: %s\n", vars->file_path);
+		return results;
+	}
+
+	char line[512];
+	while (fgets(line, sizeof(line), file)) {
+		// Remove newline.
+		int length = (int)strlen(line);
+		if (length > 0 && line[length - 1] == '\n') {
+			line[length - 1] = '\0';
+		}
+
+		const char* trimmed = skip_whitespace(line);
+
+		// Skipping comments.
+		if (trimmed[0] == '#') { continue; }
+
+		std::string current = trimmed;
+		results.push_back(current);
+		
+	} // End of while loop.
+	
+	fclose(file);
+	return results;
 }

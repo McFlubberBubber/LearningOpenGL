@@ -15,7 +15,7 @@ static void init_filewatcher(FileWatcher* watcher, const char* filepath) {
 static void hotloader_callback(Hotloader* hotloader, RenderingContext* ctx) {
 	std::cout << "File changed at path: " << hotloader->watcher.path << "\n";
 	
-	reload_vars(&ctx->vars, hotloader->watcher.path);
+	reload_vars(&ctx->vars);
 }
 
 bool check_for_file_updates(FileWatcher* watcher) {

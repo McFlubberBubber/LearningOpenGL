@@ -52,6 +52,8 @@ struct Dev {
 };
 
 struct HotloadedVariables {
+	const char* file_path;
+
 	Display display;
 	Audio audio;
 	Scene scene;
@@ -59,4 +61,7 @@ struct HotloadedVariables {
 };
 
 void init_vars(HotloadedVariables* vars, const char* path);
-void reload_vars(HotloadedVariables* vars, const char* path);
+void reload_vars(HotloadedVariables* vars);
+
+void write_to_vars(HotloadedVariables* vars, const std::vector<std::string>& tokens);
+std::vector<std::string> get_all_lines(HotloadedVariables* vars);

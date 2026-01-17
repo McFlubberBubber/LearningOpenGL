@@ -10,8 +10,10 @@ struct Console;
 enum CommandType {
 	CMD_CLEAR = 0,
 	CMD_RESET,
-
 	CMD_SCENE_CHANGE,
+
+	CMD_PRINT_HOTLOADER,
+	CMD_HOTLOADER,
 	
 	CMD_COUNT
 };

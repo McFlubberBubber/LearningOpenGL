@@ -12,9 +12,9 @@ music_volume  = 0.5
 :/Scene
 shadow_light_color_x = 1.0
 shadow_light_color_y = 0.0
-shadow_light_color_z = 1.0
+shadow_light_color_z = 0.0
 
 :/Dev
-console_small_openness = 0.8
-console_big_openness   = 0.08
+console_small_openness = 0.85
+console_big_openness   = 0.1
 console_openness_dt    = 0.2

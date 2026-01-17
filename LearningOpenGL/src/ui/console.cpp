@@ -1,10 +1,11 @@
 #include "console.h"
 
 #include "renderer/render_context.h"
+
 #include "core/time.h"
+#include "core/vars.h" // For writing to the vars file from the console.
 
 #include <math.h>   // For fabs()
-// #include <string.h> // For str 
 #include <cstring>  // For std::memset()
 
 namespace ConsoleSpecs {
@@ -260,7 +261,6 @@ static void parse_and_tokenize(Console* console, const std::string& command) {
 		tokens.push_back(current_token);
 	}
 
-	// Just trying out the hashmap lookup stuff. Could be VERY buggy.
 	auto it = console->arguments.find(tokens[0]);
 	if (it != console->arguments.end()) {
 		if (it->second.procedure_ptr == NULL) {
@@ -341,15 +341,53 @@ static void change_current_scene(Console* console, const std::vector<std::string
 	}
 }
 
+static void print_vars_file(Console* console, const std::vector<std::string>& tokens) {
+	if (tokens.size() != 1) {
+		push_log(console, "ERROR::expected usage: print_hotloader", LogType::ERROR);
+		return;
+	}
+	
+	auto vars = &console->render_ctx_ptr->vars;
+	std::vector<std::string> lines = get_all_lines(vars);
+
+	for (auto& line : lines) {
+		std::cout << line << "\n";
+		push_log(console, line, LogType::OUTPUT);
+	}
+}
+
+static void update_vars_file(Console* console, const std::vector<std::string>& tokens) {
+	std::string sections[] = {"Display", "Audio", "Scene", "Dev"};
+
+	if (tokens.size() == 2 && tokens[1].compare("help") == 0) {
+		// Display how to use hotloader command.
+	}
+
+
+	if (tokens.size() != 4) {
+		push_log(console, "ERROR::expected usage: hotloader <section> <variable> <value>", LogType::ERROR);
+		push_log(console, "Type: ""hotloader help <section>"" to see a list of valid variables in each category.", LogType::ERROR);
+		push_log(console, "List of sections: Display | Audio | Scene | Dev", LogType::ERROR);	
+		return;
+	}
+	
+	auto vars = &console->render_ctx_ptr->vars;
+	write_to_vars(vars, tokens);
+}
+
 static void init_arguments(Console* console) {
 	console->commands[CMD_CLEAR].procedure_ptr = clear_logs;
 	console->commands[CMD_RESET].procedure_ptr = clear_command_history;
 	console->commands[CMD_SCENE_CHANGE].procedure_ptr = change_current_scene;
+	console->commands[CMD_PRINT_HOTLOADER].procedure_ptr = print_vars_file;
+	console->commands[CMD_HOTLOADER].procedure_ptr = update_vars_file;
 
 	auto& args = console->arguments;
 	args.insert({ "clear", console->commands[CMD_CLEAR] });
 	args.insert({ "reset", console->commands[CMD_RESET] });
 	args.insert({ "scene", console->commands[CMD_SCENE_CHANGE] });
+	args.insert({ "print_hotloader", console->commands[CMD_PRINT_HOTLOADER] });
+	args.insert({ "hotloader", console->commands[CMD_HOTLOADER] });
 }
 
 // ----- Public functions -----
