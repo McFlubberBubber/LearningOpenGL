@@ -156,6 +156,52 @@ static void draw_input_area(Console* console, RenderingContext* ctx, float x, fl
 	draw_cursor(console, ctx, x, input_y0, input_y1, text_width_to_cursor);
 }
 
+static std::vector<std::string> wrap_text(const std::string& text, const Font* font, float max_width) {
+	std::vector<std::string> lines;
+	if (text.empty()) { return lines; }
+
+	std::string current_line;
+	std::string current_word;
+
+	for (char c : text) {
+		if (c == ' ' || c == '\n') {
+			std::string test = current_line.empty() ? current_word : current_line + " " + current_word;
+			float width = get_string_width_in_pixels(font, test, ConsoleSpecs::INPUT_SCALE);
+			if (width > max_width && !current_line.empty()) {
+				lines.push_back(current_line);
+				current_line = current_word;
+			} else {
+				current_line = test;
+			}
+
+			current_word.clear();
+
+			if (c == '\n') {
+				lines.push_back(current_line);
+				current_line.clear();
+			}
+		} else {
+			current_word += c;
+		}
+	}
+
+	// Handling the remaining word and line.
+	if (!current_word.empty()) {
+		std::string test = current_line.empty() ? current_word : current_line + " " + current_word;
+		float width = get_string_width_in_pixels(font, test, ConsoleSpecs::INPUT_SCALE);
+		if (width > max_width && !current_line.empty()) {
+			lines.push_back(current_line);
+			lines.push_back(current_word);
+		} else {
+			lines.push_back(test);
+		}
+	} else if (!current_line.empty()) {
+		lines.push_back(current_line);
+	}
+
+	return lines;
+}
+
 static void draw_logs(Console* console, RenderingContext* ctx, float y) {
 	using namespace ConsoleSpecs;
     auto font = &ctx->assets.fonts[FONT_REGULAR];
@@ -164,6 +210,7 @@ static void draw_logs(Console* console, RenderingContext* ctx, float y) {
 	float text_x = LOG_X_PADDING;
 	float text_y = y + LOG_Y_PADDING;
 	float console_top = static_cast<float>(ctx->viewport.height) * 0.99f;
+	float max_text_width = static_cast<float>(ctx->viewport.width) - (LOG_X_PADDING * 2);
 	int log_count = (int)console->logs.size(); 
 	glm::vec3 color;
 
@@ -180,10 +227,16 @@ static void draw_logs(Console* console, RenderingContext* ctx, float y) {
 		case LogType::INFO:	   { color = BRONZE;  break; }
 		default:  			   { color = WHITE;  break; } 
 		}
-		
-		draw_text(font, ctx, log.message, text_x, text_y, INPUT_SCALE, color, TEXT_ALPHA, TextAlign::LEFT, false);
-		
-		text_y += LOG_LINE_HEIGHT;
+
+		auto wrapped_lines = wrap_text(log.message, font, max_text_width);
+		int wrapped_line_count = (int)wrapped_lines.size();
+		for (int j = wrapped_line_count - 1; j >= 0; --j) {
+			if (text_y > console_top) { break; }
+			
+			draw_text(font, ctx, wrapped_lines[j], text_x, text_y, INPUT_SCALE, 
+					  color, TEXT_ALPHA, TextAlign::LEFT, false);
+			text_y += LOG_LINE_HEIGHT;			
+		}
 	}
 }
 
@@ -362,7 +415,8 @@ static void update_vars_file(Console* console, const std::vector<std::string>& t
 	if (tokens.size() == 2 && tokens[1].compare("help") == 0) {
 		// Display how to use hotloader command.
 		push_log(console, """hotloader"" allows you to modify ONLY the values of the vars in the hotloaded file.", LogType::INFO);
-		push_log(console, "Within the hotloader, there are several sections that you can choose to modify. Type hotloader help <section> to view the different vars under each section", LogType::INFO);
+		push_log(console, "Within the hotloader, there are several sections that you can choose to modify. Type hotloader help <section> to view the different vars under each section.", LogType::INFO);
+		return;
 	}
 
 	if (tokens.size() != 4) {
@@ -380,8 +434,17 @@ static void update_vars_file(Console* console, const std::vector<std::string>& t
 	}
 }
 
+static void display_help(Console* console, const std::vector<std::string>& tokens) {
+	if (tokens.size() == 1) {
+		std::string message = "You may have expected this console command to actually return something useful, but for the time being, it is being used for testing purposes. So instead, this is a SUUUUPER long log message that is mainly here to test the text wrapping in the console. If this text does not wrap correctly, or the line does not end with the word, ""Hamburger"", then we have seriously messed up. But hopefully it should work right?! Anyways, Hamburger.";
+		push_log(console, message, LogType::INFO);
+		return;
+	}
+}
+
 static void init_arguments(Console* console) {
 	console->commands[CMD_CLEAR].procedure_ptr = clear_logs;
+	console->commands[CMD_HELP].procedure_ptr = display_help;
 	console->commands[CMD_RESET].procedure_ptr = clear_command_history;
 	console->commands[CMD_SCENE_CHANGE].procedure_ptr = change_current_scene;
 	console->commands[CMD_PRINT_HOTLOADER].procedure_ptr = print_vars_file;
@@ -389,6 +452,7 @@ static void init_arguments(Console* console) {
 
 	auto& args = console->arguments;
 	args.insert({ "clear", console->commands[CMD_CLEAR] });
+	args.insert({ "help", console->commands[CMD_HELP] });
 	args.insert({ "reset", console->commands[CMD_RESET] });
 	args.insert({ "scene", console->commands[CMD_SCENE_CHANGE] });
 	args.insert({ "print_hotloader", console->commands[CMD_PRINT_HOTLOADER] });

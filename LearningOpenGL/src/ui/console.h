@@ -9,6 +9,7 @@ struct Console;
 
 enum CommandType {
 	CMD_CLEAR = 0,
+	CMD_HELP,
 	CMD_RESET,
 	CMD_SCENE_CHANGE,
 
