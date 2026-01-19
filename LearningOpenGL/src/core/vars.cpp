@@ -80,6 +80,9 @@ void reload_vars(HotloadedVariables* vars) {
 	FILE* file = fopen(vars->file_path, "r");
 
 	if (!file) {
+		char log[128];
+		snprintf(log, sizeof(log), "ERROR: Could not open vars file at path: %s", vars->file_path);
+		push_log(vars->console_ptr, std::string(log), LogType::ERROR);
 		fprintf(stderr, "ERROR: opening vars file at path: %s\n", vars->file_path);
 		return;
 	}
@@ -189,12 +192,12 @@ bool write_to_vars(HotloadedVariables* vars, const std::vector<std::string>& tok
 
 	// Then, modify the contents of the file in memory.
 	for (size_t i = 0; i < line_count; ++i) {
-		
+
 		if (line_count >= MAX_LINES) {
 			fprintf(stderr, "ERROR: Config file too large\n");
 			break;
 		}
-		
+
 		const char* trimmed = skip_whitespace(lines[i]);
 		if (trimmed[0] == '\0' || trimmed[0] == '#') { continue; }
 
@@ -205,39 +208,40 @@ bool write_to_vars(HotloadedVariables* vars, const std::vector<std::string>& tok
 			continue;
 		}
 
-		if (strcmp(current_section, target_section) != 0) {
-			continue;
+		if (strcmp(current_section, target_section) != 0) { continue; }
+
+		char current_line[MAX_LINE_LENGTH] = { 0 };
+		strncpy(current_line, trimmed, sizeof(current_line) - 1);
+		char* equals_pos = strchr(current_line, '=');
+		if (!equals_pos) {
+			fprintf(stderr, "ERROR: Syntax error at line %ld, missing equals operator!\n", i + 1);
+			free(lines);
+			return false;
 		}
 
-		char* equals = strchr(lines[i], '=');
-		if (!equals) { continue; }
-		char* equals_backup = equals;
-
-		*equals = '\0';
-		char* var_name = (char*)skip_whitespace(lines[i]);
-		trim_end(var_name);
+		char* var_name = (char*)skip_whitespace(current_line);
+		char* c = var_name;
+		while (!is_whitespace(*c)) {
+			c++;
+		}
+		*c = '\0';
 
 		// If we find our variable...
 		if (strcmp(var_name, target_var) == 0) {
-			*equals_backup = '=';
-			char* value_start = (char*)skip_whitespace(equals_backup + 1);
-			char* comment = strchr(value_start, '#');
 			char new_line[MAX_LINE_LENGTH];
+			char* value_start = (char*)skip_whitespace(equals_pos + 1);
+			char* comment	  = strchr(value_start, '#');
 
 			if (comment) {
-				snprintf(new_line, sizeof(new_line), "%.*s= %s %s", (int)(equals_backup - lines[i]),
-						 lines[i], new_value, comment);
+				snprintf(new_line, sizeof(new_line), "%s = %s %s", var_name, new_value, comment);
 			} else {
-				snprintf(new_line, sizeof(new_line), "%.*s= %s", (int)(equals_backup - lines[i]),
-						 lines[i], new_value);
+				snprintf(new_line, sizeof(new_line), "%s = %s", var_name, new_value);
 			}
 
 			strncpy(lines[i], new_line, MAX_LINE_LENGTH - 1);
 			lines[i][MAX_LINE_LENGTH - 1] = '\0';
 			found = true;
 			break;
-		} else {
-			*equals_backup = '=';
 		}
 	}
 
@@ -278,19 +282,16 @@ std::vector<std::string> get_all_lines(HotloadedVariables* vars) {
 
 	char line[512];
 	while (fgets(line, sizeof(line), file)) {
-		// Remove newline.
 		int length = (int)strlen(line);
 		if (length > 0 && line[length - 1] == '\n') {
 			line[length - 1] = '\0';
 		}
 
 		const char* trimmed = skip_whitespace(line);
-
-		// Skipping comments.
 		if (trimmed[0] == '#') { continue; }
 
 		results.push_back(trimmed);
-	} // End of while loop.
+	}
 	
 	fclose(file);
 	return results;

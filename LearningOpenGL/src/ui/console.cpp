@@ -430,7 +430,7 @@ static void update_vars_file(Console* console, const std::vector<std::string>& t
 	if (write_to_vars(vars, tokens)) {
 		push_log(console, "Successfully updated vars file.", LogType::OUTPUT);
 	} else {
-		push_log(console, "ERROR: Failed to update vars file! Check report below.", LogType::ERROR);
+		push_log(console, "ERROR: Failed to update vars file! Check report.", LogType::ERROR);
 	}
 }
 
