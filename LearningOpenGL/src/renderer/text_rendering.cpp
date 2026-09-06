@@ -132,7 +132,6 @@ void draw_text(const Font* font, const RenderingContext* context, const std::str
 
 		glBindTexture(GL_TEXTURE_2D, character.texture_id);
 
-
 		// Drawing the drop shadow (if needed)
 		if (drop_shadow) {
 			float shadow_offset = 2.0f;

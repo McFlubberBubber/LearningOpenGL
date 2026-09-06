@@ -514,7 +514,7 @@ void draw_console(Console* console, RenderingContext* ctx) {
 }
 
 
-void insert_character(Console* console, char character) {
+void insert_character(Console* console, int character) {
 	if (console->input.cursor_pos >= 1023) {
 		std::cout << "CONSOLE_ERROR: Reached maximum number of character buffer!\n";
 		return;

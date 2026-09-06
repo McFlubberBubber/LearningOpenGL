@@ -65,7 +65,8 @@ struct TextBox {
 	glm::vec3 bg_color;
 	float alpha;
 
-	// @TODO: We could make it where these are irrelevant if we want to draw a text box that's 'consistent' and doesn't fade away?
+	// @TODO: We could make it where these are irrelevant if we want to draw a
+	// text box that's 'consistent' and doesn't fade away?
 	float lifetime = 1.0f;
 	float fade_duration = 1.0f;
 	float time_elapsed = 0.0f;

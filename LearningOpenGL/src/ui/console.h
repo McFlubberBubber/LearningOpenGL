@@ -78,7 +78,7 @@ void draw_console(Console* console, RenderingContext* ctx);
 void execute_command(Console* console);
 void autocomplete_command(Console* console);
 
-void insert_character(Console* console, char character);
+void insert_character(Console* console, int character);
 void delete_character(Console* console);
 void delete_word(Console* console);
 

@@ -214,7 +214,7 @@ bool write_to_vars(HotloadedVariables* vars, const std::vector<std::string>& tok
 		strncpy(current_line, trimmed, sizeof(current_line) - 1);
 		char* equals_pos = strchr(current_line, '=');
 		if (!equals_pos) {
-			fprintf(stderr, "ERROR: Syntax error at line %ld, missing equals operator!\n", i + 1);
+			fprintf(stderr, "ERROR: Syntax error at line %d, missing equals operator!\n", (int)(i + 1));
 			free(lines);
 			return false;
 		}
